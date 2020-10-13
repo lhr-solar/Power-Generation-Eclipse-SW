@@ -1,9 +1,15 @@
-# Python simulator for MPPT Algorithms
+# Array Simulator
 
 Created on 5/24/20 by Matthew Yu, Solar Array Lead (2020) of the UT Solar Vehicles Team.
 
-*Consider making an actual structured repo, Matthew.*
-[Repo Structure](https://docs.python-guide.org/writing/structure/)
+This repository contains an in-development simulation of various components of the solar array subsystems, including the following:
+
+- Solar Array
+- DC-DC Converter
+- MPPT
+- Load (Kinda)
+
+Additionally, this simulator also can simulate the source properties of solar cells.
 
 ## Dependencies
 
@@ -17,6 +23,14 @@ Install these dependencies or use the requirements.txt to install.
 * pyqtgraph
 
 Install dependencies using `pip3 install -r requirements.txt`
+
+## Using the Simulator
+
+After installing dependencies, run the main application with the following command:
+`python3 main.py`
+
+You can also run the source simulator with the following command:
+`python3 source_main.py`
 
 ## Feature Request and Bug list
 * source
