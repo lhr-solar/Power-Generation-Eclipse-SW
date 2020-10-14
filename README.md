@@ -5,6 +5,16 @@ Created on 5/24/20 by Matthew Yu, Solar Array Lead (2020) of the UT Solar Vehicl
 *Consider making an actual structured repo, Matthew.*
 [Repo Structure](https://docs.python-guide.org/writing/structure/)
 
+---
+
+## Python Source and MPPT Simulator
+
+To install dependencies, run `pip3 install -r requirements.txt`.
+To run the MPPT Simulator, call `python3 main.py`.
+To run the Solar cell model Simulator, call `python3 source_main.py`.
+
+---
+
 ## Dependencies
 
 Install these dependencies or use the requirements.txt to install.
@@ -17,6 +27,8 @@ Install these dependencies or use the requirements.txt to install.
 * pyqtgraph
 
 Install dependencies using `pip3 install -r requirements.txt`
+
+---
 
 ## Feature Request and Bug list
 * source
@@ -47,6 +59,8 @@ Install dependencies using `pip3 install -r requirements.txt`
   * [ ] have a hashed model (perhaps loaded from a file?) of a complete IV curve for all quantized values of temperature and irradiance. Additionally, perhaps use interpolation to get curve values if temp/irrad entry does not exist.
 * upgrade
   * [ ] consider the feasibility of rewriting this application in rust or C++, as there may be extensive overhead computation as source models get more expensive. **LONG TERM**
+
+---
 
 ## Papers and sites I haven't used yet but are promising
 
