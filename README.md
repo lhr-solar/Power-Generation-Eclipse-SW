@@ -1,9 +1,15 @@
-# Python simulator for MPPT Algorithms
+# Array Simulator
 
 Created on 5/24/20 by Matthew Yu, Solar Array Lead (2020) of the UT Solar Vehicles Team.
 
-*Consider making an actual structured repo, Matthew.*
-[Repo Structure](https://docs.python-guide.org/writing/structure/)
+This repository contains an in-development simulation of various components of the solar array subsystems, including the following:
+
+- Solar Array
+- DC-DC Converter
+- MPPT
+- Load (Kinda)
+
+Additionally, this simulator also can simulate the source properties of solar cells.
 
 ---
 
@@ -18,47 +24,25 @@ To run the Solar cell model Simulator, call `python3 source_main.py`.
 ## Dependencies
 
 Install these dependencies or use the requirements.txt to install.
-* python3
-* sys
-* matplotlib
-* numpy
-* bisect
-* math
-* pyqtgraph
+- python3
+- sys
+- matplotlib
+- numpy
+- bisect
+- math
+- pyqtgraph
 
 Install dependencies using `pip3 install -r requirements.txt`
 
 ---
 
-## Feature Request and Bug list
-* source
-  * [x] source dependence on temperature
-  * [x] source dependence on irradiance
-  * [ ] <del>source dependence on load</del> remove source dependence on load - this is managed by the mppt
-  * [ ] load profile from some formatted file (probably csv) TODO: priority
-  * [ ] load source model from some formatted file
-* dc-dc converter TODO: priority
-  * [ ] research simulating a dc-dc converter that converts duty cycle to v_ref TODO: priority
-* mppt
-  * mppt_passthrough
-    * [ ] Newton's method - stride approximation leads to strong mppt oscillation
-    * [ ] Piegari (Optimal) - needs to develop an accurate model function for best voltage
-  * mppt_other
-    * [x] PandO
-    * [x] PandO variable
-    * [x] dP dV feedback control mppt algo
-    * [ ] fuzzy logic mppt algo
-    * [ ] ripple correlation control mppt algo
-    * [x] update program structure to implement default method for each mppt algorithm, then give the option of using fixed and/or optimal.
-  * [ ] modify simulation to match mppt hardware convert mppt v_ref to duty cycle
-* simulation
-  * [ ] Profile mode: mppt power is greater than max array power by a cycle
-  * [x] Save to file
-* optimization
-  * [x] since the model is monotonically decreasing, swap from linear search to ternary search
-  * [ ] have a hashed model (perhaps loaded from a file?) of a complete IV curve for all quantized values of temperature and irradiance. Additionally, perhaps use interpolation to get curve values if temp/irrad entry does not exist.
-* upgrade
-  * [ ] consider the feasibility of rewriting this application in rust or C++, as there may be extensive overhead computation as source models get more expensive. **LONG TERM**
+## Using the Simulator
+
+After installing dependencies, run the main application with the following command:
+`python3 main.py`
+
+You can also run the source simulator with the following command:
+`python3 source_main.py`
 
 ---
 
