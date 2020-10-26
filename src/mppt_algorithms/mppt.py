@@ -87,7 +87,7 @@ class MPPT:
         """
         return self.v_ref
 
-    def calc_perturb_amt(self, v_ref, v_in, i_in, t_in, p_old, v_old):
+    def calc_perturb_amt(self, v_ref, v_in, i_in, t_in):
         """
         calc_perturb_amt
         Uses a black box method to determine the change to v_ref
@@ -149,29 +149,28 @@ class MPPT:
             return stride
         elif self.stride_mode == "Bisection":
             min_stride = 0.02
+            stride = 0
             p_in = v_in * i_in
-            diff_v = v_in - v_old
-            diff_p = p_in - p_old
-            if(p_old ==0):
-                stride = 0.1
-                return stride
-            if(abs(diff_p)<0.1 and p_old != 0):
-                stride = 0
+            diff_v = v_in - self.v_old
+            diff_p = p_in - self.p_old
+            if self.p_old == 0: # TODO: consolidate logic into one if statement
+                pass
+            if abs(diff_p) < 0.1 and self.p_old != 0:
+                pass
             elif(diff_v == 0):
-                stride = min_stride
+                pass
             else:
                 slope = diff_p/diff_v
-                if(slope >0):
+                if slope > 0:
                     slope = slope/100
                     stride = round(slope,2)
-                    print(stride)
-                elif(slope<0):
-                    v_new = (v_in + v_old)/2
-                    diff_v_new = v_new - v_old
+                elif slope < 0:
+                    v_new = (v_in + self.v_old)/2
+                    diff_v_new = v_new - self.v_old
                     stride = diff_v_new
                 else:
-                    stride = 0
-                return max(abs(stride), min_stride)
+                    pass
+            return max(abs(stride), min_stride)
         else: # default fixed
             return self.stride
 

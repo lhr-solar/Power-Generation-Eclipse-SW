@@ -773,5 +773,5 @@ class Simulation:
 
     def save_model(self):
         with open("results.csv", "ab") as f:
-            a = np.transpose(np.asarray([self.disp_cycle, self.disp_pDiff]))
+            a = np.transpose(np.asarray([self.cycles, self.disp_pDiffA])) # or disp_pDiff or power2
             np.savetxt(f, a, delimiter=",", fmt="%.4f")
