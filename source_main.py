@@ -73,7 +73,7 @@ def main():
 
     string_overlay = "./src/source_models/Cell_Measurements/model.csv"
     if disp_sim:
-        string_is_overlay = input(
+        string_is_overlay = input(# TODO: this doesn't default NO properly
             "Load irradiance data? File format should be 'V,C,R,G,B', ... - [NO]|YES: "
         )
         if string_is_overlay == "NO":

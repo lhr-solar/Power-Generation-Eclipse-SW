@@ -78,12 +78,13 @@ def main():
             stride_mode = string_stride_mode
     else:
         string_stride_mode = input(
-            "Stride mode for MPPT (see src docs): ['Fixed']|'Adaptive'|'Optimal': "
+            "Stride mode for MPPT (see src docs): ['Fixed']|'Adaptive'|'Optimal'|'Bisection': "
         )
         if (
             string_stride_mode == "Fixed"
             or string_stride_mode == "Optimal"
             or string_stride_mode == "Adaptive"
+            or string_stride_mode == "Bisection"
         ):
             stride_mode = string_stride_mode
 
@@ -296,6 +297,7 @@ def main_loop(
         # source.setup_i(irradiance, temperature, load)
 
     input("Halted at the end of cycle " + str(max_cycle))
+    # simulation.save_model() # TODO: add prompt to save the model into results.txt
 
 
 if __name__ == "__main__":
