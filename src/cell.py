@@ -230,7 +230,8 @@ class Cell:
         Returns:
             - (current out) (float)
 
-        Ref:
+        Ref: TODO: remove this from source. Can probably keep relevant details
+        on cell temperature on line 262.
             1. Modeling of photovoltaic module and experimental determination of serial resistance (Benghanem et Alamri)
                 - Section 2.1, Explicit Model        
                 - model(v) = i_sc*( 1 - C_1*( exp( v/(C_2*v_oc) ) - 1 ) )
@@ -356,7 +357,7 @@ class Cell:
                 # model2 = model * k
                 return model
 
-            if self.model_type == "Benghanem":
+            if self.model_type == "Benghanem": # TODO: document these in the design document and remove from source code
                 k = 0.92 # manufacturing efficiency loss (8% according to test data)
 
                 # open circuit voltage and short circuit current dependence on temperature

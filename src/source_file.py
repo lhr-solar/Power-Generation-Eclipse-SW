@@ -81,7 +81,7 @@ class SourceFile():
             v_ref has a range of [0, 0.8] and a resolution of 0.01
             """
 
-            # regularize input
+            # regularize input TODO: generify for a given resolution
             # NOTE: round because int() truncates, breaks things when val is like 0.9999998
             temp_idx = int(round(params[2]*2))      # 0.5 * 2 = 1
             irrad_idx = int(round(params[1]/50))    # 50. / 50 = 1

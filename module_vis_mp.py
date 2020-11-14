@@ -26,7 +26,8 @@ import src.source_file
 
 # Creating figure
 fig = plt.figure(figsize = (10, 7))
-ax = fig.add_subplot(111, projection='3d')
+ax = fig.add_subplot(121, projection='3d')
+ax2 = fig.add_subplot(122, projection='3d')
 
 """
 3rd Plot. A 2D graph (with 3 overlapping datasets) representing the min
@@ -43,7 +44,7 @@ points_mag  = []
 
 # Independent axis constraint
 problem_3 = constraint.Problem()
-v_total = 2.6 # at most v_max*(v1_scaling+v2_scaling+v3_scaling)
+v_total = 2.0 # at most v_max*(v1_scaling+v2_scaling+v3_scaling)
 v_max = .8
 v1_scaling = 1
 v2_scaling = 1
@@ -90,7 +91,15 @@ for index, solution in enumerate(solutions):
 # Filter out solutions for the best one(s).
 m = max(points_mag)
 max_pos = [i for i, j in enumerate(points_mag) if j == m]
+max_pos_x = []
+max_pos_y = []
+max_pos_z = []
+max_pos_mag = []
 for pos in max_pos:
+    max_pos_x.append(points_x[pos])
+    max_pos_y.append(points_y[pos])
+    max_pos_z.append(points_z[pos])
+    max_pos_mag.append(points_mag[pos])
     print("Best candidate: ({},{},{}) = {}".format(
         round(points_x[pos], 2),
         round(points_y[pos], 2),
@@ -98,9 +107,22 @@ for pos in max_pos:
         round(points_mag[pos], 2)
     ))
 
-# Creating plot
-ax.scatter3D(points_x, points_y, points_z, c=points_mag, cmap=plt.get_cmap("YlOrRd"))
+# Creating plots
+ax.scatter3D(
+    points_x, points_y, points_z,
+    c=points_mag, cmap=plt.get_cmap("YlOrRd"))
 plt.title("3 modules.")
+ax.set_xlabel('Module 1 Voltage (V)')
+ax.set_ylabel('Module 2 Voltage (V)')
+ax.set_zlabel('Module 3 Voltage (V)')
+ax.text2D (.02, .90, "Color is a function of\ncurrent output: Red-higher,\nWhite-lower",
+    transform=ax.transAxes)
+
+ax2.scatter3D(max_pos_x, max_pos_y, max_pos_z)
+plt.title("3 modules.")
+ax2.set_xlabel('Module 1 Voltage (V)')
+ax2.set_ylabel('Module 2 Voltage (V)')
+ax2.set_zlabel('Module 3 Voltage (V)')
 
 plt.show()
 
