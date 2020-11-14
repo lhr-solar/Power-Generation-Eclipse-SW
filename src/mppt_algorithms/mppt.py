@@ -153,13 +153,8 @@ class MPPT:
             p_in = v_in * i_in
             diff_v = v_in - self.v_old
             diff_p = p_in - self.p_old
-            if self.p_old == 0: # TODO: consolidate logic into one if statement
-                pass
-            if abs(diff_p) < 0.1 and self.p_old != 0:
-                pass
-            elif(diff_v == 0):
-                pass
-            else:
+
+            if abs(diff_p) >= 0.01 and abs(diff_v) >= 0.001:
                 slope = diff_p/diff_v
                 if slope > 0:
                     slope = slope/100
@@ -168,8 +163,6 @@ class MPPT:
                     v_new = (v_in + self.v_old)/2
                     diff_v_new = v_new - self.v_old
                     stride = diff_v_new
-                else:
-                    pass
             return max(abs(stride), min_stride)
         else: # default fixed
             return self.stride
