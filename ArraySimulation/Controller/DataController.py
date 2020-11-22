@@ -165,24 +165,38 @@ class DataController:
         """
         Runs an entire cycle through the pipeline, based on the simulation.
         """
+        # Get the current simulation cycle.
         cycle = self._PVEnv.getCycle()
+
+        # Retrieve the source definition for the current simulation cycle.
         modulesDef = self._PVEnv.getSourceDefinition(self._vREF)
-        current = self._PVSource.getSourceCurrent(modulesDef)
-        IV = self._PVSource.getIV(modulesDef)
-        edge = self._PVSource.getEdgeCharacteristics(modulesDef)
+        envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
+
+        # Retrieve the source characteristics given the source definition.
+        sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
+        sourceIV = self._PVSource.getIV(modulesDef)
+        sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef)
+
+        # Retrieve the MPPT VREF guess given the source output current.
         vRef = self._MPPT.getReferenceVoltage(
-            self._vREF, current, 0.0, 0.0
-        )  # TODO: get PVEnv agglomerated temperature, irradiance
+            self._vREF, sourceCurrent, envDef["irradiance"], envDef["temperature"]
+        )
+
+        # Generate the pulsewidth of the DC-DC Converter and spit it back out.
         self._DCDCConverter.setPulseWidth(vRef)
         pulseWidth = self._DCDCConverter.getPulseWidth()
 
+        # Store our output into our datastore.
         self._dataStore["cycle"].append(cycle)
         self._dataStore["sourceDef"].append(modulesDef)
         self._dataStore["sourceOutput"].append(
-            {"current": current, "IV": IV, "edge": edge}
+            {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
         )
         self._dataStore["mpptOutput"].append(vRef)
         self._dataStore["dcdcOutput"].append(pulseWidth)
+
+        # Assign the VREF to apply across the source in the next simulation cycle.
         self._vREF = vRef
 
+        # Increment the current simulation cycle.
         self._PVEnv.cycle()

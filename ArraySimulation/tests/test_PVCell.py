@@ -26,58 +26,60 @@ class TestPVCell:
         """
         Testing the default PVCell.
         """
-        print("PVCell Test.")
-
         cell = PVCell()
 
-        assert cell.getCurrent(0, 0, 0) == -1  # -1 is our default invalid value.
-        assert cell.getCellIV(0, 0, 0) == []
-        assert cell.getCellEdgeCharacteristics(0, 0, 0) == (0, 0, (0, 0))
-        assert cell.getModelType() == "Default"
+        try:
+            # Assert that we can get the default values for various function
+            # calls.
+            assert cell.getCurrent(0, 0, 0) == -1
+            assert cell.getCurrentLookup(0, 0, 0) == -1
+            assert cell.getCellIV(0, 0, 0) == []
+            assert cell.getCellEdgeCharacteristics(0, 0, 0) == (0, 0, (0, 0))
+            assert cell.getModelType() == "Default"
+        except Exception as e:
+            pytest.fail(str(e))
 
     def test_PVCellIdeal(self):
         """
         Testing the ideal PVCell model.
         """
-        print("PVCell Ideal Model Test.")
-
         cell = PVCellIdeal()
 
         try:
+            # Assert that we can get the default values for various function
+            # calls.
             assert cell.getCurrent(0, 1000, 25) != -1
             assert cell.getCurrentLookup(0, 1000, 25) == -1
-
-            cell.getCellIV(0.1, 1000, 25)
-            cell.getCellEdgeCharacteristics(0.1, 1000, 25)
+            assert cell.getCellIV(0.1, 1000, 25) != []
+            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (0, 0, (0, 0))
             assert cell.getModelType() == "Ideal"
-
         except Exception as e:
-            pytest.fail(e)
+            pytest.fail(str(e))
 
     def test_PVCellNonideal(self):
         """
         Testing the nonideal PVCell model.
         """
-        print("PVCell Nonideal Model Test.")
-
         cell = PVCellNonideal()
 
         try:
+            # Assert that we can get the default values for various function
+            # calls.
             assert cell.getCurrent(0, 1000, 25) != -1
             assert cell.getCurrentLookup(0, 1000, 25) == 6.146
-            cell.getCellIV(0.1, 1000, 25)
-            cell.getCellEdgeCharacteristics(0.1, 1000, 25)
+            assert cell.getCurrent(0, 1000, 25) == cell.getCurrentLookup(
+                0, 1000, 25
+            )
+            assert cell.getCellIV(0.1, 1000, 25) != []
+            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (0, 0, (0, 0))
             assert cell.getModelType() == "Nonideal"
-
         except Exception as e:
-            pytest.fail(e)
+            pytest.fail(str(e))
 
     def test_PVCellNonidealBuildLookup(self):
         """
         Test that we can build a lookup for the Nonideal Cell Model.
         """
-        print("PVCell Nonideal Build Test.")
-
         cell = PVCellNonideal()
 
         try:
@@ -85,7 +87,7 @@ class TestPVCell:
                 voltageRes=0.1, irradianceRes=50, temperatureRes=5
             )
         except Exception as e:
-            pytest.fail(e)
+            pytest.fail(str(e))
 
     @pytest.mark.additional
     def test_PVCellNonidealBuildLookupLong(self):
@@ -93,8 +95,6 @@ class TestPVCell:
         Test that we can build a lookup for the Nonideal Cell Model.
         This test version should match that in NonidealCellLookup.csv.
         """
-        print("PVCell Nonideal Build Test.")
-
         cell = PVCellNonideal()
 
         try:
@@ -102,8 +102,9 @@ class TestPVCell:
                 voltageRes=0.01, irradianceRes=50, temperatureRes=0.5
             )
         except Exception as e:
-            pytest.fail(e)
+            pytest.fail(str(e))
 
+# Example test script comparing outputs between models.
 
 # Call `python3 tests/test_PVCell.py` from ArraySimulation/ to see model output
 # at STD conditions.
@@ -112,7 +113,7 @@ cellI = PVCellIdeal()
 cellNI = PVCellNonideal()
 print("----------------------------------------------------------------------")
 print("Input            |Default       |Ideal                  |Nonideal     ")
-for voltage in np.arange(0, .61, .01):
+for voltage in np.arange(0, 0.61, 0.01):
     print(
         str(voltage / 10)
         + "V|1000G|25C   |"

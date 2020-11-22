@@ -34,16 +34,10 @@ class PVCellNonideal(PVCell):
         self._lookup.readFile()
 
     def getCurrent(self, voltage=0, irradiance=0.001, temperature=0):
-        # Ideal single diode model.
+        # Nonideal single diode model.
         cellTemperature = (
             temperature + 273.15
         )  # Convert cell temperature into kelvin.
-
-        # Suppres divide by 0s from voltage and irradiance.
-        if voltage == 0.0:
-            voltage = 0.001
-        if irradiance == 0.0:
-            irradiance = 0.001
 
         # Short circuit current.
         SCCurrent = (
@@ -149,9 +143,13 @@ class PVCellNonideal(PVCell):
             Temperature resolution step.
         """
         lookup = Lookup(fileName=fileName)
-        for voltage in np.arange(0, 0.81, voltageRes):
-            for irradiance in np.arange(0, 1000.1, irradianceRes):
-                for temperature in np.arange(0, 80.1, temperatureRes):
+        for voltage in np.arange(0.00, 0.81, voltageRes):
+            for irradiance in np.arange(0.00, 1000.1, irradianceRes):
+                for temperature in np.arange(0.00, 80.1, temperatureRes):
+                    if irradiance == 0.00:
+                        irradiance = 0.001
+                    if temperature == 0.00:
+                        temperature = 0.001
                     current = self.getCurrent(voltage, irradiance, temperature)
                     lookup.addLine(
                         [

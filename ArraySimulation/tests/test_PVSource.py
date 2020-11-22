@@ -16,6 +16,8 @@ sys.path.append("../")
 
 # Custom Imports.
 from ArraySimulation.PVSource.PVSource import PVSource
+from ArraySimulation.PVSource.PVCell.PVCellIdeal import PVCellIdeal
+from ArraySimulation.PVSource.PVCell.PVCellNonideal import PVCellNonideal
 
 
 class TestPVSource:
@@ -23,15 +25,14 @@ class TestPVSource:
         """
         Testing the default PVSource.
         """
-        print("PVSource Test.")
-
         # Single cell model.
         source = PVSource()
         source.setupModel()
 
         try:
-            # Getting characteristics for the single cell.
-            assert (
+            # Assert that we throw no module definitions for all methods of
+            # PVSource.
+            with pytest.raises(Exception) as excinfo:
                 source.getModuleCurrent(
                     {
                         "numCells": 1,
@@ -40,10 +41,10 @@ class TestPVSource:
                         "temperature": 25,
                     }
                 )
-                == None
+            assert "No cell model is defined for the PVSource." == str(
+                excinfo.value
             )
-
-            assert (
+            with pytest.raises(Exception) as excinfo:
                 source.getSourceCurrent(
                     {
                         "0": {
@@ -54,10 +55,10 @@ class TestPVSource:
                         },
                     }
                 )
-                == None
+            assert "No cell model is defined for the PVSource." == str(
+                excinfo.value
             )
-
-            assert (
+            with pytest.raises(Exception) as excinfo:
                 source.getIV(
                     {
                         "0": {
@@ -69,10 +70,10 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+            assert "No cell model is defined for the PVSource." == str(
+                excinfo.value
             )
-
-            assert (
+            with pytest.raises(Exception) as excinfo:
                 source.getEdgeCharacteristics(
                     {
                         "0": {
@@ -84,23 +85,26 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+            assert "No cell model is defined for the PVSource." == str(
+                excinfo.value
             )
 
+            # Assert that we get the correct model type.
             assert source.getModelType() == "Default"
         except Exception as e:
-            pytest.fail(e)
+            pytest.fail(str(e))
 
-    # TODO: test with ideal and non ideal models.
     def test_PVSourceIdeal(self):
         """
-        A test feeding the default PVEnvironment to the PVSource using an ideal
-        PVCell model.
+        Testing the PVSource with an Ideal PVCell model.
         """
         source = PVSource()
         source.setupModel("Ideal")
 
+        cell = PVCellIdeal()
         try:
+            # Assert that we get the same module current output as that for a
+            # single cell.
             assert (
                 source.getModuleCurrent(
                     {
@@ -110,10 +114,10 @@ class TestPVSource:
                         "temperature": 25,
                     }
                 )
-                != None
+                == cell.getCurrent(0.0, 1000, 25)
             )
 
-            # TODO: fix when implemented
+            # TODO: fix when implemented, and implement comments
             assert (
                 source.getSourceCurrent(
                     {
@@ -125,7 +129,7 @@ class TestPVSource:
                         },
                     }
                 )
-                == None
+                == cell.getCurrent(0.0, 1000, 25)
             )
 
             assert (
@@ -140,7 +144,7 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+                == cell.getCellIV(0.01, 1000, 25)
             )
 
             assert (
@@ -155,23 +159,25 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+                == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
             )
 
+            # Assert that we get the correct model type.
             assert source.getModelType() == "Ideal"
         except Exception as e:
-            print(e)
-            pytest.fail(e)
+            pytest.fail(str(e))
 
     def test_PVSourceNonideal(self):
         """
-        A test feeding the default PVEnvironment to the PVSource using a
-        nonideal PVCell model.
+        Testing the PVSource with an Nonideal PVCell model.
         """
         source = PVSource()
         source.setupModel("Nonideal")
 
+        cell = PVCellNonideal()
         try:
+            # Assert that we get the same module current output as that for a
+            # single cell.
             assert (
                 source.getModuleCurrent(
                     {
@@ -181,7 +187,7 @@ class TestPVSource:
                         "temperature": 25,
                     }
                 )
-                != None
+                == cell.getCurrent(0.0, 1000, 25)
             )
 
             # TODO: fix when implemented
@@ -196,7 +202,7 @@ class TestPVSource:
                         },
                     }
                 )
-                == None
+                == cell.getCurrent(0.0, 1000, 25)
             )
 
             assert (
@@ -211,7 +217,7 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+                == cell.getCellIV(0.01, 1000, 25)
             )
 
             assert (
@@ -226,23 +232,25 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+                == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
             )
 
+            # Assert that we get the correct model type.
             assert source.getModelType() == "Nonideal"
         except Exception as e:
-            print(e)
-            pytest.fail(e)
+            pytest.fail(str(e))
 
     def test_PVSourceNonidealLookup(self):
         """
-        A test feeding the default PVEnvironment to the PVSource using a
-        nonideal PVCell model. Lookup is enabled.
+        Testing the PVSource with an Ideal PVCell model. Lookup is enabled.
         """
         source = PVSource()
         source.setupModel("Nonideal", True)
 
+        cell = PVCellNonideal()
         try:
+            # Assert that we get the same module current output as that for a
+            # single cell.
             assert (
                 source.getModuleCurrent(
                     {
@@ -252,7 +260,7 @@ class TestPVSource:
                         "temperature": 25,
                     }
                 )
-                != None
+                == cell.getCurrentLookup(0.0, 1000, 25)
             )
 
             # TODO: fix when implemented
@@ -267,7 +275,7 @@ class TestPVSource:
                         },
                     }
                 )
-                == None
+                == cell.getCurrentLookup(0.0, 1000, 25)
             )
 
             assert (
@@ -282,7 +290,7 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+                == cell.getCellIV(0.01, 1000, 25)
             )
 
             assert (
@@ -297,10 +305,10 @@ class TestPVSource:
                     },
                     0.01,
                 )
-                == None
+                == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
             )
 
+            # Assert that we get the correct model type.
             assert source.getModelType() == "Nonideal"
         except Exception as e:
-            print(e)
-            pytest.fail(e)
+            pytest.fail(str(e))

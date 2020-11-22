@@ -162,7 +162,7 @@ class PVEnvironment:
         Returns
         -------
         dict:  modulesDef
-            A dictionary of the selected module's properties.
+            A dictionary of the source properties.
         """
         modulesDef = {}
 
@@ -258,3 +258,41 @@ class PVEnvironment:
             modulesDict[module[0]] = module[1]["module_type"]
 
         return modulesDict
+
+    def getAgglomeratedEnvironmentDefinition(self):
+        """
+        Returns a weighted average environment definition of the PVSource model.
+
+        The environment definition is in the following format:
+
+            envDef = {
+                "irradiance": float,    (W/m^2)
+                "temperature": float,   (C)
+            }
+
+        Returns
+        -------
+        dict: envDef
+            A dictionary of the source environment properties, weighted.
+        """
+        totalIrrad = 0
+        totalTemp = 0
+        cellCount = 0
+        modules = self._source["pv_model"]
+        for key in modules.keys():
+            module = modules[key]
+            numCells = self._cellDefinitions[module["module_type"]]
+            cellCount += numCells
+            if module["env_type"] == "Array":
+                totalIrrad += numCells * module["env_regime"][self._cycle][1]
+                totalTemp += numCells * module["env_regime"][self._cycle][2]
+            elif module["env_type"] == "Step":
+                totalIrrad += numCells * module["env_regime"][0]
+                totalTemp += numCells * module["env_regime"][1]
+            else:
+                raise Exception("Undefined environment type.")
+
+        return {
+            "irradiance": totalIrrad / cellCount,
+            "temperature": totalTemp / cellCount,
+        }

@@ -23,8 +23,6 @@ class TestPVEnvironment:
         """
         Testing the default PVEnvironment.
         """
-        print("PVEnvironment Test at STD conditions.")
-
         # The photovoltaic environment. By default we generate a single cell at
         # STD conditions (1000 G, 25 C).
         env = PVEnvironment()
@@ -97,16 +95,19 @@ class TestPVEnvironment:
             # Assert that we can get a list of modules from the PVEnvironment.
             assert env.getModuleMapping() == {"0": "1x1"}
 
+            # Assert that we can get the agglomerated environment details of the
+            # PVEnvironment.
+            assert env.getAgglomeratedEnvironmentDefinition() == {
+                "irradiance": 1000,
+                "temperature": 25,
+            }
         except Exception as e:
-            print(e)
-            pytest.fail(e)
+            pytest.fail(str(e))
 
     def test_PVEnvironmentProfile(self):
         """
         Testing the PVEnvironment using a file reference.
         """
-        print("PVEnvironment Test with a file.")
-
         env = PVEnvironment()
         env.setupModel(sourceType="SingleCell.json")
 
@@ -127,6 +128,13 @@ class TestPVEnvironment:
                     "irradiance": 1000,
                     "temperature": 45.5,
                 },
+            }
+
+            # Assert that we can get the agglomerated environment details of the
+            # PVEnvironment.
+            assert env.getAgglomeratedEnvironmentDefinition() == {
+                "irradiance": 1000,
+                "temperature": 45.5,
             }
 
             # Assert that cycling doesn't change our output.
@@ -174,9 +182,16 @@ class TestPVEnvironment:
                 },
             }
 
+            # Assert that we can get the agglomerated environment details of the
+            # PVEnvironment.
+            assert env.getAgglomeratedEnvironmentDefinition() == {
+                "irradiance": 1000,
+                "temperature": 28,
+            }
+
             # Assert that we can get a list of modules from the PVEnvironment.
             assert env.getModuleMapping() == {"0": "1x1"}
-
         except Exception as e:
-            print(e)
-            pytest.fail(e)
+            pytest.fail(str(e))
+
+    # TODO: test with multiple cell profile.
