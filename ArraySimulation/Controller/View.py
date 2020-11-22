@@ -31,9 +31,16 @@ class View:
     _red = QColor(255, 0, 0, 255)
     _green = QColor(0, 255, 0, 255)
 
-    def __init__(self, framerate=60):
+    def __init__(self, datastore=None, framerate=60):
         self._framerate = framerate
         self._layout = None
+
+        # The datastore parent is a reference to the overarching DataController,
+        # which exposes its API to user Views.
+        self._datastoreParent = datastore
+
+        # The datastore child is a reference to a local managed datastore, which
+        # is of a different format as the parent.
         self._datastore = None
 
     def getLayout(self):

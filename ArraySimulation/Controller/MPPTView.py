@@ -50,12 +50,12 @@ class MPPTView(View):
     environmental conditions.
     """
 
-    def __init__(self):
+    def __init__(self, datastore):
         """
         Upon initialization, we perform any data and UI setup required to get
         the SourceView into a default state.
         """
-        super(MPPTView, self).__init__()
+        super(MPPTView, self).__init__(datastore=datastore)
 
         self._datastore = {
             "SourceChars": Graph(

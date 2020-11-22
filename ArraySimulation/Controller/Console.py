@@ -63,4 +63,4 @@ class Console(View):
         )
 
         if callback is not None:
-            button.clicked.connect(callback)
+            self._components[id].clicked.connect(callback)

@@ -176,9 +176,9 @@ class Graph(View):
         """
         Erases all data points from all data series.
         """
-        for (key, value) in self._series:
-            self._series[key]["data"]["x"].clear()
-            self._series[key]["data"]["y"].clear()
+        for series in self._series["list"]:
+            self._series[series]["data"]["x"].clear()
+            self._series[series]["data"]["y"].clear()
 
             self._graph[series].setData(
                 x=self._series[series]["data"]["x"],
@@ -230,3 +230,4 @@ class Graph(View):
             graphLayout.layout.addWidget(widget)
 
             self._layout = graphLayout
+

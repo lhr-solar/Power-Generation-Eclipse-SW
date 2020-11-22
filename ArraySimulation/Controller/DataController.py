@@ -54,7 +54,7 @@ class DataController:
         self._DCDCConverter = DCDCConverter()
 
         # Data storage.
-        self._dataStore = {
+        self.datastore = {
             "cycle": [],
             "sourceDef": [],
             "sourceOutput": [],
@@ -144,26 +144,61 @@ class DataController:
         self._DCDCConverter.setup(arrayVoltage, loadVoltage)
 
     # Simulation pipeline management.
-    def resetPipeline(self, voltage):
+    def resetPipeline(self, voltage=0.0):
         """
         Resets components within the pipeline to the default state.
         By default, voltage applied across the source is 0V, and the cycle is 0.
+
+        Parameters
+        ----------
+        voltage: float
+            Initial VREF of the simulation.
         """
         self._PVEnv.setCycle(0)
         self._MPPT.reset()
         self._DCDCConverter.reset()
-        self._dataStore = {
+        self.datastore = None
+        self.datastore = {
             "cycle": [],
             "sourceDef": [],
             "sourceOutput": [],
             "mpptOutput": [],
             "dcdcOutput": [],
         }
-        self._vREF = 0.0
+        self._vREF = voltage
 
-    def iteratePipelineCycle(self):
+    def iteratePipelineCycleSource(self):
         """
-        Runs an entire cycle through the pipeline, based on the simulation.
+        Runs an entire cycle through the pipeline, using components required for
+        a Source Simulation.
+        """
+        # Get the current simulation cycle.
+        cycle = self._PVEnv.getCycle()
+
+        # Retrieve the source definition for the current simulation cycle.
+        modulesDef = self._PVEnv.getSourceDefinition(0)
+        envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
+
+        # Retrieve the source characteristics given the source definition.
+        sourceIV = self._PVSource.getIV(modulesDef)
+        sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef)
+
+        # Store our output into our datastore.
+        self.datastore["cycle"].append(cycle)
+        self.datastore["sourceDef"].append(modulesDef)
+        self.datastore["sourceOutput"].append(
+            {"current": 0, "IV": sourceIV, "edge": sourceEdgeChar}
+        )
+        self.datastore["mpptOutput"].append(0)
+        self.datastore["dcdcOutput"].append(0)
+
+        # Increment the current simulation cycle.
+        self._PVEnv.cycle()
+
+    def iteratePipelineCycleMPPT(self):
+        """
+        Runs an entire cycle through the pipeline, using components required for
+        a MPPT Simulation.
         """
         # Get the current simulation cycle.
         cycle = self._PVEnv.getCycle()
@@ -179,7 +214,10 @@ class DataController:
 
         # Retrieve the MPPT VREF guess given the source output current.
         vRef = self._MPPT.getReferenceVoltage(
-            self._vREF, sourceCurrent, envDef["irradiance"], envDef["temperature"]
+            self._vREF,
+            sourceCurrent,
+            envDef["irradiance"],
+            envDef["temperature"],
         )
 
         # Generate the pulsewidth of the DC-DC Converter and spit it back out.
@@ -187,13 +225,13 @@ class DataController:
         pulseWidth = self._DCDCConverter.getPulseWidth()
 
         # Store our output into our datastore.
-        self._dataStore["cycle"].append(cycle)
-        self._dataStore["sourceDef"].append(modulesDef)
-        self._dataStore["sourceOutput"].append(
+        self.datastore["cycle"].append(cycle)
+        self.datastore["sourceDef"].append(modulesDef)
+        self.datastore["sourceOutput"].append(
             {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
         )
-        self._dataStore["mpptOutput"].append(vRef)
-        self._dataStore["dcdcOutput"].append(pulseWidth)
+        self.datastore["mpptOutput"].append(vRef)
+        self.datastore["dcdcOutput"].append(pulseWidth)
 
         # Assign the VREF to apply across the source in the next simulation cycle.
         self._vREF = vRef

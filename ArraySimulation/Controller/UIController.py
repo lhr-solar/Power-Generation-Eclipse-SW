@@ -73,17 +73,17 @@ class UIController:
         windowHeight: int
             Height of the window. Defaults to 720p.
         """
-        # 1. Startup the application UI runtime.
+        # 1. Setup data structures for ingesting data and managing the
+        #    simulation execution pipeline.
+        self.dataController = DataController()
+
+        # 2. Startup the application UI runtime.
         self.app = QApplication(sys.argv)
         # TODO: set PYQTY stylesheet
 
-        # 2. Setup the View classes corresponding to each tab in the UI.
-        self.sourceView = SourceView()
-        self.MPPTView = MPPTView()
-
-        # 3. Setup data structures for ingesting data. TODO: probably more here.
-        self.sourceSimData = self.sourceView.getDatastore()
-        self.MPPTSimData = self.MPPTView.getDatastore()
+        # 3. Setup the View classes corresponding to each tab in the UI.
+        self.sourceView = SourceView(self.dataController)
+        self.MPPTView = MPPTView(self.dataController)
 
         # 4. Setup the main tabbed pane window.
         self.win = QMainWindow()

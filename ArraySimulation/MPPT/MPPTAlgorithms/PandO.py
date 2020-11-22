@@ -16,7 +16,7 @@ algorithms.
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms import MPPTAlgorithm
+from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 
 
 class PandO(MPPTAlgorithm):

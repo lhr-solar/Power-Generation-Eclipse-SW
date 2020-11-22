@@ -61,7 +61,8 @@ class MPPT:
         """
         Resets the internally set MPPT and its relevant Stride Model.
         """
-        self._model.reset()
+        if self._model is not None:
+            self._model.reset()
 
     def getReferenceVoltage(
         self, arrVoltage, arrCurrent, irradiance, temperature

@@ -51,7 +51,11 @@ class TestPVCell:
             assert cell.getCurrent(0, 1000, 25) != -1
             assert cell.getCurrentLookup(0, 1000, 25) == -1
             assert cell.getCellIV(0.1, 1000, 25) != []
-            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (0, 0, (0, 0))
+            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (
+                0,
+                0,
+                (0, 0),
+            )
             assert cell.getModelType() == "Ideal"
         except Exception as e:
             pytest.fail(str(e))
@@ -71,7 +75,11 @@ class TestPVCell:
                 0, 1000, 25
             )
             assert cell.getCellIV(0.1, 1000, 25) != []
-            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (0, 0, (0, 0))
+            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (
+                0,
+                0,
+                (0, 0),
+            )
             assert cell.getModelType() == "Nonideal"
         except Exception as e:
             pytest.fail(str(e))
@@ -103,6 +111,7 @@ class TestPVCell:
             )
         except Exception as e:
             pytest.fail(str(e))
+
 
 # Example test script comparing outputs between models.
 

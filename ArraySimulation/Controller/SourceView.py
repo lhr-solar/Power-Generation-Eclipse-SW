@@ -41,12 +41,12 @@ class SourceView(View):
     # Update rate of any simulation in the program. Upper bound.
     FRAME_RATE = 100
 
-    def __init__(self):
+    def __init__(self, datastore):
         """
         Upon initialization, we perform any data and UI setup required to get
         the SourceView into a default state.
         """
-        super(SourceView, self).__init__()
+        super(SourceView, self).__init__(datastore=datastore)
 
         self._datastore = {
             "Ideal": {
@@ -133,8 +133,15 @@ class SourceView(View):
         layoutWidget.setLayout(layoutWidget.layout)
 
         self._button = Console()
-        self._button.addButton("0", "Test", (0, 0), (1, 1), None)
-        self._button.addButton("0", "Test2", (0, 1), (1, 1), None)
+        self._button.addButton(
+            "0", "Init Pipeline", (0, 0), (1, 1), self._initializePipeline
+        )
+        self._button.addButton(
+            "0", "Iter Pipeline", (0, 1), (1, 1), self._iteratePipelineCycle
+        )
+        self._button.addButton(
+            "0", "Reset Pipeline", (0, 2), (1, 1), self._resetPipeline
+        )
 
         layoutWidget.layout.addWidget(self._button.getLayout(), 0, 0, 1, 2)
 
@@ -163,3 +170,35 @@ class SourceView(View):
         )
 
         self._layout = layoutWidget
+
+    def _initializePipeline(self):
+        """
+        This callback initializes the data pipeline for a source simulation.
+        """
+        print("Callback init triggered")
+        controller = self._datastoreParent
+        controller.setupSimEnvironment((1000, 25), 200)
+        controller.setupSimSource("Nonideal", True)
+
+    def _iteratePipelineCycle(self):
+        """
+        Iterates a single cycle in the pipeline and updates the datastore.
+        """
+        print("Callback iter triggered")
+        controller = self._datastoreParent
+        controller.iteratePipelineCycleSource()
+        for entry in controller.datastore["sourceOutput"][0]["IV"]:
+            self._datastore["Ideal"]["TempIndependent"].addPoint(
+                "current", entry[0], entry[1]
+            )
+            self._datastore["Ideal"]["TempIndependent"].addPoint(
+                "power", entry[0], entry[0]*entry[1]
+            )
+    def _resetPipeline(self):
+        """
+        Resets the pipeline.
+        """
+        print("Callback reset triggered")
+        self._datastoreParent.resetPipeline(0.0)
+        self._datastore["Ideal"]["TempIndependent"].clearPoints()
+        print(self._datastoreParent.datastore)

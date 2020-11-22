@@ -13,6 +13,8 @@ environmental conditions based on that cycle. It has the ability to extract
 environmental regimes from JSON files, as well as generate a unit step
 function with a fixed irradiance and temperature for steady state behavior
 testing.
+
+TODO: enable extrapolation for data beyond the maxCycle parameter.
 """
 # Library Imports.
 import json
