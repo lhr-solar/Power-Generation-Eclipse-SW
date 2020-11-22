@@ -164,7 +164,7 @@ class PVSource:
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
-    def getIV(self, modulesDef, resolution=0.001):
+    def getIV(self, modulesDef, resolution=0.01):
         """
         TODO: implement multimodule support
         Calculates the entire source model current voltage plot given various
@@ -209,7 +209,7 @@ class PVSource:
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
-    def getEdgeCharacteristics(self, modulesDef, resolution=0.001):
+    def getEdgeCharacteristics(self, modulesDef, resolution=0.01):
         """
         TODO: implement multimodule support
         Calculates the source model edge characteristics given various

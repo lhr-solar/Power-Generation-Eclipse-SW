@@ -137,7 +137,11 @@ class SourceView(View):
             "0", "Init Pipeline", (0, 0), (1, 1), self._initializePipeline
         )
         self._button.addButton(
-            "0", "Iter Pipeline", (0, 1), (1, 1), self._iteratePipelineCycle
+            "0",
+            "Iter Pipeline",
+            (0, 1),
+            (1, 1),
+            self._generateSourceFromPipeline,
         )
         self._button.addButton(
             "0", "Reset Pipeline", (0, 2), (1, 1), self._resetPipeline
@@ -178,27 +182,51 @@ class SourceView(View):
         print("Callback init triggered")
         controller = self._datastoreParent
         controller.setupSimEnvironment((1000, 25), 200)
-        controller.setupSimSource("Nonideal", True)
 
-    def _iteratePipelineCycle(self):
+    def _generateSourceFromPipeline(self):
         """
         Iterates a single cycle in the pipeline and updates the datastore.
         """
         print("Callback iter triggered")
         controller = self._datastoreParent
+        controller.setupSimSource("Ideal", False)
         controller.iteratePipelineCycleSource()
         for entry in controller.datastore["sourceOutput"][0]["IV"]:
             self._datastore["Ideal"]["TempIndependent"].addPoint(
                 "current", entry[0], entry[1]
             )
             self._datastore["Ideal"]["TempIndependent"].addPoint(
-                "power", entry[0], entry[0]*entry[1]
+                "power", entry[0], entry[0] * entry[1]
             )
+        self._datastoreParent.resetPipeline(0.0)
+
+        controller.setupSimSource("Nonideal", True)
+        controller.iteratePipelineCycleSource()
+        for entry in controller.datastore["sourceOutput"][0]["IV"]:
+            self._datastore["Nonideal"]["TempIndependent"].addPoint(
+                "current", entry[0], entry[1]
+            )
+            self._datastore["Nonideal"]["TempIndependent"].addPoint(
+                "power", entry[0], entry[0] * entry[1]
+            )
+        self._datastoreParent.resetPipeline(0.0)
+
+        controller.setupSimSource("Nonideal", False)
+        controller.iteratePipelineCycleSource()
+        for entry in controller.datastore["sourceOutput"][0]["IV"]:
+            self._datastore["Nonideal"]["IrradIndependent"].addPoint(
+                "current", entry[0], entry[1]
+            )
+            self._datastore["Nonideal"]["IrradIndependent"].addPoint(
+                "power", entry[0], entry[0] * entry[1]
+            )
+        self._datastoreParent.resetPipeline(0.0)
+
     def _resetPipeline(self):
         """
         Resets the pipeline.
         """
         print("Callback reset triggered")
-        self._datastoreParent.resetPipeline(0.0)
         self._datastore["Ideal"]["TempIndependent"].clearPoints()
+        self._datastore["Nonideal"]["TempIndependent"].clearPoints()
         print(self._datastoreParent.datastore)

@@ -88,10 +88,10 @@ class TestSource:
             assert source.getSourceCurrent(modulesDef) == cell.getCurrent(
                 0.0, 1000, 25
             )
-            assert source.getIV(modulesDef) == cell.getCellIV(0.001, 1000, 25)
+            assert source.getIV(modulesDef) == cell.getCellIV(0.01, 1000, 25)
             assert source.getEdgeCharacteristics(
                 modulesDef
-            ) == cell.getCellEdgeCharacteristics(0.001, 1000, 25)
+            ) == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Ideal"
@@ -121,10 +121,10 @@ class TestSource:
             assert source.getSourceCurrent(modulesDef) == cell.getCurrent(
                 0.0, 1000, 25
             )
-            assert source.getIV(modulesDef) == cell.getCellIV(0.001, 1000, 25)
+            assert source.getIV(modulesDef) == cell.getCellIV(0.01, 1000, 25)
             assert source.getEdgeCharacteristics(
                 modulesDef
-            ) == cell.getCellEdgeCharacteristics(0.001, 1000, 25)
+            ) == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Nonideal"
@@ -154,10 +154,10 @@ class TestSource:
             assert source.getSourceCurrent(modulesDef) == cell.getCurrentLookup(
                 0.0, 1000, 25
             )
-            assert source.getIV(modulesDef) == cell.getCellIV(0.001, 1000, 25)
+            assert source.getIV(modulesDef) == cell.getCellIV(0.01, 1000, 25)
             assert source.getEdgeCharacteristics(
                 modulesDef
-            ) == cell.getCellEdgeCharacteristics(0.001, 1000, 25)
+            ) == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Nonideal"

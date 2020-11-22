@@ -91,7 +91,7 @@ class PVCell:
         """
         return -1
 
-    def getCellIV(self, resolution=0.001, irradiance=0.001, temperature=0):
+    def getCellIV(self, resolution=0.01, irradiance=0.001, temperature=0):
         """
         Calculates the entire cell model current voltage plot given various
         environmental parameters.

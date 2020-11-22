@@ -230,4 +230,3 @@ class Graph(View):
             graphLayout.layout.addWidget(widget)
 
             self._layout = graphLayout
-
