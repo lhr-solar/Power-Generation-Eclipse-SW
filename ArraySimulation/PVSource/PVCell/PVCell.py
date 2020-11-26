@@ -3,8 +3,8 @@ PVCell.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/14/20
-Last Modified: 10/14/20
+Created: 11/14/20
+Last Modified: 11/24/20
 
 Description: The PVCell (Photovoltaic Cell) class is a concrete base class that
 provides a common API for derived classes to use. The PVCell class enables users

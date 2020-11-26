@@ -3,8 +3,8 @@ Console.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/18/20
-Last Modified: 10/18/20
+Created: 11/18/20
+Last Modified: 11/24/20
 
 Description: The Console class is a concrete base class that provides a common 
 API for derived classes to use. It allows for the generation of textboxes and
@@ -15,6 +15,7 @@ from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import (
     QGridLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -40,7 +41,7 @@ class Console(View):
 
         self._layout = layoutWidget
 
-    def addButton(self, ID, flavorText, position, size, callback):
+    def addButton(self, ID, flavorText, position, size, callback=None):
         """
         Adds a button to the layout with a bindable callback.
 
@@ -57,10 +58,67 @@ class Console(View):
         callback: function reference
             Function that will trigger when pressed.
         """
-        self._components[id] = QPushButton(flavorText)
+        self._components[ID] = QPushButton(flavorText)
         self._layout.layout.addWidget(
-            self._components[id], position[0], position[1], size[0], size[1]
+            self._components[ID], position[0], position[1], size[0], size[1]
         )
 
         if callback is not None:
-            self._components[id].clicked.connect(callback)
+            self._components[ID].clicked.connect(callback)
+
+    def addTextbox(self, ID, position, size, hint=""):
+        """
+        Adds a textbox to the layout.
+
+        Parameters
+        ----------
+        ID: String
+            Unique identifier for the button.
+        position: (int, int)
+            Location of the button in grid coordinates.
+        size: (int, int)
+            Size of the button in grid coordinates.
+        hint: String
+            Optional text to be displayed on an empty textbox.
+        """
+        self._components[ID] = QLineEdit()
+        self._components[ID].setPlaceholderText(hint)
+        self._layout.layout.addWidget(
+            self._components[ID], position[0], position[1], size[0], size[1]
+        )
+
+    def addLabel(self, ID, position, size, defaultText=""):
+        """
+        Adds a label to the layout.
+
+        Parameters
+        ----------
+        ID: String
+            Unique identifier for the button.
+        position: (int, int)
+            Location of the button in grid coordinates.
+        size: (int, int)
+            Size of the button in grid coordinates.
+        defaultText: String
+            Optional starter text to display on the label.
+        """
+        self._components[ID] = QLabel(defaultText)
+        self._layout.layout.addWidget(
+            self._components[ID], position[0], position[1], size[0], size[1]
+        )
+
+    def getReference(self, ID):
+        """
+        Returns the widget, if any, of the console corresponding to the correct
+        ID.
+
+        Parameters
+        ----------
+        ID: String
+            ID reference to the widget.
+
+        Returns
+        -------
+        Reference to the widget, or None.
+        """
+        return self._components.get(ID)

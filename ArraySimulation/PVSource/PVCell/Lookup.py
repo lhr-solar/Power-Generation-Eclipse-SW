@@ -4,7 +4,7 @@ Lookup.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/14/20
-Last Modified: 11/14/20
+Last Modified: 11/24/20
 
 Description: The Lookup class is a concrete class that can ingest environmental
 parameters to generate and read lookup tables for models that may take large
@@ -96,7 +96,7 @@ class Lookup:
     """
 
     # Where all lookup files are located.
-    file_root = "./External/"
+    fileRoot = "./External/"
 
     def __init__(
         self,
@@ -216,9 +216,7 @@ class Lookup:
         """
         Writes accumulated data into the file.
         """
-        with open(
-            self.file_root + self._filename, "w", newline="\n"
-        ) as csv_file:
+        with open(self.fileRoot + self._filename, "w", newline="\n") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(self._header)
             for line in self.data:
@@ -231,9 +229,7 @@ class Lookup:
         """
         print(os.getcwd())
         self.data = []
-        with open(
-            self.file_root + self._filename, "r", newline="\n"
-        ) as csv_file:
+        with open(self.fileRoot + self._filename, "r", newline="\n") as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
                 self.data.append(row)

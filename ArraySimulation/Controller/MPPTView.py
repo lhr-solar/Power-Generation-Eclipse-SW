@@ -3,8 +3,8 @@ MPPTView.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/17/20
-Last Modified: 10/17/20
+Created: 11/17/20
+Last Modified: 11/24/20
 
 Description: The MPPTView class represents a visual tab of the Display class
 (and the PVSim application window). It displays a simulation of the MPPT

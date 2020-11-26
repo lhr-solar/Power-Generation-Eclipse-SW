@@ -3,8 +3,8 @@ DCDCConverter.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/18/20
-Last Modified: 10/18/20
+Created: 11/18/20
+Last Modified: 11/24/20
 
 Description: The DCDCConverter class is a concrete base class that translate
 MPPT Reference voltages into a roughly equivalent pulse width. This class mainly

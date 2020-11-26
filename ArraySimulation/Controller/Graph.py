@@ -3,9 +3,10 @@ File: Graph.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/17/20
-Last Modified: 10/17/20
-File Description: The Graph class is a customizable widget allowing for 
+Created: 11/17/20
+Last Modified: 11/24/20
+
+Description: The Graph class is a customizable widget allowing for
 displaying series data over an independent axis, like time. Axes properties,
 labels, and number of elements displayed at one time is defined at declaration.
 """
@@ -45,6 +46,7 @@ class Graph(View):
     def __init__(
         self,
         series,
+        graphType="Line",
         title="Uninitialized.",
         xAxisLabel="Uninitialized.",
         yAxisLabel="Uninitialized.",
@@ -84,6 +86,8 @@ class Graph(View):
 
             The reference defines how the graph should be formatted and provides
             the storage for adding new data with the update() method.
+        graphType: String
+            The type of graph. Either a line graph or scatter plot.
         title: String
             Title of the graph.
         xAxisLabel: String
@@ -97,6 +101,8 @@ class Graph(View):
         super(Graph, self).__init__()
 
         self._series = series
+
+        self._graphType = graphType
 
         # Independent axis label.
         self._xAxisLabel = xAxisLabel
@@ -136,6 +142,36 @@ class Graph(View):
                 datapointY * self._series[series]["multiplier"]
             )
 
+            self._graph[series].setData(
+                x=self._series[series]["data"]["x"],
+                y=self._series[series]["data"]["y"],
+            )
+
+    def addPoints(self, series, datapointsX, datapointsY):
+        """
+        Adds a new set of data points to the graph.
+
+        Parameters
+        ----------
+        series: String
+            ID of the series that should exist in self._series where the data
+            point should be inserted.
+        datapointX: int, float
+            X value list of datapoints. Can be either floats or integers.
+        datapointY: int, float
+            Y value list of datapoints. Can be either floats or integers.
+
+        Assumptions
+        -----------
+        Datapoints are inserted IN ORDER. We aren't doing any sorting for you.
+        """
+        if series in self._series:
+            self._series[series]["data"]["x"] += datapointsX
+            modifier = self._series[series]["multiplier"]
+            modifiedDatapointsY = [datapointY * modifier for datapointY in datapointsY]
+            self._series[series]["data"]["y"] += modifiedDatapointsY
+
+            print(modifiedDatapointsY)
             self._graph[series].setData(
                 x=self._series[series]["data"]["x"],
                 y=self._series[series]["data"]["y"],
@@ -198,28 +234,53 @@ class Graph(View):
             # Build the widget for the first time.
             # Plot Widget.
             widget = pg.GraphicsLayoutWidget()
+
             plt = widget.addPlot(title=self._title)
             plt.setLabel("bottom", self._xAxisLabel)
             plt.setLabel("left", self._yAxisLabel)
             plt.addLegend()
-            for series in self._series["list"]:
-                # Apply multiplier to value.
-                for n, y in enumerate(self._series[series]["data"]["y"]):
-                    self._series[series]["data"]["y"][n] *= self._series[series][
-                        "multiplier"
-                    ]
 
-                # Get pen color.
-                penColor = self.SERIES_COLOR_SET["default"]
-                if series in self.SERIES_COLOR_SET:
-                    penColor = self.SERIES_COLOR_SET[series]
+            if self._graphType == "Line":
+                for series in self._series["list"]:
+                    # Apply multiplier to value.
+                    for n, y in enumerate(self._series[series]["data"]["y"]):
+                        self._series[series]["data"]["y"][n] *= self._series[
+                            series
+                        ]["multiplier"]
 
-                self._graph[series] = plt.plot(
-                    x=self._series[series]["data"]["x"],
-                    y=self._series[series]["data"]["y"],
-                    pen=pg.mkPen(penColor, width=1),
-                    name=self._series[series]["label"],
-                )
+                    # Get pen color.
+                    penColor = self.SERIES_COLOR_SET["default"]
+                    if series in self.SERIES_COLOR_SET:
+                        penColor = self.SERIES_COLOR_SET[series]
+
+                    self._graph[series] = plt.plot(
+                        x=self._series[series]["data"]["x"],
+                        y=self._series[series]["data"]["y"],
+                        pen=pg.mkPen(penColor, width=1),
+                        name=self._series[series]["label"],
+                    )
+            elif self._graphType == "Scatter":
+                for series in self._series["list"]:
+                    # Apply multiplier to value.
+                    for n, y in enumerate(self._series[series]["data"]["y"]):
+                        self._series[series]["data"]["y"][n] *= self._series[
+                            series
+                        ]["multiplier"]
+
+                    # Get pen color.
+                    penColor = self.SERIES_COLOR_SET["default"]
+                    if series in self.SERIES_COLOR_SET:
+                        penColor = self.SERIES_COLOR_SET[series]
+
+                    self._graph[series] = pg.ScatterPlotItem(
+                        x=self._series[series]["data"]["x"],
+                        y=self._series[series]["data"]["y"],
+                        pen=pg.mkPen(penColor, width=1),
+                        name=self._series[series]["label"],
+                    )
+                    plt.addItem(self._graph[series])
+            else:
+                raise Exception("Invalid graph type:", self._graphType)
 
             # Internal layout that contains the graph widget.
             graphLayout = QWidget()

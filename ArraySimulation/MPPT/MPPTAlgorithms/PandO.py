@@ -3,8 +3,8 @@ PandO.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/18/20
-Last Modified: 10/18/20
+Created: 11/18/20
+Last Modified: 11/24/20
 
 Description: The PandO (Perturb and Observe) class is a derived class that
 determines a VREF to apply over PSource to maximize the power generated. PandO

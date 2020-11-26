@@ -3,11 +3,11 @@ UIController.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/17/20
-Last Modified: 10/17/20
+Created: 11/17/20
+Last Modified: 11/24/20
 
 Description: The UIController class is a class that builds the GUI for the
-PVSim.  It uses the PyQT backend to create a set of viewable and interactable
+PVSim. It uses the PyQT backend to create a set of viewable and interactable
 graphs for the simulator. In addition, it allows the user to control properties
 of the simulation and execute it in real time.
 

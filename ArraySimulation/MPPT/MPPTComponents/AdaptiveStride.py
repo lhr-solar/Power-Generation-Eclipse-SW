@@ -3,8 +3,8 @@ AdaptiveStride.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/19/20
-Last Modified: 10/19/20
+Created: 11/19/20
+Last Modified: 11/24/20
 
 Description: Derived class of Stride that implements the perturbation function
 discussed in the following paper:

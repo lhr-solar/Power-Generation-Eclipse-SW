@@ -3,8 +3,8 @@ Golden.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
-Created: 10/19/20
-Last Modified: 10/19/20
+Created: 11/19/20
+Last Modified: 11/24/20
 
 Description: The Golden class is a derived class that determines a VREF to apply
 over PSource to maximize the power generated. Golden utilizes the change of
@@ -70,6 +70,10 @@ Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
 
     As this algorithm standalone can only support unimodal functions,
     it is a subcomponent for a larger, global MPPT algorithm.
+
+    Note that this method needs two starting cycles to begin convergence.
+    Unlike Ternary Search, it can converge every cycle rather than every
+    two cycles.
 """
 # Library Imports.
 from math import sqrt
