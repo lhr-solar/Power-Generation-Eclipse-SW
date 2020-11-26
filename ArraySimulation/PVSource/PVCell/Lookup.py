@@ -227,7 +227,6 @@ class Lookup:
         Initializes an internal buffer with the contents of the file, parsed.
         Repeat calls just repeat the operation.
         """
-        print(os.getcwd())
         self.data = []
         with open(self.fileRoot + self._filename, "r", newline="\n") as csv_file:
             reader = csv.reader(csv_file)

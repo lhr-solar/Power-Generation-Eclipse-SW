@@ -13,6 +13,7 @@ buttons in a wrapped widget that can connect to program functions.
 # Library Imports.
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import (
+    QComboBox,
     QGridLayout,
     QLabel,
     QLineEdit,
@@ -106,6 +107,60 @@ class Console(View):
         self._layout.layout.addWidget(
             self._components[ID], position[0], position[1], size[0], size[1]
         )
+
+    def addComboBox(self, ID, position, size, options, callback=None):
+        """
+        Adds a combo box to the layout. The combo box can have a callback
+        attached to do something when the user clicks an item.
+
+        Parameters
+        ----------
+        ID: String
+            Unique identifier for the button.
+        position: (int, int)
+            Location of the button in grid coordinates.
+        size: (int, int)
+            Size of the button in grid coordinates.
+        options: [String]
+            A list of strings representing each item in the combo box.
+        """
+        self._components[ID] = QComboBox()
+        self._components[ID].addItems(options)
+        self._layout.layout.addWidget(
+            self._components[ID], position[0], position[1], size[0], size[1]
+        )
+
+        if callback is not None:
+            self._components[ID].currentIndexChanged.connect(callback)
+
+    def hideConsoleWidgets(self, IDs=[]):
+        """
+        Hides a list of widgets from the console.
+
+        Parameters
+        ----------
+        IDs: [String]
+            A list of IDs of widgets that should be hidden.
+        """
+        for ID in IDs:
+            component = self._components.get(ID)
+            if component is not None:
+                component.hide()
+
+    def showConsoleWidgets(self, IDs=[]):
+        """
+        Shows a list of widgets from the console.
+
+        Parameters
+        ----------
+        IDs: [String]
+            A list of IDs of widgets that should be shown.
+            Assumes they were created prior.
+        """
+        for ID in IDs:
+            component = self._components.get(ID)
+            if component is not None:
+                component.show()
 
     def getReference(self, ID):
         """
