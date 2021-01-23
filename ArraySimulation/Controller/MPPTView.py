@@ -139,6 +139,7 @@ class MPPTView(View):
                 },
             ),
             "VRefPosition": Graph(
+                graphType="Scatter",
                 title="MPPT V_REF Over Source IV/PV Curve",
                 xAxisLabel="Voltage (V)",
                 yAxisLabel="Current (A)",
@@ -390,12 +391,13 @@ class MPPTView(View):
             #     [],
             #     []
             # )
-            # self._datastore["VRefPosition"].setPoint(
-            #     "MPPTVREF",
-            #     0,
-            #     cycleResults["mpptOutput"][idx],
-            #     cycleResults["sourceOutput"][idx]["edge"][2][1],
-            # )
+
+            self._datastore["VRefPosition"].clearSeries("MPPTVREF")
+            self._datastore["VRefPosition"].addPoints(
+                "MPPTVREF",
+                [VREF, VREF],
+                [MPPTCurrOut[0], VREF * MPPTCurrOut[0]],
+            )
 
             # Plot Power Comparison.
             self._datastore["PowerComp"].addPoint(
