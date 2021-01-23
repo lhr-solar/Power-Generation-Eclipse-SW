@@ -77,31 +77,31 @@ class MPPTView(View):
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Voltage (V)",
-                        "color": (255, 0, 0)
+                        "color": (255, 0, 0),
                     },
                     "current": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Current (A)",
-                        "color": (0, 255, 0)
+                        "color": (0, 255, 0),
                     },
                     "power": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Power (W)",
-                        "color": (0, 0, 255)
+                        "color": (0, 0, 255),
                     },
                     "irradiance": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1 / 1000,
                         "label": "Irradiance (G/1000)",
-                        "color": (255, 0, 122)
+                        "color": (255, 0, 122),
                     },
                     "temperature": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1 / 100,
                         "label": "Temperature (C/100)",
-                        "color": (255, 122, 0)
+                        "color": (255, 122, 0),
                     },
                     "list": (
                         "voltage",
@@ -121,19 +121,19 @@ class MPPTView(View):
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Voltage (V)",
-                        "color": (255, 0, 0)
+                        "color": (255, 0, 0),
                     },
                     "current": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Current (A)",
-                        "color": (0, 255, 0)
+                        "color": (0, 255, 0),
                     },
                     "power": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Power (W)",
-                        "color": (0, 0, 255)
+                        "color": (0, 0, 255),
                     },
                     "list": ("voltage", "current", "power"),
                 },
@@ -147,19 +147,19 @@ class MPPTView(View):
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Source IV Curve (A)",
-                        "color": (255, 0, 0)
+                        "color": (255, 0, 0),
                     },
                     "power": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Source PV Curve (W)",
-                        "color": (0, 255, 0)
+                        "color": (0, 255, 0),
                     },
                     "MPPTVREF": {
-                        "data": {"x": [], "y": []},
+                        "data": {"x": [0], "y": [0]},
                         "multiplier": 1,
                         "label": None,
-                        "color": (255, 255, 255)
+                        "color": (255, 255, 255),
                     },
                     "list": ("voltage", "power", "MPPTVREF"),
                 },
@@ -173,13 +173,13 @@ class MPPTView(View):
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "MPPT Output Power (W)",
-                        "color": (255, 0, 0)
+                        "color": (255, 0, 0),
                     },
                     "power": {
                         "data": {"x": [], "y": []},
                         "multiplier": 1,
                         "label": "Max Source Power (W)",
-                        "color": (0, 255, 0)
+                        "color": (0, 255, 0),
                     },
                     "list": ("MPPTPower", "power"),
                 },
@@ -189,25 +189,25 @@ class MPPTView(View):
                 xAxisLabel="Cycle",
                 yAxisLabel="Efficiency (%)",
                 series={
-                    "maxDiff": {
+                    "percentYield": {
                         "data": {"x": [], "y": []},
-                        "multiplier": 1,
-                        "label": "% Max Diff",
-                        "color": (255, 0, 0)
+                        "multiplier": 100,
+                        "label": "% Yield",
+                        "color": (255, 0, 0),
                     },
                     "cyclesThreshold": {
                         "data": {"x": [], "y": []},
-                        "multiplier": 1,
-                        "label": "% Cycles Above 5% Diff Threshold",
-                        "color": (0, 255, 0)
+                        "multiplier": 100,
+                        "label": "% Cycles Less Than 95% Yield",
+                        "color": (0, 255, 0),
                     },
                     "trackingEff": {
                         "data": {"x": [], "y": []},
-                        "multiplier": 1,
+                        "multiplier": 100,
                         "label": "% Tracking Efficiency",
-                        "color": (0, 0, 255)
+                        "color": (0, 0, 255),
                     },
-                    "list": ("maxDiff", "cyclesThreshold", "trackingEff"),
+                    "list": ("percentYield", "cyclesThreshold", "trackingEff"),
                 },
             ),
         }
@@ -227,9 +227,7 @@ class MPPTView(View):
             (1, 1),
             self._executeMPPTAlgorithm,
         )
-        self._console.addComboBox(
-            "ModelSelection", (0, 1), (1, 1), MPPTView.MODELS
-        )
+        self._console.addComboBox("ModelSelection", (0, 1), (1, 1), MPPTView.MODELS)
         self._console.addComboBox(
             "AlgorithmSelection", (0, 2), (1, 1), MPPTView.MPPT_MODELS
         )
@@ -237,11 +235,7 @@ class MPPTView(View):
             "AlgorithmStrideSelection", (0, 3), (1, 1), MPPTView.MPPT_STRIDE_MODELS
         )
 
-        self._console.addLabel(
-            "StatusLbl",
-            (1, 0),
-            (1, 3)
-        )
+        self._console.addLabel("StatusLbl", (1, 0), (1, 3))
 
         self._layout.layout.addWidget(
             self._datastore["SourceChars"].getLayout(), 1, 0, 1, 1
@@ -276,94 +270,160 @@ class MPPTView(View):
         # Get options from combo boxes.
         sourceModel = self._console.getReference("ModelSelection").currentText()
         MPPTAlgo = self._console.getReference("AlgorithmSelection").currentText()
-        MPPTStrideAlgo = self._console.getReference("AlgorithmStrideSelection").currentText()
+        MPPTStrideAlgo = self._console.getReference(
+            "AlgorithmStrideSelection"
+        ).currentText()
 
         controller.resetPipeline(sourceModel, MPPTAlgo, MPPTStrideAlgo)
         (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
-        print(cycleResults)
+        powerStore = {  # TODO: maybe change naming later? Or never...
+            "actualPower": 0,  # Current Cycle Actual Power
+            "theoreticalPower": 0,  # Current Cycle Theoretical Power
+            "cycleData": [0, 0],  # [Num cycles below threshold, Total cycles]
+            "energyData": [0, 0],  # [Total Energy Generated, Total Theoretical Energy]
+        }
+
+        # print(cycleResults)
 
         idx = 0
         while continueBool:
+            # Update derived data structures
+            VREF = round(cycleResults["mpptOutput"][idx], 2)
+            IVList = cycleResults["sourceOutput"][idx]["IV"]
+            MPPTCurrOut = [curr for (volt, curr) in IVList if volt == VREF]
+            # print(
+            #     "Searching for:", VREF
+            # )  # TODO: this rounding should be a function of resolution
+            # print("In:", IVList)
+            # print("We get:", MPPTCurrOut)
+
+            # Percent Yield
+            powerStore["actualPower"] = VREF * MPPTCurrOut[0]
+            powerStore["theoreticalPower"] = (
+                cycleResults["sourceOutput"][idx]["edge"][2][0]
+                * cycleResults["sourceOutput"][idx]["edge"][2][1]
+            )
+            percentYield = powerStore["actualPower"] / powerStore["theoreticalPower"]
+
+            # Cycles below threshold
+            if percentYield < 0.95:
+                powerStore["cycleData"][0] += 1
+            powerStore["cycleData"][1] += 1
+            percentThreshold = powerStore["cycleData"][0] / powerStore["cycleData"][1]
+
+            # Tracking efficiency
+            powerStore["energyData"][0] += powerStore["actualPower"]
+            powerStore["energyData"][1] += powerStore["theoreticalPower"]
+            trackingEff = powerStore["energyData"][0] / powerStore["energyData"][1]
+
             # Plot Source Characteristics.
             self._datastore["SourceChars"].addPoint(
                 "voltage",
                 cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][0]
+                cycleResults["sourceOutput"][idx]["edge"][2][0],
             )
 
             self._datastore["SourceChars"].addPoint(
                 "current",
                 cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][1]
+                cycleResults["sourceOutput"][idx]["edge"][2][1],
             )
 
             self._datastore["SourceChars"].addPoint(
                 "power",
                 cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][0] * cycleResults["sourceOutput"][idx]["edge"][2][1]
+                cycleResults["sourceOutput"][idx]["edge"][2][0]
+                * cycleResults["sourceOutput"][idx]["edge"][2][1],
             )
 
             self._datastore["SourceChars"].addPoint(
                 "irradiance",
                 cycleResults["cycle"][idx],
-                cycleResults["sourceDef"][idx]["0"]["irradiance"]
+                cycleResults["sourceDef"][idx]["0"]["irradiance"],
             )
 
             self._datastore["SourceChars"].addPoint(
                 "temperature",
                 cycleResults["cycle"][idx],
-                cycleResults["sourceDef"][idx]["0"]["temperature"]
+                cycleResults["sourceDef"][idx]["0"]["temperature"],
             )
 
             # Plot MPPT Characteristics.
             self._datastore["MPPTChars"].addPoint(
-                "voltage",
-                cycleResults["cycle"][idx],
-                cycleResults["mpptOutput"][idx]
+                "voltage", cycleResults["cycle"][idx], cycleResults["mpptOutput"][idx]
             )
 
-            VREF = round(cycleResults["mpptOutput"][idx], 2)
-            IVList = cycleResults["sourceOutput"][idx]["IV"]
-            MPPTCurrOut = [curr for (volt, curr) in IVList if volt == VREF]
-            print("Searching for:", VREF) # TODO: this rounding should be a function of resolution
-            print("In:", IVList)
-            print("We get:", MPPTCurrOut)
-
             self._datastore["MPPTChars"].addPoint(
-                "current",
-                cycleResults["cycle"][idx],
-                MPPTCurrOut[0]
+                "current", cycleResults["cycle"][idx], MPPTCurrOut[0]
             )
 
             self._datastore["MPPTChars"].addPoint(
                 "power",
                 cycleResults["cycle"][idx],
-                cycleResults["mpptOutput"][idx] * MPPTCurrOut[0]
+                cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
             )
 
             # TODO: Plot VRefPosition.
+            # self._datastore["VRefPosition"].clearSeries("voltage")
+            # self._datastore["VRefPosition"].clearSeries("power")
 
+            # "voltage": {
+            #     "data": {"x": [], "y": []},
+            #     "multiplier": 1,
+            #     "label": "Source IV Curve (A)",
+            #     "color": (255, 0, 0),
+            # },
+            # "power": {
+            #     "data": {"x": [], "y": []},
+            #     "multiplier": 1,
+            #     "label": "Source PV Curve (W)",
+            #     "color": (0, 255, 0),
+
+            # self._datastore["VRefPosition"].addPoints(
+            #     "voltage",
+            #     [],
+            #     []
+            # )
+            # self._datastore["VRefPosition"].addPoints(
+            #     "power",
+            #     [],
+            #     []
+            # )
+            # self._datastore["VRefPosition"].setPoint(
+            #     "MPPTVREF",
+            #     0,
+            #     cycleResults["mpptOutput"][idx],
+            #     cycleResults["sourceOutput"][idx]["edge"][2][1],
+            # )
 
             # Plot Power Comparison.
             self._datastore["PowerComp"].addPoint(
                 "power",
                 cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][0] * cycleResults["sourceOutput"][idx]["edge"][2][1]
+                cycleResults["sourceOutput"][idx]["edge"][2][0]
+                * cycleResults["sourceOutput"][idx]["edge"][2][1],
             )
 
             self._datastore["PowerComp"].addPoint(
                 "MPPTPower",
                 cycleResults["cycle"][idx],
-                cycleResults["mpptOutput"][idx] * MPPTCurrOut[0]
+                cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
             )
 
-            # TODO: Plot Efficiencies.
-
+            # Plot Efficiencies.
+            self._datastore["Efficiency"].addPoint(
+                "percentYield",
+                idx,
+                percentYield,
+            )
+            self._datastore["Efficiency"].addPoint(
+                "cyclesThreshold", idx, percentThreshold
+            )
+            self._datastore["Efficiency"].addPoint("trackingEff", idx, trackingEff)
 
             (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
             idx += 1
-
 
         """
         {
@@ -384,8 +444,8 @@ class MPPTView(View):
         """
         Clears the source curves for the UI.
         """
-        self._datastore["SourceChars"].clearPoints()
-        self._datastore["MPPTChars"].clearPoints()
-        self._datastore["VRefPosition"].clearPoints()
-        self._datastore["PowerComp"].clearPoints()
-        self._datastore["Efficiency"].clearPoints()
+        self._datastore["SourceChars"].clearAllSeries()
+        self._datastore["MPPTChars"].clearAllSeries()
+        self._datastore["VRefPosition"].clearAllSeries()
+        self._datastore["PowerComp"].clearAllSeries()
+        self._datastore["Efficiency"].clearAllSeries()

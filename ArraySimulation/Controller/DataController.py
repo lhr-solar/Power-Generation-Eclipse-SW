@@ -167,7 +167,7 @@ class DataController:
         modulesDef = self._PVEnv.getSourceDefinition(self._vREF)
         envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
 
-        print(modulesDef)
+        # print(modulesDef)
         # Retrieve the source characteristics given the source definition.
         sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
         sourceIV = self._PVSource.getIV(modulesDef)

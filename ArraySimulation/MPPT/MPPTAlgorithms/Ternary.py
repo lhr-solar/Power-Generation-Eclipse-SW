@@ -57,7 +57,7 @@ Ternary Search: https://en.wikipedia.org/wiki/Ternary_search
 from math import sqrt
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms import MPPTAlgorithm
+from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 
 
 class Ternary(MPPTAlgorithm):
@@ -91,9 +91,7 @@ class Ternary(MPPTAlgorithm):
         self.powerL2 = 0
         self.cycle = 0
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
             self.powerL2 = arrVoltage * arrCurrent

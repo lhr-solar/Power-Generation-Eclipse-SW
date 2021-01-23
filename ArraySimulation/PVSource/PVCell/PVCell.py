@@ -71,9 +71,7 @@ class PVCell:
         """
         return -1
 
-    def getCurrentLookup(
-        self, numCells=1, voltage=0, irradiance=0.001, temperature=0
-    ):
+    def getCurrentLookup(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         """
         Looks up the cell model current given various environmental parameters.
         Guaranteed blazing fast speed. Requires a minimum resolution for various
@@ -97,9 +95,7 @@ class PVCell:
         """
         return self.getCurrent(numCells, voltage, irradiance, temperature)
 
-    def getCellIV(
-        self, numCells=1, resolution=0.01, irradiance=0.001, temperature=0
-    ):
+    def getCellIV(self, numCells=1, resolution=0.01, irradiance=0.001, temperature=0):
         """
         Calculates the entire cell model current voltage plot given various
         environmental parameters.
@@ -134,7 +130,9 @@ class PVCell:
         ):
             current = self.getCurrent(numCells, voltage, irradiance, temperature)
             if current >= 0.0:
-                model.append((round(voltage, 2), round(current, 3))) # TODO: this rounding should be a function of resolution
+                model.append(
+                    (round(voltage, 2), round(current, 3))
+                )  # TODO: this rounding should be a function of resolution
 
         return model
 

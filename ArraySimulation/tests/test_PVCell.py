@@ -32,9 +32,7 @@ class TestPVCell:
             # Assert that we can get the default values for various function
             # calls.
             assert (
-                cell.getCurrent(
-                    numCells=1, voltage=0, irradiance=0, temperature=0
-                )
+                cell.getCurrent(numCells=1, voltage=0, irradiance=0, temperature=0)
                 == -1
             )
             assert (
@@ -44,9 +42,7 @@ class TestPVCell:
                 == -1
             )
             assert (
-                cell.getCellIV(
-                    numCells=1, resolution=0, irradiance=0, temperature=0
-                )
+                cell.getCellIV(numCells=1, resolution=0, irradiance=0, temperature=0)
                 == []
             )
             assert cell.getCellEdgeCharacteristics(
@@ -66,9 +62,7 @@ class TestPVCell:
             # Assert that we can get the default values for various function
             # calls.
             assert (
-                cell.getCurrent(
-                    numCells=1, voltage=0, irradiance=1000, temperature=25
-                )
+                cell.getCurrent(numCells=1, voltage=0, irradiance=1000, temperature=25)
                 != -1
             )
             assert (
@@ -104,9 +98,7 @@ class TestPVCell:
             # Assert that we can get the default values for various function
             # calls.
             assert (
-                cell.getCurrent(
-                    numCells=1, voltage=0, irradiance=1000, temperature=25
-                )
+                cell.getCurrent(numCells=1, voltage=0, irradiance=1000, temperature=25)
                 != -1
             )
             assert (
@@ -140,9 +132,7 @@ class TestPVCell:
         cell = PVCellNonideal()
 
         try:
-            cell.buildCurrentLookup(
-                voltageRes=0.1, irradianceRes=50, temperatureRes=5
-            )
+            cell.buildCurrentLookup(voltageRes=0.1, irradianceRes=50, temperatureRes=5)
         except Exception as e:
             pytest.fail(str(e))
 
@@ -156,9 +146,7 @@ class TestPVCell:
         cell = PVCellNonideal()
 
         try:
-            cell.buildCurrentLookup(
-                voltageRes=0.01, irradianceRes=50, temperatureRes=1
-            )
+            cell.buildCurrentLookup(voltageRes=0.01, irradianceRes=50, temperatureRes=1)
         except Exception as e:
             pytest.fail(str(e))
 

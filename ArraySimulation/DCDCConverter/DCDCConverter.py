@@ -125,5 +125,3 @@ class DCDCConverter:
         self.arrayVoltage = 0
         self.loadVoltage = 0
         self.pulseWidth = 0
-
-

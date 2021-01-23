@@ -41,9 +41,7 @@ class TestPVSource:
                         "temperature": 25,
                     }
                 )
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
             with pytest.raises(Exception) as excinfo:
                 source.getSourceCurrent(
                     {
@@ -55,9 +53,7 @@ class TestPVSource:
                         },
                     }
                 )
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
             with pytest.raises(Exception) as excinfo:
                 source.getIV(
                     {
@@ -70,9 +66,7 @@ class TestPVSource:
                     },
                     0.01,
                 )
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
             with pytest.raises(Exception) as excinfo:
                 source.getEdgeCharacteristics(
                     {
@@ -85,9 +79,7 @@ class TestPVSource:
                     },
                     0.01,
                 )
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Default"
@@ -105,29 +97,35 @@ class TestPVSource:
         try:
             # Assert that we get the same module current output as that for a
             # single cell.
-            assert source.getModuleCurrent(
-                {
-                    "numCells": 1,
-                    "voltage": 0.0,
-                    "irradiance": 1000,
-                    "temperature": 25,
-                }
-            ) == cell.getCurrent(
-                numCells=1, voltage=0, irradiance=1000, temperature=25
-            )
-
-            # TODO: fix when implemented, and implement comments
-            assert source.getSourceCurrent(
-                {
-                    "0": {
+            assert (
+                source.getModuleCurrent(
+                    {
                         "numCells": 1,
                         "voltage": 0.0,
                         "irradiance": 1000,
                         "temperature": 25,
-                    },
-                }
-            ) == cell.getCurrent(
-                numCells=1, voltage=0, irradiance=1000, temperature=25
+                    }
+                )
+                == cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
+            )
+
+            # TODO: fix when implemented, and implement comments
+            assert (
+                source.getSourceCurrent(
+                    {
+                        "0": {
+                            "numCells": 1,
+                            "voltage": 0.0,
+                            "irradiance": 1000,
+                            "temperature": 25,
+                        },
+                    }
+                )
+                == cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
             )
 
             assert source.getIV(
@@ -174,29 +172,35 @@ class TestPVSource:
         try:
             # Assert that we get the same module current output as that for a
             # single cell.
-            assert source.getModuleCurrent(
-                {
-                    "numCells": 1,
-                    "voltage": 0.0,
-                    "irradiance": 1000,
-                    "temperature": 25,
-                }
-            ) == cell.getCurrent(
-                numCells=1, voltage=0, irradiance=1000, temperature=25
-            )
-
-            # TODO: fix when implemented
-            assert source.getSourceCurrent(
-                {
-                    "0": {
+            assert (
+                source.getModuleCurrent(
+                    {
                         "numCells": 1,
                         "voltage": 0.0,
                         "irradiance": 1000,
                         "temperature": 25,
-                    },
-                }
-            ) == cell.getCurrent(
-                numCells=1, voltage=0, irradiance=1000, temperature=25
+                    }
+                )
+                == cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
+            )
+
+            # TODO: fix when implemented
+            assert (
+                source.getSourceCurrent(
+                    {
+                        "0": {
+                            "numCells": 1,
+                            "voltage": 0.0,
+                            "irradiance": 1000,
+                            "temperature": 25,
+                        },
+                    }
+                )
+                == cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
             )
 
             assert source.getIV(

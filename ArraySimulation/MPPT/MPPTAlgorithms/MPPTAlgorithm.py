@@ -76,9 +76,7 @@ class MPPTAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         """
         Calculates the reference voltage output for the given PVSource output.
         May use prior history.

@@ -79,7 +79,7 @@ Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
 from math import sqrt
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms import MPPTAlgorithm
+from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 
 
 class Golden(MPPTAlgorithm):
@@ -113,9 +113,7 @@ class Golden(MPPTAlgorithm):
         self.powerL2 = 0
         self.cycle = 0
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
             self.l1 = self.right - (self.right - self.left) * self.phi

@@ -168,9 +168,7 @@ class Graph(View):
         if series in self._series:
             self._series[series]["data"]["x"] += datapointsX
             modifier = self._series[series]["multiplier"]
-            modifiedDatapointsY = [
-                datapointY * modifier for datapointY in datapointsY
-            ]
+            modifiedDatapointsY = [datapointY * modifier for datapointY in datapointsY]
             self._series[series]["data"]["y"] += modifiedDatapointsY
 
             self._graph[series].setData(
@@ -207,9 +205,7 @@ class Graph(View):
 
         # Apply multiplier to value.
         for n, y in enumerate(self._series[series]["data"]["y"]):
-            self._series[series]["data"]["y"][n] *= self._series[series][
-                "multiplier"
-            ]
+            self._series[series]["data"]["y"][n] *= self._series[series]["multiplier"]
 
         if self._graphType == "Line":
             self._graph[series] = self.plt.plot(
@@ -240,7 +236,7 @@ class Graph(View):
             )
             self.plt.addItem(self._graph[series])
 
-    def setPoint(self, seriesID, idx, datapointX, datapointY):
+    def setPoint(self, series, idx, datapointX, datapointY):
         """
         Sets a new data point to the graph. Specifically for graphs like MPPT
         V_REF over Source IV/PV Curve, where we're looking at a single point
@@ -248,7 +244,7 @@ class Graph(View):
 
         Parameters
         ----------
-        seriesID: String
+        series: String
             ID of the series that should exist in self._series where the data
             point should be inserted.
         idx: int
@@ -271,7 +267,25 @@ class Graph(View):
                 y=self._series[series]["data"]["y"],
             )
 
-    def clearPoints(self):
+    def clearSeries(self, series):
+        """
+        Clears the data points from a single series.
+
+        Parameters
+        ----------
+        series: String
+            ID of the series that should be cleared.
+        """
+        if series in self._series:
+            self._series[series]["data"]["x"].clear()
+            self._series[series]["data"]["y"].clear()
+
+            self._graph[series].setData(
+                x=self._series[series]["data"]["x"],
+                y=self._series[series]["data"]["y"],
+            )
+
+    def clearAllSeries(self):
         """
         Erases all data points from all data series.
         """

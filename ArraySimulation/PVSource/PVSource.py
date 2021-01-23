@@ -221,7 +221,7 @@ class PVSource:
                 moduleDef["numCells"],
                 resolution,
                 moduleDef["irradiance"],
-                moduleDef["temperature"]
+                moduleDef["temperature"],
             )
 
             # model = []

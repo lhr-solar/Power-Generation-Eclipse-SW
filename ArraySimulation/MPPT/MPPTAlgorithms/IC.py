@@ -33,7 +33,7 @@ The implementation of this algorithm is based on the folowing paper:
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms import MPPTAlgorithm
+from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 
 
 class IC(MPPTAlgorithm):
@@ -57,10 +57,9 @@ class IC(MPPTAlgorithm):
             The name of the stride model type.
         """
         super(IC, self).__init__(numCells, "IC", strideType)
+        self.firstCycle = True
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         # Compute secondary values.
         dI = arrCurrent - self.iOld
         dV = arrVoltage - self.vOld
@@ -71,20 +70,24 @@ class IC(MPPTAlgorithm):
         )
 
         # Determine the direction of movement and VREF.
+        # TODO: The 0.01 constant might need to become an extra parameter
+        # exposed to the MPPTView for more granular control on subarray level PV
         vRef = arrVoltage
-        if abs(dI * arrVoltage + arrCurrent * dV) < 0.1:  # At MPP.
+        if abs(dI * arrVoltage + arrCurrent * dV) < 0.01:  # At MPP.
             pass
-        elif dI * arrVoltage + arrCurrent * dV > 0.1:  # Left of MPP.
+        elif dI * arrVoltage + arrCurrent * dV > 0.01:  # Left of MPP.
             vRef += stride
-        elif dI * arrVoltage + arrCurrent * dV < -0.1:  # Right o MPP.
+        elif dI * arrVoltage + arrCurrent * dV < -0.01:  # Right o MPP.
             vRef -= stride
         else:
-            raise Exception(
-                "[IC][getReferenceVoltage] Invalid region of interest."
-            )
+            raise Exception("[IC][getReferenceVoltage] Invalid region of interest.")
 
         # Update dependent values.
         self.iOld = arrCurrent
         self.vOld = arrVoltage
 
-        return vRef
+        # Kick the first cycle
+        if not self.firstCycle:
+            return vRef
+        self.firstCycle = False
+        return 0.1

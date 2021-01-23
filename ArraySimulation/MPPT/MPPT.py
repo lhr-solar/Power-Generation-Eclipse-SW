@@ -17,6 +17,12 @@ and Stride models (see MPPTComponents) on demand.
 # Custom Imports.
 from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 from ArraySimulation.MPPT.MPPTAlgorithms.PandO import PandO
+from ArraySimulation.MPPT.MPPTAlgorithms.IC import IC
+
+# from ArraySimulation.MPPT.MPPTAlgorithms.FC import FC
+from ArraySimulation.MPPT.MPPTAlgorithms.Ternary import Ternary
+from ArraySimulation.MPPT.MPPTAlgorithms.Golden import Golden
+from ArraySimulation.MPPT.MPPTAlgorithms.Bisection import Bisection
 
 
 class MPPT:
@@ -52,6 +58,16 @@ class MPPT:
         # Select and rebuild a new model.
         if modelType == "PandO":
             self._model = PandO(numCells, strideType)
+        elif modelType == "IC":
+            self._model = IC(numCells, strideType)
+        elif modelType == "Ternary":
+            self._model = Ternary(numCells, strideType)
+        elif modelType == "Golden":
+            self._model = Golden(numCells, strideType)
+        elif modelType == "IC":
+            self._model = IC(numCells, strideType)
+        elif modelType == "IC":
+            self._model = Bisection(numCells, strideType)
         elif modelType == "Default":
             self._model = MPPTAlgorithm(numCells, modelType, strideType)
         else:
@@ -64,9 +80,7 @@ class MPPT:
         if self._model is not None:
             self._model.reset()
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         return self._model.getReferenceVoltage(
             arrVoltage, arrCurrent, irradiance, temperature
         )

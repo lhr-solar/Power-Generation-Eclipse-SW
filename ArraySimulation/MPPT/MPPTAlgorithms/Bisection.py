@@ -62,7 +62,7 @@ Bisection Method: https://en.wikipedia.org/wiki/Bisection_method
 from math import sqrt
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms import MPPTAlgorithm
+from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 
 
 class Bisection(MPPTAlgorithm):
@@ -97,9 +97,7 @@ class Bisection(MPPTAlgorithm):
         self.powerL2 = 0
         self.cycle = 0
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
             vRef = (self.left + self.right) / 2

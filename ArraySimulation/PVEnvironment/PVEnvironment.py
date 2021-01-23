@@ -254,8 +254,7 @@ class PVEnvironment:
                 raise Exception("Undefined environment type.")
         else:
             raise Exception(
-                "Module does not exist in PVEnvironment with the name "
-                + moduleName
+                "Module does not exist in PVEnvironment with the name " + moduleName
             )
 
     def getModuleMapping(self):

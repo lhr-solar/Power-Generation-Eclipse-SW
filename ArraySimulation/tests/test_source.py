@@ -41,24 +41,16 @@ class TestSource:
             # PVSource.
             with pytest.raises(Exception) as excinfo:
                 source.getModuleCurrent(moduleDef)
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
             with pytest.raises(Exception) as excinfo:
                 source.getSourceCurrent(modulesDef)
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
             with pytest.raises(Exception) as excinfo:
                 source.getIV(modulesDef)
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
             with pytest.raises(Exception) as excinfo:
                 source.getEdgeCharacteristics(modulesDef)
-            assert "No cell model is defined for the PVSource." == str(
-                excinfo.value
-            )
+            assert "No cell model is defined for the PVSource." == str(excinfo.value)
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Default"

@@ -42,9 +42,7 @@ class PandO(MPPTAlgorithm):
         """
         super(PandO, self).__init__(numCells, "PandO", strideType)
 
-    def getReferenceVoltage(
-        self, arrVoltage, arrCurrent, irradiance, temperature
-    ):
+    def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         # Compute secondary values.
         pIn = arrVoltage * arrCurrent
         dV = arrVoltage - self.vOld

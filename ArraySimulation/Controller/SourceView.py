@@ -144,9 +144,7 @@ class SourceView(View):
             (1, 1),
             self._clearSourceCurves,
         )
-        self._console.addComboBox(
-            "ModelSelection", (0, 3), (1, 1), SourceView.MODELS
-        )
+        self._console.addComboBox("ModelSelection", (0, 3), (1, 1), SourceView.MODELS)
         self._console.addComboBox(
             "LookupSelection", (0, 4), (1, 1), ["UseLookup", "NoLookup"]
         )
@@ -289,9 +287,7 @@ class SourceView(View):
         if not errors:
             # Grab combo box based parameters.
             model = self._console.getReference("ModelSelection").currentText()
-            useLookup = self._console.getReference(
-                "LookupSelection"
-            ).currentText()
+            useLookup = self._console.getReference("LookupSelection").currentText()
             useLookupBool = False
             if useLookup == "UseLookup":
                 useLookupBool = True
@@ -307,9 +303,7 @@ class SourceView(View):
                 model,
                 useLookupBool,
             )
-            powers = [
-                voltage * current for voltage, current in zip(voltages, currents)
-            ]
+            powers = [voltage * current for voltage, current in zip(voltages, currents)]
 
             # Update the graph.
             self._datastore["Arbitrary"].addSeries(
@@ -333,16 +327,9 @@ class SourceView(View):
                     + str(irradianceRes[1])
                     + " G",
                     "color": (
-                        temperatureRes[1]
-                        * 255
-                        / SourceView.TEMPERATURE_RANGE[1],
-                        255
-                        - irradianceRes[1]
-                        * 255
-                        / SourceView.IRRADIANCE_RANGE[1],
-                        numCellsRes[1]
-                        * 255
-                        / SourceView.ACCEPTABLE_NUM_CELLS[-1],
+                        temperatureRes[1] * 255 / SourceView.TEMPERATURE_RANGE[1],
+                        255 - irradianceRes[1] * 255 / SourceView.IRRADIANCE_RANGE[1],
+                        numCellsRes[1] * 255 / SourceView.ACCEPTABLE_NUM_CELLS[-1],
                     ),
                 },
             )
@@ -367,17 +354,10 @@ class SourceView(View):
                     + str(irradianceRes[1])
                     + " G",
                     "color": (
-                        temperatureRes[1]
-                        * 255
-                        / SourceView.TEMPERATURE_RANGE[1],
+                        temperatureRes[1] * 255 / SourceView.TEMPERATURE_RANGE[1],
+                        255 - irradianceRes[1] * 255 / SourceView.IRRADIANCE_RANGE[1],
                         255
-                        - irradianceRes[1]
-                        * 255
-                        / SourceView.IRRADIANCE_RANGE[1],
-                        255
-                        - numCellsRes[1]
-                        * 255
-                        / SourceView.ACCEPTABLE_NUM_CELLS[-1],
+                        - numCellsRes[1] * 255 / SourceView.ACCEPTABLE_NUM_CELLS[-1],
                     ),
                 },
             )
@@ -448,17 +428,11 @@ class SourceView(View):
                             + str(temperature)
                             + " C",
                             "color": (
-                                temperature
-                                * 255
-                                / SourceView.TEMPERATURE_RANGE[1],
+                                temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
                                 255
-                                - temperature
-                                * 255
-                                / SourceView.TEMPERATURE_RANGE[1],
+                                - temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
                                 255
-                                - temperature
-                                * 255
-                                / SourceView.TEMPERATURE_RANGE[1],
+                                - temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
                             ),
                         },
                     )
@@ -471,16 +445,10 @@ class SourceView(View):
                             + str(temperature)
                             + " C",
                             "color": (
-                                temperature
-                                * 255
-                                / SourceView.TEMPERATURE_RANGE[1],
+                                temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
                                 255
-                                - temperature
-                                * 255
-                                / SourceView.TEMPERATURE_RANGE[1],
-                                temperature
-                                * 255
-                                / SourceView.TEMPERATURE_RANGE[1],
+                                - temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
+                                temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
                             ),
                         },
                     )
@@ -514,19 +482,10 @@ class SourceView(View):
                             + " G",
                             "color": (
                                 122
-                                + irradiance
-                                * 255
-                                / SourceView.IRRADIANCE_RANGE[1]
-                                / 2,
+                                + irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
                                 122
-                                + irradiance
-                                * 255
-                                / SourceView.IRRADIANCE_RANGE[1]
-                                / 2,
-                                255
-                                - irradiance
-                                * 255
-                                / SourceView.IRRADIANCE_RANGE[1],
+                                + irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
+                                255 - irradiance * 255 / SourceView.IRRADIANCE_RANGE[1],
                             ),
                         },
                     )
@@ -535,24 +494,13 @@ class SourceView(View):
                         {
                             "data": {"x": voltages, "y": powers},
                             "multiplier": 1,
-                            "label": "Power (W): Irradiance "
-                            + str(irradiance)
-                            + " G",
+                            "label": "Power (W): Irradiance " + str(irradiance) + " G",
                             "color": (
                                 122
-                                + irradiance
-                                * 255
-                                / SourceView.IRRADIANCE_RANGE[1]
-                                / 2,
+                                + irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
                                 255
-                                - irradiance
-                                * 255
-                                / SourceView.IRRADIANCE_RANGE[1]
-                                / 2,
-                                255
-                                - irradiance
-                                * 255
-                                / SourceView.IRRADIANCE_RANGE[1],
+                                - irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
+                                255 - irradiance * 255 / SourceView.IRRADIANCE_RANGE[1],
                             ),
                         },
                     )
@@ -719,8 +667,7 @@ class SourceView(View):
                         + str(valCandidate)
                         + " ["
                         + ", ".join(
-                            str(entry)
-                            for entry in SourceView.ACCEPTABLE_NUM_CELLS
+                            str(entry) for entry in SourceView.ACCEPTABLE_NUM_CELLS
                         )
                         + "]."
                     )
