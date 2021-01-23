@@ -65,6 +65,6 @@ class OptimalStride(Stride):
         self.k = error
 
     def getStride(self, arrVoltage, arrCurrent, irradiance, temperature):
-        minStride = k * k / (2 * (1 - self.k)) * self.VMPP
+        minStride = self.k * self.k / (2 * (1 - self.k)) * self.VMPP
         stride = abs(self.VMPP - arrVoltage)
         return stride + minStride

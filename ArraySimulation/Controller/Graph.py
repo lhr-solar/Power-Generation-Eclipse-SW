@@ -50,7 +50,6 @@ class Graph(View):
         title="Uninitialized.",
         xAxisLabel="Uninitialized.",
         yAxisLabel="Uninitialized.",
-        color=(255, 255, 255),
     ):
         """
         Upon initialization, we perform any data and UI setup required to get
@@ -70,13 +69,15 @@ class Graph(View):
                     },
                     "multiplier": 1,
                     "label": "Voltage (V)",         <-  This label is displayed
-                "current": {                            in the legend if not None.
+                    "color": (255, 0, 0)                in the legend if not None.
+                "current": {
                     "data": {
                         "x": [ 0, 1, 2, ... ],
                         "y": [6, 6, 6, ... ],
                     },
                     "multiplier": .5,               <-  Multipliers adjust the
                     "label": None,                      data scale on the graph.
+                    "color": (0, 255, 0)
                 },
                 ...
                 "temperature": {
@@ -95,8 +96,6 @@ class Graph(View):
             Label for the X Axis.
         yAxisLabel: String
             Label for the Y Axis.
-        color: (int, int, int)
-            Tuple of integers representing the RGB color of the series.
         """
         super(Graph, self).__init__()
 
@@ -112,9 +111,6 @@ class Graph(View):
 
         # Dependent axis label.
         self._yAxisLabel = yAxisLabel
-
-        # Brush color.
-        self._color = color
 
         # Reference to the graph for easy modification.
         self._graph = {}
@@ -324,8 +320,12 @@ class Graph(View):
                         x=self._series[series]["data"]["x"],
                         y=self._series[series]["data"]["y"],
                         pen=pg.mkPen(
-                            (self._color[0], self._color[1], self._color[2]),
-                            width=2,
+                            (
+                                self._series[series]["color"][0],
+                                self._series[series]["color"][1],
+                                self._series[series]["color"][2],
+                            ),
+                            width=1.5,
                         ),
                         name=self._series[series].get("label"),
                     )
@@ -336,7 +336,9 @@ class Graph(View):
                         y=self._series[series]["data"]["y"],
                         pen=pg.mkPen(None),
                         brush=pg.mkBrush(
-                            self._color[0], self._color[1], self._color[2]
+                            self._series[series]["color"][0],
+                            self._series[series]["color"][1],
+                            self._series[series]["color"][2],
                         ),
                         size=4,
                         name=self._series[series].get("label"),

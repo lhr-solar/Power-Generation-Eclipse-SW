@@ -31,10 +31,27 @@ class TestPVCell:
         try:
             # Assert that we can get the default values for various function
             # calls.
-            assert cell.getCurrent(0, 0, 0) == -1
-            assert cell.getCurrentLookup(0, 0, 0) == -1
-            assert cell.getCellIV(0, 0, 0) == []
-            assert cell.getCellEdgeCharacteristics(0, 0, 0) == (0, 0, (0, 0))
+            assert (
+                cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=0, temperature=0
+                )
+                == -1
+            )
+            assert (
+                cell.getCurrentLookup(
+                    numCells=1, voltage=0, irradiance=0, temperature=0
+                )
+                == -1
+            )
+            assert (
+                cell.getCellIV(
+                    numCells=1, resolution=0, irradiance=0, temperature=0
+                )
+                == []
+            )
+            assert cell.getCellEdgeCharacteristics(
+                numCells=1, resolution=0, irradiance=0, temperature=0
+            ) == (0, 0, (0, 0))
             assert cell.getModelType() == "Default"
         except Exception as e:
             pytest.fail(str(e))
@@ -48,10 +65,27 @@ class TestPVCell:
         try:
             # Assert that we can get the default values for various function
             # calls.
-            assert cell.getCurrent(0, 1000, 25) != -1
-            assert cell.getCurrentLookup(0, 1000, 25) == -1
-            assert cell.getCellIV(0.1, 1000, 25) != []
-            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (
+            assert (
+                cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
+                != -1
+            )
+            assert (
+                cell.getCurrentLookup(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
+                == -1
+            )
+            assert (
+                cell.getCellIV(
+                    numCells=1, resolution=0.1, irradiance=1000, temperature=25
+                )
+                != []
+            )
+            assert cell.getCellEdgeCharacteristics(
+                numCells=1, resolution=0.1, irradiance=1000, temperature=25
+            ) != (
                 0,
                 0,
                 (0, 0),
@@ -69,13 +103,28 @@ class TestPVCell:
         try:
             # Assert that we can get the default values for various function
             # calls.
-            assert cell.getCurrent(0, 1000, 25) != -1
-            assert cell.getCurrentLookup(0, 1000, 25) == 6.146
-            assert cell.getCurrent(0, 1000, 25) == cell.getCurrentLookup(
-                0, 1000, 25
+            assert (
+                cell.getCurrent(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
+                != -1
             )
-            assert cell.getCellIV(0.1, 1000, 25) != []
-            assert cell.getCellEdgeCharacteristics(0.1, 1000, 25) != (
+            assert (
+                cell.getCurrentLookup(
+                    numCells=1, voltage=0, irradiance=1000, temperature=25
+                )
+                == 6.146
+            )
+            assert cell.getCurrent(
+                numCells=1, voltage=0, irradiance=1000, temperature=25
+            ) == cell.getCurrentLookup(1, 0, 1000, 25)
+            assert (
+                cell.getCellIV(
+                    numCells=1, resolution=0.1, irradiance=1000, temperature=25
+                )
+                != []
+            )
+            assert cell.getCellEdgeCharacteristics(1, 0.1, 1000, 25) != (
                 0,
                 0,
                 (0, 0),
@@ -97,6 +146,7 @@ class TestPVCell:
         except Exception as e:
             pytest.fail(str(e))
 
+    # NOTE: We can use this test to generate our models for us.
     @pytest.mark.additional
     def test_PVCellNonidealBuildLookupLong(self):
         """
@@ -107,7 +157,7 @@ class TestPVCell:
 
         try:
             cell.buildCurrentLookup(
-                voltageRes=0.01, irradianceRes=50, temperatureRes=0.5
+                voltageRes=0.01, irradianceRes=50, temperatureRes=1
             )
         except Exception as e:
             pytest.fail(str(e))
@@ -121,14 +171,14 @@ cell = PVCell()
 cellI = PVCellIdeal()
 cellNI = PVCellNonideal()
 print("----------------------------------------------------------------------")
-print("Input            |Default       |Ideal                  |Nonideal     ")
-for voltage in np.arange(0, 0.61, 0.01):
+print("Input          |Default       |Ideal                  |Nonideal     ")
+for voltage in np.arange(0, 0.81, 0.01):
     print(
-        str(voltage / 10)
-        + "V|1000G|25C   |"
-        + str(cell.getCurrent(voltage, 1000, 25))
+        str(round(voltage, 3))
+        + "V|1000G|25C\t|"
+        + str(cell.getCurrent(1, voltage, 1000, 25))
         + "\t\t|"
-        + str(cellI.getCurrent(voltage, 1000, 25))
+        + str(cellI.getCurrent(1, voltage, 1000, 25))
         + "\t|"
-        + str(cellNI.getCurrentLookup(voltage, 1000, 25))
+        + str(cellNI.getCurrentLookup(1, voltage, 1000, 25))
     )

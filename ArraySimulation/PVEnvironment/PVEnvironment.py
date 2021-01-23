@@ -40,22 +40,23 @@ class PVEnvironment:
     _cellDefinitions = {"1x1": 1, "1x2": 2, "2x2": 4, "2x4": 8}
 
     # Where all lookup files are located.
-    file_root = "./External/"
+    _fileRoot = "./External/"
 
     def __init__(self):
         pass
 
-    def setupModel(self, sourceType=(1000, 25), maxCycles=200):
+    def setupModel(self, sourceType=(1, 1000, 25), maxCycles=200):
         """
         Sets up the initial source parameters.
 
         Parameters
         ----------
-        sourceType: Union -> tuple `(1000, 255)` or string `single_cell.json`
+        sourceType: Union -> tuple `(1, 1000, 255)` or string `single_cell.json`
             Specifies how and/or where the source model is defined and its
             environmental regime over time. It checks for either a tuple of
             initial conditions (Step mode) or a string pointing to a JSON file
-            in 'External/'.
+            in 'External/'. Step mode can only performed with a single module
+            of arbitrary cell length.
 
             The method builds a data model of the modules in the PVSource and
             a mapping of their environmental regime to return on demand.
@@ -74,24 +75,37 @@ class PVEnvironment:
         try:
             if isinstance(sourceType, str):
                 # Check for relevant filename at /External
-                f = open(self.file_root + sourceType)
+                f = open(self._fileRoot + sourceType)
                 self._source = json.load(f)
 
             elif isinstance(sourceType, tuple):
                 self._source = {
                     "name": "Single Cell.",
-                    "description": "A single cell. "
+                    "description": str(sourceType[0])
+                    + " cell(s) in series. "
                     + "Emulates a step function with irradiance "
-                    + str(sourceType[0])
-                    + " and temperature "
                     + str(sourceType[1])
+                    + " and temperature "
+                    + str(sourceType[2])
                     + " for t => 0.",
                     "num_modules": 1,
                     "pv_model": {
                         "0": {
-                            "module_type": "1x1",
+                            # This is a bit of annoying code that takes our
+                            # numCells, converts it into the right key
+                            # (i.e. "1x1"), which is THEN later used to convert
+                            # it back into the number of cells per module.
+                            #
+                            # We want the keyed version because in the event we
+                            # eventually want to save our modules definition
+                            # into a JSON file.
+                            "module_type": list(self._cellDefinitions.keys())[
+                                list(self._cellDefinitions.values()).index(
+                                    sourceType[0]
+                                )
+                            ],
                             "env_type": "Step",
-                            "env_regime": sourceType,
+                            "env_regime": (sourceType[1], sourceType[2]),
                         }
                     },
                 }

@@ -4,7 +4,7 @@ PVCellIdeal.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/14/20
-Last Modified: 11/24/20
+Last Modified: 11/26/20
 
 Description: Derived class of PVCell that implements an ideal model tuned to
 the Sunpower Maxeon III Bin Le1 solar cells.
@@ -26,7 +26,7 @@ class PVCellIdeal(PVCell):
     def __init__(self):
         super(PVCellIdeal, self).__init__()
 
-    def getCurrent(self, voltage=0, irradiance=0.001, temperature=0):
+    def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         # Ideal single diode model.
         cellTemperature = (
             temperature + 273.15
@@ -50,7 +50,11 @@ class PVCellIdeal(PVCell):
         OCVoltage = (
             self.refOCVoltage
             - 2.2e-3 * (cellTemperature - self.refTemp)
-            + self.k * cellTemperature / self.q * ln(irradiance / self.refIrrad)
+            + numCells
+            * self.k
+            * cellTemperature
+            / self.q
+            * ln(irradiance / self.refIrrad)
         )
 
         # Photovoltatic current.
@@ -62,9 +66,11 @@ class PVCellIdeal(PVCell):
         )
 
         # Diode current.
-        diodeCurrent = revSatCurrent * (
-            exp(self.q * voltage / (self.k * cellTemperature)) - 1
-        )
+        diodeCurrent = PVCurrent
+        if voltage <= numCells * OCVoltage:
+            diodeCurrent = revSatCurrent * (
+                exp(self.q * voltage / (numCells * self.k * cellTemperature)) - 1
+            )
 
         # Output current.
         current = PVCurrent - diodeCurrent

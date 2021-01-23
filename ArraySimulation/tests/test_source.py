@@ -83,15 +83,19 @@ class TestSource:
 
             # Assert that we get the correct function outputs for the module definition.
             assert source.getModuleCurrent(moduleDef) == cell.getCurrent(
-                0.0, 1000, 25
+                numCells=1, voltage=0, irradiance=1000, temperature=25
             )
             assert source.getSourceCurrent(modulesDef) == cell.getCurrent(
-                0.0, 1000, 25
+                numCells=1, voltage=0, irradiance=1000, temperature=25
             )
-            assert source.getIV(modulesDef) == cell.getCellIV(0.01, 1000, 25)
+            assert source.getIV(modulesDef) == cell.getCellIV(
+                numCells=1, resolution=0.01, irradiance=1000, temperature=25
+            )
             assert source.getEdgeCharacteristics(
                 modulesDef
-            ) == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
+            ) == cell.getCellEdgeCharacteristics(
+                numCells=1, resolution=0.01, irradiance=1000, temperature=25
+            )
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Ideal"
@@ -116,15 +120,19 @@ class TestSource:
 
             # Assert that we get the correct function outputs for the module definition.
             assert source.getModuleCurrent(moduleDef) == cell.getCurrent(
-                0.0, 1000, 25
+                numCells=1, voltage=0, irradiance=1000, temperature=25
             )
             assert source.getSourceCurrent(modulesDef) == cell.getCurrent(
-                0.0, 1000, 25
+                numCells=1, voltage=0, irradiance=1000, temperature=25
             )
-            assert source.getIV(modulesDef) == cell.getCellIV(0.01, 1000, 25)
+            assert source.getIV(modulesDef) == cell.getCellIV(
+                numCells=1, resolution=0.01, irradiance=1000, temperature=25
+            )
             assert source.getEdgeCharacteristics(
                 modulesDef
-            ) == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
+            ) == cell.getCellEdgeCharacteristics(
+                numCells=1, resolution=0.01, irradiance=1000, temperature=25
+            )
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Nonideal"
@@ -149,15 +157,19 @@ class TestSource:
 
             # Assert that we get the correct function outputs for the module definition.
             assert source.getModuleCurrent(moduleDef) == cell.getCurrentLookup(
-                0.0, 1000, 25
+                numCells=1, voltage=0, irradiance=1000, temperature=25
             )
             assert source.getSourceCurrent(modulesDef) == cell.getCurrentLookup(
-                0.0, 1000, 25
+                numCells=1, voltage=0, irradiance=1000, temperature=25
             )
-            assert source.getIV(modulesDef) == cell.getCellIV(0.01, 1000, 25)
+            assert source.getIV(modulesDef) == cell.getCellIV(
+                numCells=1, resolution=0.01, irradiance=1000, temperature=25
+            )
             assert source.getEdgeCharacteristics(
                 modulesDef
-            ) == cell.getCellEdgeCharacteristics(0.01, 1000, 25)
+            ) == cell.getCellEdgeCharacteristics(
+                numCells=1, resolution=0.01, irradiance=1000, temperature=25
+            )
 
             # Assert that we get the correct model type.
             assert source.getModelType() == "Nonideal"

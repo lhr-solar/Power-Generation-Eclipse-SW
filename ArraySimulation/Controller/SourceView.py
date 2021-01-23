@@ -43,11 +43,16 @@ class SourceView(View):
     # Update rate of any simulation in the program. Upper bound.
     FRAME_RATE = 100
 
+    # Acceptable boundaries for various inputs for the SourceView.
     VOLTAGE_RES_RANGE = [0.001, 0.1]
     IRRADIANCE_RANGE = [0, 1000]
     IRRADIANCE_RES_RANGE = [1, 200]
     TEMPERATURE_RANGE = [0, 80]
     TEMPERATURE_RES_RANGE = [0.5, 20]
+    ACCEPTABLE_NUM_CELLS = [1, 2, 4, 8]
+
+    # List of source models that can be used.
+    MODELS = ["Ideal", "Nonideal"]
 
     def __init__(self, datastore):
         """
@@ -140,26 +145,32 @@ class SourceView(View):
             self._clearSourceCurves,
         )
         self._console.addComboBox(
-            "ModelSelection", (0, 3), (1, 1), ["Ideal", "Nonideal"]
+            "ModelSelection", (0, 3), (1, 1), SourceView.MODELS
         )
         self._console.addComboBox(
             "LookupSelection", (0, 4), (1, 1), ["UseLookup", "NoLookup"]
         )
         self._console.addTextbox(
-            "IrradTxtbx",
+            "NumCellsTxtbx",
             (0, 5),
+            (1, 1),
+            "Number of cells in the module.",
+        )
+        self._console.addTextbox(
+            "IrradTxtbx",
+            (0, 6),
             (1, 1),
             "Irradiance (W/M^2)",
         )
         self._console.addTextbox(
             "TempTxtbx",
-            (0, 6),
+            (0, 7),
             (1, 1),
             "Temperature (C)",
         )
         self._console.addTextbox(
             "VoltResTxtbx",
-            (0, 7),
+            (0, 8),
             (1, 1),
             "Voltage Resolution (V)",
         )
@@ -228,7 +239,7 @@ class SourceView(View):
 
         self._showSingleShotUI()
 
-        layoutWidget.layout.addWidget(self._console.getLayout(), 0, 0, 1, 2)
+        self._layout.layout.addWidget(self._console.getLayout(), 0, 0, 1, 2)
 
     def _generateSourceCurves(self):
         """
@@ -257,17 +268,20 @@ class SourceView(View):
         controller = self._datastoreParent
 
         # Get textbox values from the console.
+        numCells = self._console.getReference("NumCellsTxtbx").text()
         irradiance = self._console.getReference("IrradTxtbx").text()
         temperature = self._console.getReference("TempTxtbx").text()
         voltageResolution = self._console.getReference("VoltResTxtbx").text()
 
         # Validate textbox values from the console.
+        numCellsRes = self._validate("NumberCells", numCells)
         irradianceRes = self._validate("Irradiance", irradiance)
         temperatureRes = self._validate("Temperature", temperature)
         voltageRes = self._validate("VoltageResolution", voltageResolution)
 
         # Aggregate errors from the validation input.
         errors = []
+        errors += numCellsRes[0]
         errors += irradianceRes[0]
         errors += temperatureRes[0]
         errors += voltageRes[0]
@@ -286,15 +300,87 @@ class SourceView(View):
 
             # Generate the source curves.
             (voltages, currents) = controller.generateSourceCurve(
-                irradianceRes[1], temperatureRes[1], 0.01, model, useLookupBool
+                numCellsRes[1],
+                irradianceRes[1],
+                temperatureRes[1],
+                0.01,
+                model,
+                useLookupBool,
             )
             powers = [
                 voltage * current for voltage, current in zip(voltages, currents)
             ]
 
             # Update the graph.
-            self._datastore["Arbitrary"].addPoints("current", voltages, currents)
-            self._datastore["Arbitrary"].addPoints("power", voltages, powers)
+            self._datastore["Arbitrary"].addSeries(
+                model
+                + ".lookup:"
+                + str(useLookupBool)
+                + ".current:temp."
+                + str(temperatureRes[1])
+                + ":irrad."
+                + str(irradianceRes[1])
+                + ":numCells."
+                + str(numCellsRes[1]),
+                {
+                    "data": {"x": voltages, "y": currents},
+                    "multiplier": 1,
+                    "label": "Current (A): "
+                    + str(numCellsRes[1])
+                    + " cell(s), Temp "
+                    + str(temperatureRes[1])
+                    + " C, Irrad "
+                    + str(irradianceRes[1])
+                    + " G",
+                    "color": (
+                        temperatureRes[1]
+                        * 255
+                        / SourceView.TEMPERATURE_RANGE[1],
+                        255
+                        - irradianceRes[1]
+                        * 255
+                        / SourceView.IRRADIANCE_RANGE[1],
+                        numCellsRes[1]
+                        * 255
+                        / SourceView.ACCEPTABLE_NUM_CELLS[-1],
+                    ),
+                },
+            )
+            self._datastore["Arbitrary"].addSeries(
+                model
+                + ".lookup:"
+                + str(useLookupBool)
+                + ".power:temp."
+                + str(temperatureRes[1])
+                + ":irrad."
+                + str(irradianceRes[1])
+                + ":numCells."
+                + str(numCellsRes[1]),
+                {
+                    "data": {"x": voltages, "y": powers},
+                    "multiplier": 1,
+                    "label": "Power (W): "
+                    + str(numCellsRes[1])
+                    + " cell(s), Temp "
+                    + str(temperatureRes[1])
+                    + " C, Irrad "
+                    + str(irradianceRes[1])
+                    + " G",
+                    "color": (
+                        temperatureRes[1]
+                        * 255
+                        / SourceView.TEMPERATURE_RANGE[1],
+                        255
+                        - irradianceRes[1]
+                        * 255
+                        / SourceView.IRRADIANCE_RANGE[1],
+                        255
+                        - numCellsRes[1]
+                        * 255
+                        / SourceView.ACCEPTABLE_NUM_CELLS[-1],
+                    ),
+                },
+            )
 
             self._console.getReference("StatusLbl").setText("Success.")
         else:
@@ -340,12 +426,12 @@ class SourceView(View):
                 )
                 for temperature in np.arange(
                     SourceView.TEMPERATURE_RANGE[0],
-                    SourceView.TEMPERATURE_RANGE[1],
+                    SourceView.TEMPERATURE_RANGE[1] + tempRes[1],
                     tempRes[1],
                 ):
                     # Note that by default we try to use lookups.
                     (voltages, currents) = controller.generateSourceCurve(
-                        1000, temperature, voltageRes[1], model, True
+                        1, 1000, temperature, voltageRes[1], model, True
                     )
                     powers = [
                         voltage * current
@@ -358,7 +444,9 @@ class SourceView(View):
                         {
                             "data": {"x": voltages, "y": currents},
                             "multiplier": 1,
-                            "label": "Temperature " + str(temperature) + "C",
+                            "label": "Current (A): Temperature "
+                            + str(temperature)
+                            + " C",
                             "color": (
                                 temperature
                                 * 255
@@ -379,6 +467,9 @@ class SourceView(View):
                         {
                             "data": {"x": voltages, "y": powers},
                             "multiplier": 1,
+                            "label": "Power (W): Temperature "
+                            + str(temperature)
+                            + " C",
                             "color": (
                                 temperature
                                 * 255
@@ -400,12 +491,12 @@ class SourceView(View):
                 )
                 for irradiance in np.arange(
                     SourceView.IRRADIANCE_RANGE[0],
-                    SourceView.IRRADIANCE_RANGE[1],
+                    SourceView.IRRADIANCE_RANGE[1] + irradRes[1],
                     irradRes[1],
                 ):
                     # Note that by default we try to use lookups.
                     (voltages, currents) = controller.generateSourceCurve(
-                        irradiance, 25, voltageRes[1], model, True
+                        1, irradiance, 25, voltageRes[1], model, True
                     )
                     powers = [
                         voltage * current
@@ -418,7 +509,9 @@ class SourceView(View):
                         {
                             "data": {"x": voltages, "y": currents},
                             "multiplier": 1,
-                            "label": "Irradiance " + str(irradiance) + "C",
+                            "label": "Current (A): Irradiance "
+                            + str(irradiance)
+                            + " G",
                             "color": (
                                 122
                                 + irradiance
@@ -442,6 +535,9 @@ class SourceView(View):
                         {
                             "data": {"x": voltages, "y": powers},
                             "multiplier": 1,
+                            "label": "Power (W): Irradiance "
+                            + str(irradiance)
+                            + " G",
                             "color": (
                                 122
                                 + irradiance
@@ -490,7 +586,7 @@ class SourceView(View):
         errors = []
         val = None
 
-        if value is None or value is "":
+        if value is None or value == "":
             errors.append("No value. Please type something in!")
         elif _type == "Irradiance":
             try:
@@ -612,6 +708,26 @@ class SourceView(View):
                     + str(val)
                     + "."
                 )
+        elif _type == "NumberCells":
+            try:
+                valCandidate = int(value)
+                if valCandidate in SourceView.ACCEPTABLE_NUM_CELLS:
+                    val = valCandidate
+                else:
+                    errors.append(
+                        "The number of cells is not in the list of acceptable number of cells: "
+                        + str(valCandidate)
+                        + " ["
+                        + ", ".join(
+                            str(entry)
+                            for entry in SourceView.ACCEPTABLE_NUM_CELLS
+                        )
+                        + "]."
+                    )
+            except ValueError:
+                errors.append(
+                    "The number of cells is not of type int: " + str(val) + "."
+                )
         else:
             errors.append("The input type is not defined: " + _type + ".")
 
@@ -651,6 +767,7 @@ class SourceView(View):
                 "ClrSrcCurve",
                 "ModelSelection",
                 "LookupSelection",
+                "NumCellsTxtbx",
                 "IrradTxtbx",
                 "TempTxtbx",
                 "VoltResTxtbx",
@@ -680,6 +797,7 @@ class SourceView(View):
                 "ClrSrcCurve",
                 "ModelSelection",
                 "LookupSelection",
+                "NumCellsTxtbx",
                 "IrradTxtbx",
                 "TempTxtbx",
                 "VoltResTxtbx",

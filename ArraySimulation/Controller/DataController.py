@@ -126,161 +126,102 @@ class DataController:
         # The reference voltage applied at the start of every cycle.
         self._vREF = 0.0
 
-    # def setSimTime(self, targetCycle):
-    #     """
-    #     Time travel to the specified cycle.
+    # Simulation pipeline management.
+    def resetPipeline(self, modelType, MPPTAlgo, MPPTStrideAlgo):
+        """
+        Resets components within the pipeline to the default state.
+        By default, voltage applied across the source is 0V, and the cycle is 0.
 
-    #     Parameters
-    #     ----------
-    #     targetCycle: int
-    #         The cycle the simulation should jump to.
-    #     """
-    #     self._environment.setCycle(targetCycle)
+        Parameters
+        ----------
+        modelType: String
+            The source model type.
+        MPPTAlgo: String
+            The MPPT algorithm used.
+        MPPTStrideAlgo: String
+            The MPPT stride algorithm used.
+        """
+        self._PVEnv.setupModel()
+        self._PVSource.setupModel(modelType=modelType)
+        self._MPPT.setupModel(numCells=1, modelType=MPPTAlgo, strideType=MPPTStrideAlgo)
+        self._DCDCConverter.reset()
+        self.datastore = {
+            "cycle": [],
+            "sourceDef": [],
+            "sourceOutput": [],
+            "mpptOutput": [],
+            "dcdcOutput": [],
+        }
 
-    # # Source management.
-    # def setupSimSource(self, modelType, useLookup):
-    #     """
-    #     Sets up the PVSource object for the simulation.
+        self._vREF = 0.0
 
-    #     Parameters
-    #     ----------
-    #     modelType: String
-    #         Specifies the PVCell model used for modeling all photovoltaics.
-    #     useLookup: Bool
-    #         Enables the use of lookup tables, if they exist for the model. If it
-    #         doesn't, we default to the getCurrent function that doesn't use
-    #         lookups.
-    #     """
+    def iteratePipelineCycleMPPT(self):
+        """
+        Runs an entire cycle through the pipeline, using components required for
+        a MPPT Simulation.
+        """
+        # Get the current simulation cycle.
+        cycle = self._PVEnv.getCycle()
 
-    # # MPPT management.
-    # def setupSimMPPT(self, numCells, modelType, strideType):
-    #     """
-    #     Sets up the MPPT object for the simulation.
+        # Retrieve the source definition for the current simulation cycle.
+        modulesDef = self._PVEnv.getSourceDefinition(self._vREF)
+        envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
 
-    #     Parameters
-    #     ----------
-    #     numCells: int
-    #         Number of cells expected by the MPPT model.
-    #     modelType: String
-    #         Specifier for the type of model to be used in the MPPT.
-    #     strideType: String
-    #         Specifier for the type of stride model to be used in the MPPT.
-    #     """
-    #     self._MPPT.setupModel(numCells, modelType, strideType)
+        print(modulesDef)
+        # Retrieve the source characteristics given the source definition.
+        sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
+        sourceIV = self._PVSource.getIV(modulesDef)
+        sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef)
 
-    # # DC-DC Converter management.
-    # def setupSimDCDCConverter(self, arrayVoltage, loadVoltage):
-    #     """
-    #     Sets up the DC-DC Converter object for the simulation.
+        # Retrieve the MPPT VREF guess given the source output current.
+        vRef = self._MPPT.getReferenceVoltage(
+            self._vREF,
+            sourceCurrent,
+            envDef["irradiance"],
+            envDef["temperature"],
+        )
 
-    #     Parameters
-    #     ----------
-    #     arrayVoltage: float
-    #         Expected array output voltage.
-    #     loadVoltage: float
-    #         Initial load voltage. This is the battery in the case of the solar
-    #         array.
-    #     """
-    #     self._DCDCConverter.setup(arrayVoltage, loadVoltage)
+        # Generate the pulsewidth of the DC-DC Converter and spit it back out.
+        self._DCDCConverter.setPulseWidth(vRef)
+        pulseWidth = self._DCDCConverter.getPulseWidth()
 
-    # # Simulation pipeline management.
-    # def resetPipeline(self, voltage=0.0):
-    #     """
-    #     Resets components within the pipeline to the default state.
-    #     By default, voltage applied across the source is 0V, and the cycle is 0.
+        # Store our output into our datastore.
+        self.datastore["cycle"].append(cycle)
+        self.datastore["sourceDef"].append(modulesDef)
+        self.datastore["sourceOutput"].append(
+            {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
+        )
+        self.datastore["mpptOutput"].append(vRef)
+        self.datastore["dcdcOutput"].append(pulseWidth)
 
-    #     Parameters
-    #     ----------
-    #     voltage: float
-    #         Initial VREF of the simulation.
-    #     """
-    #     self._PVEnv.setCycle(0)
-    #     self._MPPT.reset()
-    #     self._DCDCConverter.reset()
-    #     self.datastore = None
+        # Assign the VREF to apply across the source in the next simulation cycle.
+        self._vREF = vRef
 
-    #     self._vREF = voltage
+        # Increment the current simulation cycle.
+        self._PVEnv.cycle()
 
-    # def iteratePipelineCycleSource(self):
-    #     """
-    #     Runs an entire cycle through the pipeline, using components required for
-    #     a Source Simulation.
-    #     """
-    #     # Get the current simulation cycle.
-    #     cycle = self._PVEnv.getCycle()
+        continueBool = True
+        if cycle > 200:
+            continueBool = False
 
-    #     # Retrieve the source definition for the current simulation cycle.
-    #     modulesDef = self._PVEnv.getSourceDefinition(0)
-    #     envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
-
-    #     # Retrieve the source characteristics given the source definition.
-    #     sourceIV = self._PVSource.getIV(modulesDef)
-    #     sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef)
-
-    #     # Store our output into our datastore.
-    #     self.datastore["cycle"].append(cycle)
-    #     self.datastore["sourceDef"].append(modulesDef)
-    #     self.datastore["sourceOutput"].append(
-    #         {"current": 0, "IV": sourceIV, "edge": sourceEdgeChar}
-    #     )
-    #     self.datastore["mpptOutput"].append(0)
-    #     self.datastore["dcdcOutput"].append(0)
-
-    #     # Increment the current simulation cycle.
-    #     self._PVEnv.cycle()
-
-    # def iteratePipelineCycleMPPT(self):
-    #     """
-    #     Runs an entire cycle through the pipeline, using components required for
-    #     a MPPT Simulation.
-    #     """
-    #     # Get the current simulation cycle.
-    #     cycle = self._PVEnv.getCycle()
-
-    #     # Retrieve the source definition for the current simulation cycle.
-    #     modulesDef = self._PVEnv.getSourceDefinition(self._vREF)
-    #     envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
-
-    #     # Retrieve the source characteristics given the source definition.
-    #     sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
-    #     sourceIV = self._PVSource.getIV(modulesDef)
-    #     sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef)
-
-    #     # Retrieve the MPPT VREF guess given the source output current.
-    #     vRef = self._MPPT.getReferenceVoltage(
-    #         self._vREF,
-    #         sourceCurrent,
-    #         envDef["irradiance"],
-    #         envDef["temperature"],
-    #     )
-
-    #     # Generate the pulsewidth of the DC-DC Converter and spit it back out.
-    #     self._DCDCConverter.setPulseWidth(vRef)
-    #     pulseWidth = self._DCDCConverter.getPulseWidth()
-
-    #     # Store our output into our datastore.
-    #     self.datastore["cycle"].append(cycle)
-    #     self.datastore["sourceDef"].append(modulesDef)
-    #     self.datastore["sourceOutput"].append(
-    #         {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
-    #     )
-    #     self.datastore["mpptOutput"].append(vRef)
-    #     self.datastore["dcdcOutput"].append(pulseWidth)
-
-    #     # Assign the VREF to apply across the source in the next simulation cycle.
-    #     self._vREF = vRef
-
-    #     # Increment the current simulation cycle.
-    #     self._PVEnv.cycle()
+        return (self.datastore, continueBool)
 
     def generateSourceCurve(
-        self, irradiance, temperature, voltageResolution, modelType, useLookup
+        self,
+        numCells,
+        irradiance,
+        temperature,
+        voltageResolution,
+        modelType,
+        useLookup,
     ):
         """
         Generates a source curve for the given parameters.
 
         Parameters
         ----------
+        numCells: int
+            The number of cells in the source model.
         irradiance: float
             PVEnvironment irradiance.
         temperature: float
@@ -300,7 +241,7 @@ class DataController:
         """
         # Setup the PVEnvironment.
         # We don't care about the max cycles in this case.
-        self._PVEnv.setupModel((irradiance, temperature), 0)
+        self._PVEnv.setupModel((numCells, irradiance, temperature), 0)
 
         # Setup the PVSource.
         self._PVSource.setupModel(modelType, useLookup)
@@ -309,7 +250,9 @@ class DataController:
         # We don't care about the voltage input in this case (since we grab the
         # entire I-V curve, which iterates over all voltages).
         modulesDef = self._PVEnv.getSourceDefinition(0.0)
+        print(modulesDef, voltageResolution)
         IVCoordinates = self._PVSource.getIV(modulesDef, voltageResolution)
+        print(IVCoordinates)
 
         # Parse it into a format directly ingestable by the UIController.
         xVals = []

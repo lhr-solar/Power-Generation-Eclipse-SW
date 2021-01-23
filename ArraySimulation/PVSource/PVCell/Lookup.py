@@ -33,11 +33,11 @@ reach any expected output value.
     We can ignore sorting and insertion costs if we insert in order with a clever 
     source building scheme. Retrieval is reduced to an O(1) lookup.
 
-    We can also eliminate the need to interpolate data if we clearly define the 
-    minimum resolution across each independent variable. This is a semi hard 
-    problem that can be resolved, however. An example procedure would be to check
-    which parameters are finer grained than the built resolution, and search for 
-    2^N points on the lookup with the two closest resolved solutions for each 
+    We can also reduce the constraints of our minimum resolution if we
+    interpolate our data across each independent variable. This is a semi hard
+    problem that can be resolved. An example procedure would be to check which
+    parameters are finer grained than the built resolution, and search for 2^N
+    points on the lookup with the two closest resolved solutions for each
     parameter.
     
     For example, given              and our lookup resolution is:
@@ -96,7 +96,7 @@ class Lookup:
     """
 
     # Where all lookup files are located.
-    fileRoot = "./External/"
+    _fileRoot = "./External/"
 
     def __init__(
         self,
@@ -178,7 +178,8 @@ class Lookup:
 
         Return
         ------
-        float: De
+        float: The resultant output given the input parameters.
+
         Assumptions
         -----------
         params must match the number of parameters specified at initialization.
@@ -216,7 +217,7 @@ class Lookup:
         """
         Writes accumulated data into the file.
         """
-        with open(self.fileRoot + self._filename, "w", newline="\n") as csv_file:
+        with open(self._fileRoot + self._filename, "w", newline="\n") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(self._header)
             for line in self.data:
@@ -228,7 +229,7 @@ class Lookup:
         Repeat calls just repeat the operation.
         """
         self.data = []
-        with open(self.fileRoot + self._filename, "r", newline="\n") as csv_file:
+        with open(self._fileRoot + self._filename, "r", newline="\n") as csv_file:
             reader = csv.reader(csv_file)
             for row in reader:
                 self.data.append(row)

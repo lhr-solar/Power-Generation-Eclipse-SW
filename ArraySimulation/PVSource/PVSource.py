@@ -49,10 +49,18 @@ class PVSource:
     set of input conditions.
     """
 
-    # The upper voltage bound that should be tested by any model. We expect the
-    # PV to always be at open circuit voltage at this point. Adjustable based on
-    # the number of cells determined from the initialization.
-    MAX_VOLTAGE = 100
+    # The upper voltage bound that should be tested by any model for a single
+    # cell. We expect the PV to always be at open circuit voltage at this point.
+    # Adjustable based on the number of cells determined from the initialization.
+    MAX_CELL_VOLTAGE = 0.8
+
+    # Our starting upper current bound when looking for the minimum current of
+    # a set of modules in series with bypass diodes.
+    MAX_CURRENT = 8
+
+    # Out starting lower current bound when looking for the I-V curve of a set
+    # of modules in series with bypass diodes.
+    MIN_CURRENT = 0
 
     def __init__(self):
         self._modelType = None
@@ -113,13 +121,15 @@ class PVSource:
         """
         if self._model is not None:
             if self._useLookup:
-                return moduleDef["numCells"] * self._model.getCurrentLookup(
+                return self._model.getCurrentLookup(
+                    moduleDef["numCells"],
                     moduleDef["voltage"],
                     moduleDef["irradiance"],
                     moduleDef["temperature"],
                 )
             else:
-                return moduleDef["numCells"] * self._model.getCurrent(
+                return self._model.getCurrent(
+                    moduleDef["numCells"],
                     moduleDef["voltage"],
                     moduleDef["irradiance"],
                     moduleDef["temperature"],
@@ -159,8 +169,12 @@ class PVSource:
         Current is roughly linear to the number of cells in series.
         """
         if self._model is not None:
-            moduleDef = modulesDef["0"]
-            return self.getModuleCurrent(moduleDef)
+            minCurrent = PVSource.MAX_CURRENT
+            for moduleDef in modulesDef.values():
+                current = self.getModuleCurrent(moduleDef)
+                if current < minCurrent:
+                    minCurrent = current
+            return minCurrent
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
@@ -199,13 +213,48 @@ class PVSource:
         The IV curve of the source has a short circuit current of 0A at
         MAX_VOLTAGE.
         """
-        # for voltage in np.arange(0, self.MAX_VOLTAGE, resolution):
-        # pass
+        # We need to calculate the expected maximum voltage that can be applied
+        # over all modules.
         if self._model is not None:
             moduleDef = modulesDef["0"]
             return self._model.getCellIV(
-                resolution, moduleDef["irradiance"], moduleDef["temperature"]
+                moduleDef["numCells"],
+                resolution,
+                moduleDef["irradiance"],
+                moduleDef["temperature"]
             )
+
+            # model = []
+            # maxVoltage = 0
+            # for moduleDef in modulesDef.values():
+            #     maxVoltage += moduleDef["numCells"] * PVSource.MAX_CELL_VOLTAGE
+
+            # for voltage in np.arange(0, maxVoltage + resolution, resolution):
+            #     currents = []
+
+            #     # We're looking for the maximum of current of all modules. We
+            #     # can do this by putting each module result into a list and then
+            #     # finding the max of the list.
+            #     # TODO: needs to match desmos.
+            #     for moduleDef in modulesDef.values():
+            #         print(moduleDef)
+            #         if self._useLookup:
+            #             currents.append(self._model.getCurrentLookup(
+            #                 moduleDef["numCells"],
+            #                 voltage,
+            #                 moduleDef["irradiance"],
+            #                 moduleDef["temperature"]
+            #             ))
+            #         else:
+            #             currents.append(self._model.getCurrent(
+            #                 moduleDef["numCells"],
+            #                 voltage,
+            #                 moduleDef["irradiance"],
+            #                 moduleDef["temperature"]
+            #             ))
+            #     print(currents)
+            #     model.append((voltage, max(currents)))
+            # return model
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
@@ -244,7 +293,10 @@ class PVSource:
         if self._model is not None:
             moduleDef = modulesDef["0"]
             return self._model.getCellEdgeCharacteristics(
-                resolution, moduleDef["irradiance"], moduleDef["temperature"]
+                moduleDef["numCells"],
+                resolution,
+                moduleDef["irradiance"],
+                moduleDef["temperature"],
             )
         else:
             raise Exception("No cell model is defined for the PVSource.")

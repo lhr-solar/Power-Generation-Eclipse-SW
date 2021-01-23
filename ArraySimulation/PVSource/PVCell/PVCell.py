@@ -27,7 +27,7 @@ class PVCell:
 
     # The upper voltage bound that should be tested by any model. We expect the
     # cell to always be at open circuit voltage at this point.
-    MAX_VOLTAGE = 0.8
+    MAX_CELL_VOLTAGE = 0.8
 
     # Minimum allowed resolution step for voltage.
     MIN_RESOLUTION = 0.001
@@ -49,13 +49,15 @@ class PVCell:
         self.rSeries = 0.032  # Predicted Cell series resistance (Ohms).
         self.rShunt = 36.1  # Predicted Cell shunt resistance (Ohms).
 
-    def getCurrent(self, voltage=0, irradiance=0.001, temperature=0):
+    def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         """
         Calculates and returns the cell model current given various
         environmental parameters.
 
         Parameters
         ----------
+        numCells: int
+            Number of cells in the model.
         voltage: float
             Voltage across the cell. Restricted to MAX_VOLTAGE.
         irradiance: float
@@ -69,7 +71,9 @@ class PVCell:
         """
         return -1
 
-    def getCurrentLookup(self, voltage=0, irradiance=0.001, temperature=0):
+    def getCurrentLookup(
+        self, numCells=1, voltage=0, irradiance=0.001, temperature=0
+    ):
         """
         Looks up the cell model current given various environmental parameters.
         Guaranteed blazing fast speed. Requires a minimum resolution for various
@@ -78,6 +82,8 @@ class PVCell:
 
         Parameters
         ----------
+        numCells: int
+            Number of cells in the model.
         voltage: float
             Voltage across the cell. Restricted to MAX_VOLTAGE.
         irradiance: float
@@ -89,15 +95,19 @@ class PVCell:
         -------
         float: current of the cell model.
         """
-        return -1
+        return self.getCurrent(numCells, voltage, irradiance, temperature)
 
-    def getCellIV(self, resolution=0.01, irradiance=0.001, temperature=0):
+    def getCellIV(
+        self, numCells=1, resolution=0.01, irradiance=0.001, temperature=0
+    ):
         """
         Calculates the entire cell model current voltage plot given various
         environmental parameters.
 
         Parameters
         ----------
+        numCells: int
+            Number of cells in the model.
         resolution: float
             Voltage stride across the cell. Occurs within the bounds of [0,
             MAX_VOLTAGE], inclusive.
@@ -119,15 +129,17 @@ class PVCell:
         if resolution <= 0:
             resolution = self.MIN_RESOLUTION
 
-        for voltage in np.arange(0.0, self.MAX_VOLTAGE, resolution):
-            current = self.getCurrent(voltage, irradiance, temperature)
+        for voltage in np.arange(
+            0.0, self.MAX_CELL_VOLTAGE * numCells + resolution, resolution
+        ):
+            current = self.getCurrent(numCells, voltage, irradiance, temperature)
             if current >= 0.0:
-                model.append((voltage, current))
+                model.append((round(voltage, 2), round(current, 3))) # TODO: this rounding should be a function of resolution
 
         return model
 
     def getCellEdgeCharacteristics(
-        self, resolution=0.001, irradiance=0.001, temperature=0
+        self, numCells=1, resolution=0.001, irradiance=0.001, temperature=0
     ):
         """
         Calculates the cell model edge characteristics given various
@@ -135,6 +147,8 @@ class PVCell:
 
         Parameters
         ----------
+        numCells: int
+            Number of cells in the model.
         resolution: float
             Voltage stride across the cell. Occurs within the bounds of [0,
             MAX_VOLTAGE], inclusive.
@@ -162,7 +176,7 @@ class PVCell:
         if resolution <= 0:
             resolution = self.MIN_RESOLUTION
 
-        model = self.getCellIV(resolution, irradiance, temperature)
+        model = self.getCellIV(numCells, resolution, irradiance, temperature)
 
         if model != []:
             SCCurrent = model[0][1]  # Current in first entry

@@ -195,3 +195,7 @@ class TestPVEnvironment:
             pytest.fail(str(e))
 
     # TODO: test with multiple cell profile.
+
+
+env = PVEnvironment()
+env.setupModel()

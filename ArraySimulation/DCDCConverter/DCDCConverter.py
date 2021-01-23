@@ -26,15 +26,17 @@ voltage has reached the correct place and is at steady state).
 class DCDCConverter:
     """
     The DCDCConverter class is a concrete base class that translate
-    MPPT Reference voltages into a roughly equivalent pulse width. This class mainly
-    is a pass through component of the simulator, since we assume our MPPT VRef
-    equates to a pulse width that applies exactly the MPPT VRef across the source.
+    MPPT Reference voltages into a roughly equivalent pulse width. This class
+    mainly is a pass through component of the simulator, since we assume our
+    MPPT VRef equates to a pulse width that applies exactly the MPPT VRef across
+    the source.
 
-    In a more advanced model, we might tinker with this class to not do convert 1-1,
-    and investigate the sampling timing required in a real system. Doing so will
-    allow us to develop feedback loop algorithms for the real DC-DC Converter to
-    push the source to the correct VRef prior to the MPPT step (which assumes our
-    voltage has reached the correct place and is at steady state).
+    In a more advanced model, we might tinker with this class to not do convert
+    1-1, and investigate the sampling timing required in a real system. Doing so
+    will allow us to develop feedback loop algorithms for the real DC-DC
+    Converter to push the source to the correct VRef prior to the MPPT step
+    (which assumes our voltage has reached the correct place and is at steady
+    state).
     """
 
     def __init__(self):
@@ -123,3 +125,5 @@ class DCDCConverter:
         self.arrayVoltage = 0
         self.loadVoltage = 0
         self.pulseWidth = 0
+
+

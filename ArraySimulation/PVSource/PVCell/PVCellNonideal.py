@@ -4,10 +4,12 @@ PVCellNonideal.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/14/20
-Last Modified: 11/24/20
+Last Modified: 11/26/20
 
 Description: Derived class of PVCell that implements an nonideal model tuned to
 the Sunpower Maxeon III Bin Le1 solar cells.
+
+TODO: Implement number of cells in output.
 """
 # Library Imports.
 from math import exp, pow, e
@@ -30,10 +32,12 @@ class PVCellNonideal(PVCell):
         super(PVCellNonideal, self).__init__()
 
         # Lookup object for pulling a model from a file.
+        # parameters=[(0.001, 801), (10, 101), (1, 81)],
+        # fileName="NonidealCellLookup2.csv"
         self._lookup = Lookup(fileName="NonidealCellLookup.csv")
         self._lookup.readFile()
 
-    def getCurrent(self, voltage=0, irradiance=0.001, temperature=0):
+    def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         # Nonideal single diode model.
         cellTemperature = (
             temperature + 273.15
@@ -108,9 +112,11 @@ class PVCellNonideal(PVCell):
             difference = (left - right) ** 2
 
         # TODO: for some reason, I'm bloody off by a factor of 10 at all times.
-        return currentPrediction * 10
+        return currentPrediction# * 10
 
-    def getCurrentLookup(self, voltage=0, irradiance=0.001, temperature=0):
+    def getCurrentLookup(
+        self, numCells=1, voltage=0, irradiance=0.001, temperature=0
+    ):
         """
         Guaranteed to be at least a dozen times faster than getCurrent. However,
         we need to be able to generate the lookup table from the original, which
@@ -143,14 +149,20 @@ class PVCellNonideal(PVCell):
             Temperature resolution step.
         """
         lookup = Lookup(fileName=fileName)
-        for voltage in np.arange(0.00, 0.81, voltageRes):
-            for irradiance in np.arange(0.00, 1000.1, irradianceRes):
-                for temperature in np.arange(0.00, 80.1, temperatureRes):
+        for voltage in np.arange(0.00, 0.80 + voltageRes, voltageRes):
+            for irradiance in np.arange(
+                0.00, 1000 + irradianceRes, irradianceRes
+            ):
+                for temperature in np.arange(
+                    0.00, 80 + temperatureRes, temperatureRes
+                ):
                     if irradiance == 0.00:
                         irradiance = 0.001
                     if temperature == 0.00:
                         temperature = 0.001
-                    current = self.getCurrent(voltage, irradiance, temperature)
+                    current = self.getCurrent(
+                        1, voltage, irradiance, temperature
+                    )
                     lookup.addLine(
                         [
                             round(voltage, 3),
@@ -164,7 +176,9 @@ class PVCellNonideal(PVCell):
         lookup.readFile()
         self._lookup = lookup
 
-    def getCellIV(self, resolution=0.001, irradiance=0.001, temperature=0):
+    def getCellIV(
+        self, numCells=1, resolution=0.001, irradiance=0.001, temperature=0
+    ):
         """
         Calculates the entire cell model current voltage plot given various
         environmental parameters.
@@ -192,10 +206,14 @@ class PVCellNonideal(PVCell):
         if resolution <= 0:
             resolution = self.MIN_RESOLUTION
 
-        for voltage in np.arange(0.0, self.MAX_VOLTAGE, resolution):
-            current = self.getCurrentLookup(voltage, irradiance, temperature)
+        for voltage in np.arange(
+            0.0, self.MAX_CELL_VOLTAGE * numCells + resolution, resolution
+        ):
+            current = self.getCurrentLookup(
+                numCells, voltage, irradiance, temperature
+            )
             if current >= 0.0:
-                model.append((voltage, current))
+                model.append((round(voltage, 2), round(current, 3))) # TODO: this rounding should be a function of resolution
 
         return model
 

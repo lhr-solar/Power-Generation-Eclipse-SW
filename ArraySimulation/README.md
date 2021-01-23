@@ -9,7 +9,7 @@ The author and maintainer of this utility is Matthew Yu (2020).
 ## Install
 
 Installation requirements can be found in `requirements.txt` and can be
-installed using `pip3 instll -r requirements.txt`. Python 3 is required.
+installed using `pip3 install -r requirements.txt`. Python 3 is required.
 
 ---
 
@@ -68,7 +68,7 @@ The list below are some files that require a refactor in some sort of way.
     - [ ] This Class could be converted into a builder class for objects. Besides
       buttons, it should have combo boxes and/or text boxes with validation.
   - SourceView.py
-    - [ ] This Class should simplify its UI layout and data management scheme.
+    - [x] This Class should simplify its UI layout and data management scheme.
   - MPPTView.py
     - [ ] This Class should implement its UI layout scheme and data management
       scheme.

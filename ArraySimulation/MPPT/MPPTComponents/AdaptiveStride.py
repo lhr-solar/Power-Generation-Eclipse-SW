@@ -62,7 +62,7 @@ class AdaptiveStride(Stride):
         self.k = error
 
     def getStride(self, arrVoltage, arrCurrent, irradiance, temperature):
-        minStride = k * k / (2 * (1 - self.k)) * self.VMPP
+        minStride = self.k * self.k / (2 * (1 - self.k)) * self.VMPP
         stride = 0
         if arrVoltage < self.VMPP:
             stride = exp((self.VMPP - arrVoltage) / 3) - 1
