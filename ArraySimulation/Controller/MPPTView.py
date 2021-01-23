@@ -296,8 +296,6 @@ class MPPTView(View):
             # print(
             #     "Searching for:", VREF
             # )  # TODO: this rounding should be a function of resolution
-            # print("In:", IVList)
-            # print("We get:", MPPTCurrOut)
 
             # Percent Yield
             powerStore["actualPower"] = VREF * MPPTCurrOut[0]
