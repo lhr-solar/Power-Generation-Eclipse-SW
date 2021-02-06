@@ -34,13 +34,24 @@ class View:
     # Timing constants.
     _SECOND = 1000  # in milliseconds.
 
-    def __init__(self, datastore=None, framerate=60):
+    def __init__(self, dataController=None, framerate=60):
+        """
+        Initializes a view object for displaying data.
+
+        Parameters
+        ----------
+        dataController: Dictionary
+            reference to the DataController object which manages the program
+            simulation pipeline.
+        framerate: int
+            Number of updates per second for realtime graphing and graphics.
+        """
         self._framerate = framerate
         self._layout = None
 
-        # The datastore parent is a reference to the overarching DataController,
+        # The datastoreParent is a reference to the overarching DataController,
         # which exposes its API to user Views.
-        self._datastoreParent = datastore
+        self._datastoreParent = dataController
 
         # The datastore child is a reference to a local managed datastore, which
         # is of a different format as the parent.

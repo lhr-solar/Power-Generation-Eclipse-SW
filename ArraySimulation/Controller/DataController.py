@@ -51,7 +51,7 @@ For now, we only have two types of simulations that we want to simulate.
 
     - Set the PVEnvironment to a specific irradiance and temperature.
     - Set the PVSource to a specific model.
-    - Set the MPPT to use a specific algorithm and stride algorithm.
+    - Set the MPPT to use a specific global, local, and stride algorithm.
 
     Using the PVEnvironment and PVSource, provide the input for the
     the MPPT to generate a reverence voltage. Calculate the appropriate
@@ -127,7 +127,7 @@ class DataController:
         self._vREF = 0.0
 
     # Simulation pipeline management.
-    def resetPipeline(self, modelType, MPPTAlgo, MPPTStrideAlgo):
+    def resetPipeline(self, modelType, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo):
         """
         Resets components within the pipeline to the default state.
         By default, voltage applied across the source is 0V, and the cycle is 0.
@@ -136,14 +136,20 @@ class DataController:
         ----------
         modelType: String
             The source model type.
+        MPPTGlobalAlgo: String
+            The global MPPT algorithm type.
         MPPTAlgo: String
-            The MPPT algorithm used.
+            The local MPPT algorithm type.
         MPPTStrideAlgo: String
-            The MPPT stride algorithm used.
+            The stride MPPT algorithm type.
         """
         self._PVEnv.setupModel()
         self._PVSource.setupModel(modelType=modelType)
-        self._MPPT.setupModel(numCells=1, modelType=MPPTAlgo, strideType=MPPTStrideAlgo)
+
+        # TODO: add support for global algorithms when Afnan merges in his work.
+        self._MPPT.setupModel(
+            numCells=1, modelType=MPPTLocalAlgo, strideType=MPPTStrideAlgo
+        )
         self._DCDCConverter.reset()
         self.datastore = {
             "cycle": [],
