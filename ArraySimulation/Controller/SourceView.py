@@ -54,12 +54,12 @@ class SourceView(View):
     # List of source models that can be used.
     MODELS = ["Ideal", "Nonideal"]
 
-    def __init__(self, datastore):
+    def __init__(self, datastore, framerate):
         """
         Upon initialization, we perform any data and UI setup required to get
         the SourceView into a default state.
         """
-        super(SourceView, self).__init__(datastore=datastore)
+        super(SourceView, self).__init__(datastore=datastore, framerate=framerate)
 
         self._datastore = {
             "Ideal": {

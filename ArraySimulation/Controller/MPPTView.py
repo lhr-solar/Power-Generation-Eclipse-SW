@@ -25,6 +25,7 @@ It shows the following IV-PV Curve graphs:
       power generated
 """
 # Library Imports.
+from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import (
     QGridLayout,
@@ -60,12 +61,12 @@ class MPPTView(View):
     # List of MPPT stride algorithms that can be used.
     MPPT_STRIDE_MODELS = ["Fixed", "Adaptive", "Bisection", "Optimal"]
 
-    def __init__(self, datastore):
+    def __init__(self, datastore, framerate):
         """
         Upon initialization, we perform any data and UI setup required to get
         the SourceView into a default state.
         """
-        super(MPPTView, self).__init__(datastore=datastore)
+        super(MPPTView, self).__init__(datastore=datastore, framerate=framerate)
 
         self._datastore = {
             "SourceChars": Graph(
@@ -161,6 +162,7 @@ class MPPTView(View):
                         "multiplier": 1,
                         "label": None,
                         "color": (255, 255, 255),
+                        "size": 8 # Twice the size of default.
                     },
                     "list": ("voltage", "power", "MPPTVREF"),
                 },
@@ -266,8 +268,6 @@ class MPPTView(View):
         """
         self._clearGraphs()
 
-        controller = self._datastoreParent
-
         # Get options from combo boxes.
         sourceModel = self._console.getReference("ModelSelection").currentText()
         MPPTAlgo = self._console.getReference("AlgorithmSelection").currentText()
@@ -275,6 +275,7 @@ class MPPTView(View):
             "AlgorithmStrideSelection"
         ).currentText()
 
+        controller = self._datastoreParent
         controller.resetPipeline(sourceModel, MPPTAlgo, MPPTStrideAlgo)
         (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
@@ -285,146 +286,172 @@ class MPPTView(View):
             "energyData": [0, 0],  # [Total Energy Generated, Total Theoretical Energy]
         }
 
-        # print(cycleResults)
-
-        idx = 0
-        while continueBool:
-            # Update derived data structures
-            VREF = round(cycleResults["mpptOutput"][idx], 2)
-            IVList = cycleResults["sourceOutput"][idx]["IV"]
-            MPPTCurrOut = [curr for (volt, curr) in IVList if volt == VREF]
-            # print(
-            #     "Searching for:", VREF
-            # )  # TODO: this rounding should be a function of resolution
-
-            # Percent Yield
-            powerStore["actualPower"] = VREF * MPPTCurrOut[0]
-            powerStore["theoreticalPower"] = (
-                cycleResults["sourceOutput"][idx]["edge"][2][0]
-                * cycleResults["sourceOutput"][idx]["edge"][2][1]
-            )
-            percentYield = powerStore["actualPower"] / powerStore["theoreticalPower"]
-
-            # Cycles below threshold
-            if percentYield < 0.95:
-                powerStore["cycleData"][0] += 1
-            powerStore["cycleData"][1] += 1
-            percentThreshold = powerStore["cycleData"][0] / powerStore["cycleData"][1]
-
-            # Tracking efficiency
-            powerStore["energyData"][0] += powerStore["actualPower"]
-            powerStore["energyData"][1] += powerStore["theoreticalPower"]
-            trackingEff = powerStore["energyData"][0] / powerStore["energyData"][1]
-
-            # Plot Source Characteristics.
-            self._datastore["SourceChars"].addPoint(
-                "voltage",
-                cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][0],
-            )
-
-            self._datastore["SourceChars"].addPoint(
-                "current",
-                cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][1],
-            )
-
-            self._datastore["SourceChars"].addPoint(
-                "power",
-                cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][0]
-                * cycleResults["sourceOutput"][idx]["edge"][2][1],
-            )
-
-            self._datastore["SourceChars"].addPoint(
-                "irradiance",
-                cycleResults["cycle"][idx],
-                cycleResults["sourceDef"][idx]["0"]["irradiance"],
-            )
-
-            self._datastore["SourceChars"].addPoint(
-                "temperature",
-                cycleResults["cycle"][idx],
-                cycleResults["sourceDef"][idx]["0"]["temperature"],
-            )
-
-            # Plot MPPT Characteristics.
-            self._datastore["MPPTChars"].addPoint(
-                "voltage", cycleResults["cycle"][idx], cycleResults["mpptOutput"][idx]
-            )
-
-            self._datastore["MPPTChars"].addPoint(
-                "current", cycleResults["cycle"][idx], MPPTCurrOut[0]
-            )
-
-            self._datastore["MPPTChars"].addPoint(
-                "power",
-                cycleResults["cycle"][idx],
-                cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
-            )
-
-            # Plot VRefPosition.
-            self._datastore["VRefPosition"].clearSeries("voltage")
-            self._datastore["VRefPosition"].clearSeries("power")
-
-            voltageList = [entry[0] for entry in IVList]
-            currentList = [entry[1] for entry in IVList]
-            powerList = [entry[0] * entry[1] for entry in IVList]
-
-            self._datastore["VRefPosition"].addPoints(
-                "voltage", voltageList, currentList
-            )
-            self._datastore["VRefPosition"].addPoints("power", voltageList, powerList)
-
-            self._datastore["VRefPosition"].clearSeries("MPPTVREF")
-            self._datastore["VRefPosition"].addPoints(
-                "MPPTVREF",
-                [VREF, VREF],
-                [MPPTCurrOut[0], VREF * MPPTCurrOut[0]],
-            )
-
-            # Plot Power Comparison.
-            self._datastore["PowerComp"].addPoint(
-                "power",
-                cycleResults["cycle"][idx],
-                cycleResults["sourceOutput"][idx]["edge"][2][0]
-                * cycleResults["sourceOutput"][idx]["edge"][2][1],
-            )
-
-            self._datastore["PowerComp"].addPoint(
-                "MPPTPower",
-                cycleResults["cycle"][idx],
-                cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
-            )
-
-            # Plot Efficiencies.
-            self._datastore["Efficiency"].addPoint(
-                "percentYield",
-                idx,
-                percentYield,
-            )
-            self._datastore["Efficiency"].addPoint(
-                "cyclesThreshold", idx, percentThreshold
-            )
-            self._datastore["Efficiency"].addPoint("trackingEff", idx, trackingEff)
-
-            (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
-            idx += 1
-
-        """
-        {
-            "cycle": [],        # List of integers
-            "sourceDef": [],    # List of source environment definitions
-            "sourceOutput: [],  # List of dicts in the following format:
-                                    {
-                                        "current": float,
-                                        "IV": list of voltage/current tuples,
-                                        "edge": tuple (V_OC, I_SC, (V_MPP, I_MPP))
-                                    }
-            "mpptOutput": [],   # List of reference voltages
-            "dcdcOutput": [],   # List of output Pulse Widths
+        self.pipelineData = {
+            "continueBool": continueBool,
+            "executionIdx": 0,
+            "cycleResults": cycleResults,
+            "powerStore": powerStore,
         }
-        """
+
+        # Execute a timer thread for the duration of the generating the MPPT
+        # algorithm graphs.
+        self.timer = QTimer()
+        self.timer.timeout.connect(self._executeMPPTAlgorithmHelper)
+        self.timer.start(self._SECOND / self._framerate)
+
+    def _executeMPPTAlgorithmHelper(self):
+        controller = self._datastoreParent
+        idx = self.pipelineData["executionIdx"]
+        cycleResults = self.pipelineData["cycleResults"]
+        powerStore = self.pipelineData["powerStore"]
+
+        # Update derived data structures
+        VREF = round(cycleResults["mpptOutput"][idx], 2)
+        IVList = cycleResults["sourceOutput"][idx]["IV"]
+        MPPTCurrOut = [curr for (volt, curr) in IVList if volt == VREF]
+        # print(
+        #     "Searching for:", VREF
+        # )  # TODO: this rounding should be a function of resolution
+
+        # Percent Yield
+        powerStore["actualPower"] = VREF * MPPTCurrOut[0]
+        powerStore["theoreticalPower"] = (
+            cycleResults["sourceOutput"][idx]["edge"][2][0]
+            * cycleResults["sourceOutput"][idx]["edge"][2][1]
+        )
+        percentYield = powerStore["actualPower"] / powerStore["theoreticalPower"]
+
+        # Cycles below threshold
+        if percentYield < 0.95:
+            powerStore["cycleData"][0] += 1
+        powerStore["cycleData"][1] += 1
+        percentThreshold = powerStore["cycleData"][0] / powerStore["cycleData"][1]
+
+        # Tracking efficiency
+        powerStore["energyData"][0] += powerStore["actualPower"]
+        powerStore["energyData"][1] += powerStore["theoreticalPower"]
+        trackingEff = powerStore["energyData"][0] / powerStore["energyData"][1]
+
+        # Update the MPPTView UI by plotting graphs.
+        self._plotSourceCharacteristics()
+        self._plotMPPTCharacteristics(MPPTCurrOut)
+        self._plotVRefPosition(IVList, VREF, MPPTCurrOut)
+        self._plotPowerComparison(MPPTCurrOut)
+        self._plotEfficiencyMetrics(percentYield, percentThreshold, trackingEff)
+
+        # Reiterate the pipeline and store results for next run.
+        (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
+        self.pipelineData["continueBool"] = continueBool
+        self.pipelineData["executionIdx"] += 1
+        self.pipelineData["cycleResults"] = cycleResults
+        self.pipelineData["powerStore"] = powerStore
+
+        if not self.pipelineData["continueBool"]:
+            self.timer.timeout.disconnect()
+
+    def _plotSourceCharacteristics(self):
+        idx = self.pipelineData["executionIdx"]
+        cycleResults = self.pipelineData["cycleResults"]
+
+        # Plot Source Characteristics.
+        self._datastore["SourceChars"].addPoint(
+            "voltage",
+            cycleResults["cycle"][idx],
+            cycleResults["sourceOutput"][idx]["edge"][2][0],
+        )
+
+        self._datastore["SourceChars"].addPoint(
+            "current",
+            cycleResults["cycle"][idx],
+            cycleResults["sourceOutput"][idx]["edge"][2][1],
+        )
+
+        self._datastore["SourceChars"].addPoint(
+            "power",
+            cycleResults["cycle"][idx],
+            cycleResults["sourceOutput"][idx]["edge"][2][0]
+            * cycleResults["sourceOutput"][idx]["edge"][2][1],
+        )
+
+        self._datastore["SourceChars"].addPoint(
+            "irradiance",
+            cycleResults["cycle"][idx],
+            cycleResults["sourceDef"][idx]["0"]["irradiance"],
+        )
+
+        self._datastore["SourceChars"].addPoint(
+            "temperature",
+            cycleResults["cycle"][idx],
+            cycleResults["sourceDef"][idx]["0"]["temperature"],
+        )
+
+    def _plotMPPTCharacteristics(self, MPPTCurrOut):
+        idx = self.pipelineData["executionIdx"]
+        cycleResults = self.pipelineData["cycleResults"]
+
+        # Plot MPPT Characteristics.
+        self._datastore["MPPTChars"].addPoint(
+            "voltage", cycleResults["cycle"][idx], cycleResults["mpptOutput"][idx]
+        )
+
+        self._datastore["MPPTChars"].addPoint(
+            "current", cycleResults["cycle"][idx], MPPTCurrOut[0]
+        )
+
+        self._datastore["MPPTChars"].addPoint(
+            "power",
+            cycleResults["cycle"][idx],
+            cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
+        )
+
+    def _plotVRefPosition(self, IVList, VREF, MPPTCurrOut):
+        # Plot VRefPosition.
+        self._datastore["VRefPosition"].clearSeries("voltage")
+        self._datastore["VRefPosition"].clearSeries("power")
+
+        voltageList = [entry[0] for entry in IVList]
+        currentList = [entry[1] for entry in IVList]
+        powerList = [entry[0] * entry[1] for entry in IVList]
+
+        self._datastore["VRefPosition"].addPoints("voltage", voltageList, currentList)
+        self._datastore["VRefPosition"].addPoints("power", voltageList, powerList)
+
+        self._datastore["VRefPosition"].clearSeries("MPPTVREF")
+        self._datastore["VRefPosition"].addPoints(
+            "MPPTVREF",
+            [VREF, VREF],
+            [MPPTCurrOut[0], VREF * MPPTCurrOut[0]],
+        )
+
+    def _plotPowerComparison(self, MPPTCurrOut):
+        idx = self.pipelineData["executionIdx"]
+        cycleResults = self.pipelineData["cycleResults"]
+
+        # Plot Power Comparison.
+        self._datastore["PowerComp"].addPoint(
+            "power",
+            cycleResults["cycle"][idx],
+            cycleResults["sourceOutput"][idx]["edge"][2][0]
+            * cycleResults["sourceOutput"][idx]["edge"][2][1],
+        )
+
+        self._datastore["PowerComp"].addPoint(
+            "MPPTPower",
+            cycleResults["cycle"][idx],
+            cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
+        )
+
+    def _plotEfficiencyMetrics(self, percentYield, percentThreshold, trackingEff):
+        idx = self.pipelineData["executionIdx"]
+
+        # Plot Efficiencies.
+        self._datastore["Efficiency"].addPoint(
+            "percentYield",
+            idx,
+            percentYield,
+        )
+        self._datastore["Efficiency"].addPoint("cyclesThreshold", idx, percentThreshold)
+        self._datastore["Efficiency"].addPoint("trackingEff", idx, trackingEff)
 
     def _clearGraphs(self):
         """

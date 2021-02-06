@@ -77,7 +77,7 @@ class Graph(View):
                     },
                     "multiplier": .5,               <-  Multipliers adjust the
                     "label": None,                      data scale on the graph.
-                    "color": (0, 255, 0)
+                    "color": (0, 255, 0),
                 },
                 ...
                 "temperature": {
@@ -85,6 +85,8 @@ class Graph(View):
                 },
                 "list": ["voltage", "current", ..., "temperature"],
             }
+            An optional field "size" is supported for scatter graph types. By default, this value is 4.
+
 
             The reference defines how the graph should be formatted and provides
             the storage for adding new data with the update() method.
@@ -302,7 +304,7 @@ class Graph(View):
         """
         Sets up the UI properties of the Graph. Updates the graph whenever a
         point is added to it. This widget is composed of two layers, a wrapper
-        that contains the widget descriptor label ("Flight Altitude Graph") and
+        that contains the widget descriptor label ("IV Graph") and
         an internal layout that holds the graph itself.
 
         This method is dependent on the backend used.
@@ -354,8 +356,8 @@ class Graph(View):
                             self._series[series]["color"][1],
                             self._series[series]["color"][2],
                         ),
-                        size=4,
-                        name=self._series[series].get("label"),
+                        size=self._series[series].get("size", 4),
+                        name=self._series[series].get("label", "Undefined Label"),
                     )
                     self.plt.addItem(self._graph[series])
 

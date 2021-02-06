@@ -31,6 +31,9 @@ class View:
     _red = QColor(255, 0, 0, 255)
     _green = QColor(0, 255, 0, 255)
 
+    # Timing constants.
+    _SECOND = 1000  # in milliseconds.
+
     def __init__(self, datastore=None, framerate=60):
         self._framerate = framerate
         self._layout = None

@@ -48,7 +48,7 @@ class UIController:
     """
 
     def __init__(self):
-        self._framerate = 60
+        self._framerate = 30
         self.sourceSimData = None
         self.MPPTSimData = None
 
@@ -79,11 +79,11 @@ class UIController:
 
         # 2. Startup the application UI runtime.
         self.app = QApplication(sys.argv)
-        # TODO: set PYQTY stylesheet
+        # TODO: set PYQT stylesheet
 
         # 3. Setup the View classes corresponding to each tab in the UI.
-        self.sourceView = SourceView(self.dataController)
-        self.MPPTView = MPPTView(self.dataController)
+        self.sourceView = SourceView(self.dataController, self._framerate)
+        self.MPPTView = MPPTView(self.dataController, self._framerate)
 
         # 4. Setup the main tabbed pane window.
         self.win = QMainWindow()
