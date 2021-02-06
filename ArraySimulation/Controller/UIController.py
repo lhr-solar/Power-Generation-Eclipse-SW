@@ -26,11 +26,13 @@ from PyQt5.QtWidgets import (
     QApplication,
     QLabel,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
+import signal
 import sys
 
 # Custom Imports.
@@ -93,16 +95,26 @@ class UIController:
         self.win.setCentralWidget(self.win.tabWidget)
         self.win.show()
 
+        # 5. Set up timer to enable CTRL+C sigints.
+        signal.signal(signal.SIGINT, self.shutdown)
+        timer = QTimer()
+        timer.timeout.connect(lambda: None)
+        timer.start(100)
+
         self.exe = self.app.exec_()
 
-    def shutdown(self):
+    def shutdown(self, *args):
         """
         Cleans up the main window and associated Views and shuts down the
         application.
-        """
-        # TODO: shut down SourceView and MPPTView here.
 
-        sys.exit(self.exe)
+        Handler for the SIGINT signal.
+        """
+        sys.stderr.write('\r')
+        if QMessageBox.question(None, '', "Are you sure you want to quit?",
+                                QMessageBox.Yes | QMessageBox.No,
+                                QMessageBox.No) == QMessageBox.Yes:
+            QApplication.quit()
 
     def _createTabbedPaneWidget(self):
         widget = QWidget()
