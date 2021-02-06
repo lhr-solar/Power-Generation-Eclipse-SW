@@ -363,32 +363,18 @@ class MPPTView(View):
                 cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
             )
 
-            # TODO: Plot VRefPosition.
-            # self._datastore["VRefPosition"].clearSeries("voltage")
-            # self._datastore["VRefPosition"].clearSeries("power")
+            # Plot VRefPosition.
+            self._datastore["VRefPosition"].clearSeries("voltage")
+            self._datastore["VRefPosition"].clearSeries("power")
 
-            # "voltage": {
-            #     "data": {"x": [], "y": []},
-            #     "multiplier": 1,
-            #     "label": "Source IV Curve (A)",
-            #     "color": (255, 0, 0),
-            # },
-            # "power": {
-            #     "data": {"x": [], "y": []},
-            #     "multiplier": 1,
-            #     "label": "Source PV Curve (W)",
-            #     "color": (0, 255, 0),
+            voltageList = [entry[0] for entry in IVList]
+            currentList = [entry[1] for entry in IVList]
+            powerList = [entry[0] * entry[1] for entry in IVList]
 
-            # self._datastore["VRefPosition"].addPoints(
-            #     "voltage",
-            #     [],
-            #     []
-            # )
-            # self._datastore["VRefPosition"].addPoints(
-            #     "power",
-            #     [],
-            #     []
-            # )
+            self._datastore["VRefPosition"].addPoints(
+                "voltage", voltageList, currentList
+            )
+            self._datastore["VRefPosition"].addPoints("power", voltageList, powerList)
 
             self._datastore["VRefPosition"].clearSeries("MPPTVREF")
             self._datastore["VRefPosition"].addPoints(

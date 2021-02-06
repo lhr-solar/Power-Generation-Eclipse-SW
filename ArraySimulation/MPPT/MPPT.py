@@ -18,7 +18,6 @@ and Stride models (see MPPTComponents) on demand.
 from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
 from ArraySimulation.MPPT.MPPTAlgorithms.PandO import PandO
 from ArraySimulation.MPPT.MPPTAlgorithms.IC import IC
-
 from ArraySimulation.MPPT.MPPTAlgorithms.FC import FC
 from ArraySimulation.MPPT.MPPTAlgorithms.Ternary import Ternary
 from ArraySimulation.MPPT.MPPTAlgorithms.Golden import Golden
@@ -66,10 +65,10 @@ class MPPT:
             self._model = Golden(numCells, strideType)
         elif modelType == "IC":
             self._model = IC(numCells, strideType)
-        elif modelType == "IC":
+        elif modelType == "Bisection":
             self._model = Bisection(numCells, strideType)
         elif modelType == "FC":
-            self._model = FC(numCells,strideType)
+            self._model = FC(numCells, strideType)
             print("Hello")
         elif modelType == "Default":
             self._model = MPPTAlgorithm(numCells, modelType, strideType)

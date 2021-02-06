@@ -31,6 +31,13 @@ requirements. To not run these, use the command `pytest . -m "not additional"`.
 
 ---
 
+## Development
+
+After making changes, please run the [black formatter](https://github.com/psf/black) with the command
+`python -m black {source_file_or_directory}`.
+
+---
+
 ## TODO
 
 The list below are some files that require a refactor in some sort of way.
@@ -55,7 +62,7 @@ The list below are some files that require a refactor in some sort of way.
   - IC.py
     - [ ] Tests should be written for this file.
   - FC.py
-    - [ ] This file needs to be implemented. See mppt_dP_dV_feedback_control.py
+    - [x] This file needs to be implemented. See mppt_dP_dV_feedback_control.py
       for further details on how to implement this.
     - [ ] Tests should be written for this file.
 - Controller/
@@ -70,5 +77,5 @@ The list below are some files that require a refactor in some sort of way.
   - SourceView.py
     - [x] This Class should simplify its UI layout and data management scheme.
   - MPPTView.py
-    - [ ] This Class should implement its UI layout scheme and data management
+    - [x] This Class should implement its UI layout scheme and data management
       scheme.
