@@ -110,10 +110,17 @@ class UIController:
 
         Handler for the SIGINT signal.
         """
-        sys.stderr.write('\r')
-        if QMessageBox.question(None, '', "Are you sure you want to quit?",
-                                QMessageBox.Yes | QMessageBox.No,
-                                QMessageBox.No) == QMessageBox.Yes:
+        sys.stderr.write("\r")
+        if (
+            QMessageBox.question(
+                None,
+                "",
+                "Are you sure you want to quit?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+            == QMessageBox.Yes
+        ):
             QApplication.quit()
 
     def _createTabbedPaneWidget(self):

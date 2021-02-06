@@ -55,18 +55,23 @@ class MPPTView(View):
     # List of source models that can be used.
     MODELS = ["Ideal", "Nonideal"]
 
-    # List of MPPT algorithms that can be used.
-    MPPT_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
+    # List of Global MPPT algorithms that can be used.
+    MPPT_GLOBAL_MODELS = ["Voltage Sweep"]
+
+    # List of Local MPPT algorithms that can be used.
+    MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
 
     # List of MPPT stride algorithms that can be used.
     MPPT_STRIDE_MODELS = ["Fixed", "Adaptive", "Bisection", "Optimal"]
 
-    def __init__(self, datastore, framerate):
+    def __init__(self, dataController, framerate):
         """
         Upon initialization, we perform any data and UI setup required to get
-        the SourceView into a default state.
+        the MPPTView into a default state.
         """
-        super(MPPTView, self).__init__(datastore=datastore, framerate=framerate)
+        super(MPPTView, self).__init__(
+            dataController=dataController, framerate=framerate
+        )
 
         self._datastore = {
             "SourceChars": Graph(
@@ -162,7 +167,7 @@ class MPPTView(View):
                         "multiplier": 1,
                         "label": None,
                         "color": (255, 255, 255),
-                        "size": 8 # Twice the size of default.
+                        "size": 8,  # Twice the size of default.
                     },
                     "list": ("voltage", "power", "MPPTVREF"),
                 },
@@ -230,12 +235,16 @@ class MPPTView(View):
             (1, 1),
             self._executeMPPTAlgorithm,
         )
+
         self._console.addComboBox("ModelSelection", (0, 1), (1, 1), MPPTView.MODELS)
         self._console.addComboBox(
-            "AlgorithmSelection", (0, 2), (1, 1), MPPTView.MPPT_MODELS
+            "GlobalMPPTAlgorithmSelection", (0, 2), (1, 1), MPPTView.MPPT_GLOBAL_MODELS
         )
         self._console.addComboBox(
-            "AlgorithmStrideSelection", (0, 3), (1, 1), MPPTView.MPPT_STRIDE_MODELS
+            "LocalMPPTAlgorithmSelection", (0, 3), (1, 1), MPPTView.MPPT_LOCAL_MODELS
+        )
+        self._console.addComboBox(
+            "AlgorithmStrideSelection", (0, 4), (1, 1), MPPTView.MPPT_STRIDE_MODELS
         )
 
         self._console.addLabel("StatusLbl", (1, 0), (1, 3))
@@ -270,13 +279,20 @@ class MPPTView(View):
 
         # Get options from combo boxes.
         sourceModel = self._console.getReference("ModelSelection").currentText()
-        MPPTAlgo = self._console.getReference("AlgorithmSelection").currentText()
+        MPPTGlobalAlgo = self._console.getReference(
+            "GlobalMPPTAlgorithmSelection"
+        ).currentText()
+        MPPTLocalAlgo = self._console.getReference(
+            "LocalMPPTAlgorithmSelection"
+        ).currentText()
         MPPTStrideAlgo = self._console.getReference(
             "AlgorithmStrideSelection"
         ).currentText()
 
         controller = self._datastoreParent
-        controller.resetPipeline(sourceModel, MPPTAlgo, MPPTStrideAlgo)
+        controller.resetPipeline(
+            sourceModel, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+        )
         (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
         powerStore = {  # TODO: maybe change naming later? Or never...
@@ -300,6 +316,11 @@ class MPPTView(View):
         self.timer.start(self._SECOND / self._framerate)
 
     def _executeMPPTAlgorithmHelper(self):
+        """
+        This helper function is executed by a QTimer when enabled by
+        _executeMPPTAlgorithm. It calculates results returned by the pipeline
+        and displays it on the relevant graphs.
+        """
         controller = self._datastoreParent
         idx = self.pipelineData["executionIdx"]
         cycleResults = self.pipelineData["cycleResults"]
@@ -350,6 +371,12 @@ class MPPTView(View):
             self.timer.timeout.disconnect()
 
     def _plotSourceCharacteristics(self):
+        """
+        Plots the source characteristics and environmental characteristics of
+        the PV system. One point at a time.
+
+        Utilizes the self.pipelineData object for primary data.
+        """
         idx = self.pipelineData["executionIdx"]
         cycleResults = self.pipelineData["cycleResults"]
 
@@ -386,6 +413,16 @@ class MPPTView(View):
         )
 
     def _plotMPPTCharacteristics(self, MPPTCurrOut):
+        """
+        Plots the MPPT characteristics of the PV system. One point at a time.
+
+        Utilizes the self.pipelineData object for primary data.
+
+        Parameters
+        ----------
+        MPPTCurrOut: [int]
+            Single element list that contains the MPPT current at the given voltage.
+        """
         idx = self.pipelineData["executionIdx"]
         cycleResults = self.pipelineData["cycleResults"]
 
@@ -405,6 +442,19 @@ class MPPTView(View):
         )
 
     def _plotVRefPosition(self, IVList, VREF, MPPTCurrOut):
+        """
+        Plots the reference voltage position relative to the IV and PV curves.
+
+        Parameters
+        ----------
+        IVList: [(double, double), ..]
+            List of voltage current tuples across the IV Curve for the current
+            source conditions.
+        VREF: double
+            Reference voltage output of the MPPT at the end of the given cycle.
+        MPPTCurrOut: [double]
+            Single element list that contains the MPPT current at the given voltage.
+        """
         # Plot VRefPosition.
         self._datastore["VRefPosition"].clearSeries("voltage")
         self._datastore["VRefPosition"].clearSeries("power")
@@ -424,6 +474,17 @@ class MPPTView(View):
         )
 
     def _plotPowerComparison(self, MPPTCurrOut):
+        """
+        Plots the theoretical power versus the MPPT output power.
+
+        Utilizes the self.pipelineData object for primary data.
+
+        Parameters
+        ----------
+        MPPTCurrOut: [int]
+            Single element list that contains the MPPT current at the given voltage.
+        """
+
         idx = self.pipelineData["executionIdx"]
         cycleResults = self.pipelineData["cycleResults"]
 
@@ -442,6 +503,22 @@ class MPPTView(View):
         )
 
     def _plotEfficiencyMetrics(self, percentYield, percentThreshold, trackingEff):
+        """
+        Plots the efficiency metrics of the MPPT over time.
+
+        Utilizes the self.pipelineData object for primary data.
+
+        Parameters
+        ----------
+        percentYield: double
+            Percentage yield of the current cycle theoretical versus
+            experimental power.
+        percentThreshold: double
+            Percentage of all cycles above a quantified efficiency threshold.
+        trackingEff: double
+            Overall tracking efficiency in terms of theoretical versus
+            experimental energy generated.
+        """
         idx = self.pipelineData["executionIdx"]
 
         # Plot Efficiencies.
