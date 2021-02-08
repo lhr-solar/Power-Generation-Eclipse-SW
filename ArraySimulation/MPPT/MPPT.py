@@ -4,7 +4,7 @@ MPPT.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 11/24/20
+Last Modified: 2/8/21
 
 Description: The MPPT (Maximum Power Point Tracker) class is a concrete class
 that manages the data flow and operation of MPPT Algorithms. More properly, it
@@ -37,7 +37,7 @@ class MPPT:
     def __init__(self):
         self._model = None
 
-    def setupModel(self, numCells=1, modelType="Default", strideType="Fixed"):
+    def setupModel(self, numCells=1, MPPTLocalAlgoType="Default", strideType="Fixed"):
         """
         Initializes an internal model object for reference.
         This is called whenever the user wants to switch models or stride
@@ -47,10 +47,12 @@ class MPPT:
         ----------
         numCells: int
             Number of cells expected by the MPPT model.
-        modelType: String
-            Specifier for the type of model to be used in the MPPT.
+        MPPTGlobalAlgoType: String
+            The name of the global MPPT algorithm type.
+        MPPTLocalAlgoType: String
+            The name of the local MPPT algorithm type.
         strideType: String
-            Specifier for the type of stride model to be used in the MPPT.
+            The name of the stride algorithm type.
         """
         # Reset any model if there are any already defined.
         if self._model is not None:
