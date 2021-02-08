@@ -15,13 +15,9 @@ and Stride models (see MPPTComponents) on demand.
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
-from ArraySimulation.MPPT.MPPTAlgorithms.PandO import PandO
-from ArraySimulation.MPPT.MPPTAlgorithms.IC import IC
-from ArraySimulation.MPPT.MPPTAlgorithms.FC import FC
-from ArraySimulation.MPPT.MPPTAlgorithms.Ternary import Ternary
-from ArraySimulation.MPPT.MPPTAlgorithms.Golden import Golden
-from ArraySimulation.MPPT.MPPTAlgorithms.Bisection import Bisection
+from ArraySimulation.MPPT.GlobalMPPTAlgo.GlobalAlgorithm import GlobalAlgorithm
+from ArraySimulation.MPPT.GlobalMPPTAlgo.VoltageSweep import VoltageSweep
+from ArraySimulation.MPPT.GlobalMPPTAlgo.GlobalPandO import GlobalPando
 
 
 class MPPT:
@@ -54,26 +50,12 @@ class MPPT:
         if self._model is not None:
             self.reset()
 
-        # Select and rebuild a new model.
-        if modelType == "PandO":
-            self._model = PandO(numCells, strideType)
-        elif modelType == "IC":
-            self._model = IC(numCells, strideType)
-        elif modelType == "Ternary":
-            self._model = Ternary(numCells, strideType)
-        elif modelType == "Golden":
-            self._model = Golden(numCells, strideType)
-        elif modelType == "IC":
-            self._model = IC(numCells, strideType)
-        elif modelType == "Bisection":
-            self._model = Bisection(numCells, strideType)
-        elif modelType == "FC":
-            self._model = FC(numCells, strideType)
-            print("Hello")
+        if modelType == "Voltage Sweep":
+            self._model = VoltageSweep(numCells, modelType,strideType)
         elif modelType == "Default":
-            self._model = MPPTAlgorithm(numCells, modelType, strideType)
+            self._model = GlobalPando(numCells, modelType, strideType)
         else:
-            self._model = MPPTAlgorithm(numCells, modelType, strideType)
+            self._model = GlobalAlgorithm(numCells, modelType, strideType)
 
     def reset(self):
         """
