@@ -16,10 +16,12 @@ algorithms.
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
 
 
-class PandO(MPPTAlgorithm):
+class PandO(LocalMPPTAlgorithm):
     """
     The PandO (Perturb and Observe) class is a derived class that
     determines a VREF to apply over PSource to maximize the power generated.
@@ -29,17 +31,6 @@ class PandO(MPPTAlgorithm):
     """
 
     def __init__(self, numCells=1, strideType="Fixed"):
-        """
-        Sets up the initial source parameters.
-
-        Parameters
-        ----------
-        numCells: int
-            The number of cells that should be accounted for in the MPPT
-            algorithm.
-        strideType: String
-            The name of the stride model type.
-        """
         super(PandO, self).__init__(numCells, "PandO", strideType)
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):

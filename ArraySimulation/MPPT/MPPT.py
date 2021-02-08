@@ -15,9 +15,15 @@ and Stride models (see MPPTComponents) on demand.
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.GlobalMPPTAlgo.GlobalAlgorithm import GlobalAlgorithm
-from ArraySimulation.MPPT.GlobalMPPTAlgo.VoltageSweep import VoltageSweep
-from ArraySimulation.MPPT.GlobalMPPTAlgo.GlobalPandO import GlobalPando
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.PandO import PandO
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.IC import IC
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.FC import FC
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.Ternary import Ternary
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.Golden import Golden
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.Bisection import Bisection
 
 
 class MPPT:
@@ -50,12 +56,24 @@ class MPPT:
         if self._model is not None:
             self.reset()
 
-        if modelType == "Voltage Sweep":
-            self._model = VoltageSweep(numCells, modelType,strideType)
-        elif modelType == "Default":
-            self._model = GlobalPando(numCells, modelType, strideType)
+        if MPPTLocalAlgoType == "PandO":
+            self._model = PandO(numCells, strideType)
+        elif MPPTLocalAlgoType == "IC":
+            self._model = IC(numCells, strideType)
+        elif MPPTLocalAlgoType == "Ternary":
+            self._model = Ternary(numCells, strideType)
+        elif MPPTLocalAlgoType == "Golden":
+            self._model = Golden(numCells, strideType)
+        elif MPPTLocalAlgoType == "IC":
+            self._model = IC(numCells, strideType)
+        elif MPPTLocalAlgoType == "Bisection":
+            self._model = Bisection(numCells, strideType)
+        elif MPPTLocalAlgoType == "FC":
+            self._model = FC(numCells, strideType)
+        elif MPPTLocalAlgoType == "Default":
+            self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
         else:
-            self._model = GlobalAlgorithm(numCells, modelType, strideType)
+            self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
 
     def reset(self):
         """

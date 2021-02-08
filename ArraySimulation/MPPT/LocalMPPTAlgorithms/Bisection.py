@@ -62,10 +62,12 @@ Bisection Method: https://en.wikipedia.org/wiki/Bisection_method
 from math import sqrt
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
 
 
-class Bisection(MPPTAlgorithm):
+class Bisection(LocalMPPTAlgorithm):
     """
     The Bisection class is a derived class that determines a VREF to
     apply over PSource to maximize the power generated. The Bisection Method
@@ -77,17 +79,6 @@ class Bisection(MPPTAlgorithm):
     K = 0.01
 
     def __init__(self, numCells=1, strideType="Fixed"):
-        """
-        Sets up the initial source parameters.
-
-        Parameters
-        ----------
-        numCells: int
-            The number of cells that should be accounted for in the MPPT
-            algorithm.
-        strideType: String
-            The name of the stride model type.
-        """
         super(Bisection, self).__init__(numCells, "Bisection", strideType)
         self.left = 0
         self.right = self.MAX_VOLTAGE

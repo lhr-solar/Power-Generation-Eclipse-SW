@@ -1,25 +1,37 @@
 """
-GlobalAlgorithm.py
+GlobalMPPTAlgorithm.py
 
 Author: Afnan Mir, Array Lead (2021).
 Contact: afnanmir@utexas.edu
 Created: 02/06/2021
-Last Modified: 02/06/2021
+Last Modified: 02/08/2021
 
-Description: The Global MPPTAlgorithm (Maximum Power Point Tracker) class is a concrete
-base class that provides a common API for derived classes to use. The
-GlobalAlgorithm class enables users to calculate or predict voltage setpoints that
-would maximize the output power of the PVSource given a set of input conditions.
+Description: The GlobalMPPTAlgorithm class is a concrete base class that
+provides a common API for derived classes to use. The class enables users to
+calculate or predict voltage setpoints that would maximize the output power of
+the PVSource given a set of input conditions.
 """
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
-from ArraySimulation.MPPT.MPPTAlgorithms.PandO import PandO
-from ArraySimulation.MPPT.MPPTAlgorithms.IC import IC
-from ArraySimulation.MPPT.MPPTAlgorithms.FC import FC
-from ArraySimulation.MPPT.MPPTAlgorithms.Ternary import Ternary
-from ArraySimulation.MPPT.MPPTAlgorithms.Golden import Golden
-from ArraySimulation.MPPT.MPPTAlgorithms.Bisection import Bisection
+# Library Imports.
 
-class GlobalAlgorithm:
+
+# Custom Imports.
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.PandO import PandO
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.IC import IC
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.FC import FC
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.Ternary import Ternary
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.Golden import Golden
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.Bisection import Bisection
+
+
+class GlobalMPPTAlgorithm:
+    """
+    The GlobalMPPTAlgorithm class and derived classes attempt to solve P-V
+    curves with multiple local maxima and a single global maxima.
+    """
+
     # The upper voltage bound that should be predicted by any model. We expect
     # the PV to always be at open circuit voltage at this point. Adjustable
     # based on the number of cells determined from the initialization.
@@ -32,7 +44,13 @@ class GlobalAlgorithm:
     # standard conditions.
     MAX_VOLTAGE_PER_CELL = 0.8
 
-    def __init__(self, numCells = 1, MPPTAlgoType = "Default", strideType = "Fixed"):
+    def __init__(
+        self,
+        numCells=1,
+        MPPTGlobalAlgoType="Default",
+        MPPTLocalAlgoType="Default",
+        strideType="Fixed",
+    ):
         """
         Sets up the initial source parameters.
 
@@ -41,38 +59,42 @@ class GlobalAlgorithm:
         numCells: int
             The number of cells that should be accounted for in the MPPT
             algorithm.
-        MPPTAlgoType: String
-            The name of the model type.
+        MPPTGlobalAlgoType: String
+            The name of the global MPPT algorithm type.
+        MPPTLocalAlgoType: String
+            The name of the local MPPT algorithm type.
         strideType: String
-            The name of the stride model type.
+            The name of the stride algorithm type.
+        TODO: Add stride argument to voltage sweep constructor.
         """
-        self.MAX_VOLTAGE = self.MAX_VOLTAGE_PER_CELL*numCells
-        self._MPPTAlgoType = MPPTAlgoType
-        
-        if MPPTAlgoType == "PandO":
+        self.MAX_VOLTAGE = self.MAX_VOLTAGE_PER_CELL * numCells
+        self._MPPTGlobalAlgoType = MPPTGlobalAlgoType
+
+        if MPPTLocalAlgoType == "PandO":
             self._model = PandO(numCells, strideType)
-        elif MPPTAlgoType == "IC":
+        elif MPPTLocalAlgoType == "IC":
             self._model = IC(numCells, strideType)
-        elif MPPTAlgoType == "Ternary":
+        elif MPPTLocalAlgoType == "Ternary":
             self._model = Ternary(numCells, strideType)
-        elif MPPTAlgoType == "Golden":
+        elif MPPTLocalAlgoType == "Golden":
             self._model = Golden(numCells, strideType)
-        elif MPPTAlgoType == "IC":
+        elif MPPTLocalAlgoType == "IC":
             self._model = IC(numCells, strideType)
-        elif MPPTAlgoType == "Bisection":
+        elif MPPTLocalAlgoType == "Bisection":
             self._model = Bisection(numCells, strideType)
-        elif MPPTAlgoType == "FC":
+        elif MPPTLocalAlgoType == "FC":
             self._model = FC(numCells, strideType)
-        elif MPPTAlgoType == "Default":
-            self._model = MPPTAlgorithm(numCells, MPPTAlgoType, strideType)
+        elif MPPTLocalAlgoType == "Default":
+            self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
         else:
-            self._model = MPPTAlgorithm(numCells, MPPTAlgoType, strideType)
-        
+            self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
+
         self.vOld = 0.0
         self.iOld = 0.0
         self.tOld = 0.0
         self.irrOld = 0.0
         self.pOld = 0.0
+
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         """
         Calculates the reference voltage output for the given PVSource output.
@@ -105,7 +127,9 @@ class GlobalAlgorithm:
         steady state behavior by the next MPPT cycle. This should always be
         considered in the algorithms.
         """
-        return self._model.getReferenceVoltage(arrVoltage,arrCurrent,irradiance,temperature)
+        return self._model.getReferenceVoltage(
+            arrVoltage, arrCurrent, irradiance, temperature
+        )
 
     def reset(self):
         """
@@ -118,15 +142,12 @@ class GlobalAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
-    def getGlobalMPPTType(self):
+    def getMPPTType(self):
         """
-        Returns the MPPT type used for the simulation.
+        Returns the Global MPPT algorithm type used for the simulation.
 
         Return
         ------
         String: Model type name.
         """
-        return self._MPPTAlgoType 
-
-
-
+        return self._MPPTGlobalAlgoType
