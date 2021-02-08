@@ -121,7 +121,7 @@ class LocalMPPTAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
-    def getMPPTType(self):
+    def getLocalMPPTType(self):
         """
         Returns the Local MPPT algorithm type used for the simulation.
 
@@ -130,3 +130,13 @@ class LocalMPPTAlgorithm:
         String: Model type name.
         """
         return self._MPPTLocalAlgoType
+
+    def getStrideType(self):
+        """
+        Returns the Stride model type used for the simulation.
+
+        Return
+        ------
+        String: Model type name.
+        """
+        return self._strideModel.getStrideType()

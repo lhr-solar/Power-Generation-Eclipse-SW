@@ -58,7 +58,7 @@ class VoltageSweep(GlobalMPPTAlgorithm):
             vRef = self._sweep(arrVoltage, arrCurrent, irradiance, temperature)
         else:
             self.sweeping = False
-            (lBound, rBound) = self._sweep.getBounds()
+            (lBound, rBound) = self._getBounds()
             if arrVoltage >= self.MAX_VOLTAGE:
                 vRef = lBound
             elif arrVoltage == lBound:
@@ -100,7 +100,7 @@ class VoltageSweep(GlobalMPPTAlgorithm):
             self.increasing = False
         elif pIn > self.pOld and not self.increasing:
             self.increasing = True
-        vRef += self._stride
+        vRef += self.stride
         self.iOld = arrCurrent
         self.vOld = arrVoltage
         self.pOld = arrCurrent * arrVoltage
@@ -108,7 +108,7 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         self.irrOld = irradiance
         return vRef
 
-    def getBounds(self):
+    def _getBounds(self):
         """
         Finds left and right bounds for the global maximum of the P-V curve.
 

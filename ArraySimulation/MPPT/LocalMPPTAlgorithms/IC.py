@@ -86,4 +86,3 @@ class IC(LocalMPPTAlgorithm):
     def reset(self):
         super(IC, self).reset()
         self.firstCycle = True
-

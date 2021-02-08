@@ -142,7 +142,7 @@ class GlobalMPPTAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
-    def getMPPTType(self):
+    def getGlobalMPPTType(self):
         """
         Returns the Global MPPT algorithm type used for the simulation.
 
@@ -151,3 +151,23 @@ class GlobalMPPTAlgorithm:
         String: Model type name.
         """
         return self._MPPTGlobalAlgoType
+
+    def getLocalMPPTType(self):
+        """
+        Returns the Local MPPT type used for the simulation.
+
+        Return
+        ------
+        String: Model type name.
+        """
+        return self._model.getLocalMPPTType()
+
+    def getStrideType(self):
+        """
+        Returns the Stride model type used for the simulation.
+
+        Return
+        ------
+        String: Model type name.
+        """
+        return self._model.getStrideType()
