@@ -4,7 +4,7 @@ MPPT.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 11/24/20
+Last Modified: 2/8/21
 
 Description: The MPPT (Maximum Power Point Tracker) class is a concrete class
 that manages the data flow and operation of MPPT Algorithms. More properly, it
@@ -15,27 +15,30 @@ and Stride models (see MPPTComponents) on demand.
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
-from ArraySimulation.MPPT.MPPTAlgorithms.PandO import PandO
-from ArraySimulation.MPPT.MPPTAlgorithms.IC import IC
-from ArraySimulation.MPPT.MPPTAlgorithms.FC import FC
-from ArraySimulation.MPPT.MPPTAlgorithms.Ternary import Ternary
-from ArraySimulation.MPPT.MPPTAlgorithms.Golden import Golden
-from ArraySimulation.MPPT.MPPTAlgorithms.Bisection import Bisection
+from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
+    GlobalMPPTAlgorithm,
+)
+from ArraySimulation.MPPT.GlobalMPPTAlgorithms.VoltageSweep import VoltageSweep
 
 
 class MPPT:
     """
     The MPPT (Maximum Power Point Tracker) class is a concrete class
     that manages the data flow and operation of MPPT Algorithms. More properly,
-    it is a wrapper class that allows the main program to swap between MPPT
-    Algorithms and Stride models (see MPPTComponents) on demand.
+    it is a wrapper class that allows the main program to swap between Global
+    and Local MPPT Algorithms and Stride models (see MPPTComponents) on demand.
     """
 
     def __init__(self):
         self._model = None
 
-    def setupModel(self, numCells=1, modelType="Default", strideType="Fixed"):
+    def setupModel(
+        self,
+        numCells=1,
+        MPPTGlobalAlgoType="Default",
+        MPPTLocalAlgoType="Default",
+        strideType="Fixed",
+    ):
         """
         Initializes an internal model object for reference.
         This is called whenever the user wants to switch models or stride
@@ -45,35 +48,27 @@ class MPPT:
         ----------
         numCells: int
             Number of cells expected by the MPPT model.
-        modelType: String
-            Specifier for the type of model to be used in the MPPT.
+        MPPTGlobalAlgoType: String
+            The name of the global MPPT algorithm type.
+        MPPTLocalAlgoType: String
+            The name of the local MPPT algorithm type.
         strideType: String
-            Specifier for the type of stride model to be used in the MPPT.
+            The name of the stride algorithm type.
         """
         # Reset any model if there are any already defined.
         if self._model is not None:
             self.reset()
 
-        # Select and rebuild a new model.
-        if modelType == "PandO":
-            self._model = PandO(numCells, strideType)
-        elif modelType == "IC":
-            self._model = IC(numCells, strideType)
-        elif modelType == "Ternary":
-            self._model = Ternary(numCells, strideType)
-        elif modelType == "Golden":
-            self._model = Golden(numCells, strideType)
-        elif modelType == "IC":
-            self._model = IC(numCells, strideType)
-        elif modelType == "Bisection":
-            self._model = Bisection(numCells, strideType)
-        elif modelType == "FC":
-            self._model = FC(numCells, strideType)
-            print("Hello")
-        elif modelType == "Default":
-            self._model = MPPTAlgorithm(numCells, modelType, strideType)
+        if MPPTGlobalAlgoType == "Voltage Sweep":
+            self._model = VoltageSweep(numCells, MPPTLocalAlgoType, strideType)
+        elif MPPTLocalAlgoType == "Default":
+            self._model = GlobalMPPTAlgorithm(
+                numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType
+            )
         else:
-            self._model = MPPTAlgorithm(numCells, modelType, strideType)
+            self._model = GlobalMPPTAlgorithm(
+                numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType
+            )
 
     def reset(self):
         """
@@ -87,15 +82,25 @@ class MPPT:
             arrVoltage, arrCurrent, irradiance, temperature
         )
 
-    def getMPPTType(self):
+    def getGlobalMPPTType(self):
         """
-        Returns the MPPT type used for the simulation.
+        Returns the Global MPPT type used for the simulation.
 
         Return
         ------
         String: Model type name.
         """
-        return self._model.getMPPTType()
+        return self._model.getGlobalMPPTType()
+
+    def getLocalMPPTType(self):
+        """
+        Returns the Local MPPT type used for the simulation.
+
+        Return
+        ------
+        String: Model type name.
+        """
+        return self._model.getLocalMPPTType()
 
     def getStrideType(self):
         """

@@ -1,10 +1,10 @@
 """
-MPPTAlgorithm.py
+LocalMPPTAlgorithm.py
 
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 11/24/20
+Last Modified: 2/8/21
 
 Description: The MPPTAlgorithm (Maximum Power Point Tracker) class is a concrete
 base class that provides a common API for derived classes to use. The
@@ -21,7 +21,7 @@ from ArraySimulation.MPPT.MPPTComponents.OptimalStride import OptimalStride
 from ArraySimulation.MPPT.MPPTComponents.Stride import Stride
 
 
-class MPPTAlgorithm:
+class LocalMPPTAlgorithm:
     """
     The MPPTAlgorithm (Maximum Power Point Tracker) class is a concrete
     base class that provides a common API for derived classes to use. The
@@ -42,7 +42,7 @@ class MPPTAlgorithm:
     # standard conditions.
     MAX_VOLTAGE_PER_CELL = 0.8
 
-    def __init__(self, numCells=1, modelType="Default", strideType="Fixed"):
+    def __init__(self, numCells=1, MPPTLocalAlgoType="Default", strideType="Fixed"):
         """
         Sets up the initial source parameters.
 
@@ -51,13 +51,13 @@ class MPPTAlgorithm:
         numCells: int
             The number of cells that should be accounted for in the MPPT
             algorithm.
-        modelType: String
-            The name of the model type.
+        MPPTLocalAlgoType: String
+            The name of the local MPPT algorithm type.
         strideType: String
-            The name of the stride model type.
+            The name of the stride algorithm type.
         """
         self.MAX_VOLTAGE = numCells * self.MAX_VOLTAGE_PER_CELL
-        self._modelType = modelType
+        self._MPPTLocalAlgoType = MPPTLocalAlgoType
 
         if strideType == "Adaptive":
             self._strideModel = AdaptiveStride()
@@ -78,7 +78,7 @@ class MPPTAlgorithm:
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         """
-        Calculates the reference voltage output for the given PVSource output.
+        Calculates the reference voltage output for the given PVSource input.
         May use prior history.
 
         Parameters
@@ -94,7 +94,7 @@ class MPPTAlgorithm:
 
         Return
         ------
-        float The reference voltage that should be applied to the array in the
+        float: The reference voltage that should be applied to the array in the
         next cycle.
 
         Assumptions
@@ -121,12 +121,22 @@ class MPPTAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
-    def getMPPTType(self):
+    def getLocalMPPTType(self):
         """
-        Returns the MPPT type used for the simulation.
+        Returns the Local MPPT algorithm type used for the simulation.
 
         Return
         ------
         String: Model type name.
         """
-        return self._modelType
+        return self._MPPTLocalAlgoType
+
+    def getStrideType(self):
+        """
+        Returns the Stride model type used for the simulation.
+
+        Return
+        ------
+        String: Model type name.
+        """
+        return self._strideModel.getStrideType()

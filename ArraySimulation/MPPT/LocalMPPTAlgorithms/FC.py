@@ -5,10 +5,12 @@ Last Modified: 01/23/2021
 
 Description: Implementation of the dp/dv feedback control.
 """
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
 
 
-class FC(MPPTAlgorithm):
+class FC(LocalMPPTAlgorithm):
     def __init__(self, numCells=1, strideType="Fixed"):
         super(FC, self).__init__(numCells, "FC", strideType)
         self.firstCycle = True
@@ -35,3 +37,7 @@ class FC(MPPTAlgorithm):
         self.iOld = arrCurrent
         self.pOld = arrVoltage * arrCurrent
         return vRef
+
+    def reset(self):
+        super(FC, self).reset()
+        self.firstCycle = True

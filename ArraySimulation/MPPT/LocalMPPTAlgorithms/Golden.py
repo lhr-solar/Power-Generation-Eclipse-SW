@@ -79,10 +79,12 @@ Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
 from math import sqrt
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
 
 
-class Golden(MPPTAlgorithm):
+class Golden(LocalMPPTAlgorithm):
     """
     The Golden class is a derived class that determines a VREF to apply
     over PSource to maximize the power generated. Golden utilizes the change of
@@ -93,17 +95,6 @@ class Golden(MPPTAlgorithm):
     phi = (sqrt(5) + 1) / 2 - 1
 
     def __init__(self, numCells=1, strideType="Fixed"):
-        """
-        Sets up the initial source parameters.
-
-        Parameters
-        ----------
-        numCells: int
-            The number of cells that should be accounted for in the MPPT
-            algorithm.
-        strideType: String
-            The name of the stride model type.
-        """
         super(Golden, self).__init__(numCells, "Golden", strideType)
         self.left = 0
         self.right = self.MAX_VOLTAGE

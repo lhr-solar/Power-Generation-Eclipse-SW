@@ -33,10 +33,12 @@ The implementation of this algorithm is based on the folowing paper:
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.MPPTAlgorithms.MPPTAlgorithm import MPPTAlgorithm
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
 
 
-class IC(MPPTAlgorithm):
+class IC(LocalMPPTAlgorithm):
     """
     The IC (Incremental Conductance) class is a derived class that
     determines a VREF to apply over PSource to maximize the power generated. IC
@@ -45,17 +47,6 @@ class IC(MPPTAlgorithm):
     """
 
     def __init__(self, numCells=1, strideType="Fixed"):
-        """
-        Sets up the initial source parameters.
-
-        Parameters
-        ----------
-        numCells: int
-            The number of cells that should be accounted for in the MPPT
-            algorithm.
-        strideType: String
-            The name of the stride model type.
-        """
         super(IC, self).__init__(numCells, "IC", strideType)
         self.firstCycle = True
 
@@ -91,3 +82,7 @@ class IC(MPPTAlgorithm):
             return vRef
         self.firstCycle = False
         return 0.1
+
+    def reset(self):
+        super(IC, self).reset()
+        self.firstCycle = True

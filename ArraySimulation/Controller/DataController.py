@@ -148,7 +148,10 @@ class DataController:
 
         # TODO: add support for global algorithms when Afnan merges in his work.
         self._MPPT.setupModel(
-            numCells=1, modelType=MPPTLocalAlgo, strideType=MPPTStrideAlgo
+            numCells=1,
+            MPPTGlobalAlgoType=MPPTGlobalAlgo,
+            MPPTLocalAlgoType=MPPTLocalAlgo,
+            strideType=MPPTStrideAlgo,
         )
         self._DCDCConverter.reset()
         self.datastore = {
