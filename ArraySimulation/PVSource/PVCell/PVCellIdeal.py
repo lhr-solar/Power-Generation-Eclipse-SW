@@ -23,8 +23,8 @@ class PVCellIdeal(PVCell):
     Maxeon III Bin Le1 solar cells.
     """
 
-    def __init__(self):
-        super(PVCellIdeal, self).__init__()
+    def __init__(self, useLookup=True):
+        super(PVCellIdeal, self).__init__(useLookup)
 
     def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         # Ideal single diode model.

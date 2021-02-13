@@ -4,7 +4,7 @@ SourceView.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/17/20
-Last Modified: 11/24/20
+Last Modified: 2/12/21
 
 Description: The SourceView class represents a visual tab of the Display class
 (and the PVSim application window). It displays a simulation of the PVSource
@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import (
     QGridLayout,
     QWidget,
 )
+import csv
 import numpy as np
 from time import sleep
 
@@ -93,10 +94,21 @@ class SourceView(View):
                 ),
             },
             "Arbitrary": Graph(
+                graphType="Scatter",
                 title="Single Shot Model",
                 xAxisLabel="Voltage (V)",
                 yAxisLabel="Characteristics",
-                series={"list": []},
+                # TODO: split into multiple series based on RGB color of
+                #  data points? Needs preprocessing.
+                series={
+                    "expData": {
+                        "data": {"x": [], "y": []},
+                        "multiplier": 1,
+                        "label": "Experimental Data",
+                        "color": (255, 0, 0),
+                    },
+                    "list": ["expData"],
+                },
             ),
         }
 
@@ -129,6 +141,13 @@ class SourceView(View):
             "StatusLbl",
             (1, 0),
             (1, 2),
+        )
+        self._console.addButton(
+            "CmpExpData",
+            "Compare Experimental Data",
+            (1, 2),
+            (1, 2),
+            self._generateExperimentalData,
         )
 
         # Single Shot specific widgets.
@@ -765,3 +784,23 @@ class SourceView(View):
         self._datastore["Ideal"]["IrradIndependent"].getLayout().show()
         self._datastore["Nonideal"]["TempIndependent"].getLayout().show()
         self._datastore["Nonideal"]["IrradIndependent"].getLayout().show()
+
+    def _generateExperimentalData(self):
+        # TODO: add docs here and reformat to add color params (item[2],
+        # item[3], item[4])
+        filePath = "./External/model.csv"
+        array = []
+        with open(filePath, "r", newline="\n") as csv_file:
+            reader = csv.reader(csv_file)
+            for row in reader:
+                array.append(row)
+
+        xVals = []
+        yVals = []
+        for item in array:
+            xVals.append(float(item[0]))
+            yVals.append(float(item[1]))
+
+        self._datastore["Arbitrary"].addPoints("expData", xVals, yVals)
+
+        self._console.getReference("StatusLbl").setText("Success.")

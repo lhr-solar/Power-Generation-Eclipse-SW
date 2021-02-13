@@ -28,8 +28,8 @@ class PVCellNonideal(PVCell):
     Maxeon III Bin Le1 solar cells.
     """
 
-    def __init__(self):
-        super(PVCellNonideal, self).__init__()
+    def __init__(self, useLookup=True):
+        super(PVCellNonideal, self).__init__(useLookup)
 
         # Lookup object for pulling a model from a file.
         # parameters=[(0.001, 801), (10, 101), (1, 81)],
@@ -165,45 +165,6 @@ class PVCellNonideal(PVCell):
         lookup.writeFile()
         lookup.readFile()
         self._lookup = lookup
-
-    def getCellIV(self, numCells=1, resolution=0.001, irradiance=0.001, temperature=0):
-        """
-        Calculates the entire cell model current voltage plot given various
-        environmental parameters.
-
-        Parameters
-        ----------
-        resolution: float
-            Voltage stride across the cell. Occurs within the bounds of [0,
-            MAX_VOLTAGE], inclusive.
-        irradiance: float
-            Irradiance on the cell. In W/M^2.
-        temperature: float
-            Cell surface temperature. In degrees Celsius.
-
-        Returns
-        -------
-        list: [(voltage:float, current:float), ...]
-            A list of paired voltage|current tuples across the cell IV curve.
-
-        Assumptions
-        -----------
-        The IV curve of the cell has a short circuit current of 0A by MAX_VOLTAGE.
-        """
-        model = []
-        if resolution <= 0:
-            resolution = self.MIN_RESOLUTION
-
-        for voltage in np.arange(
-            0.0, self.MAX_CELL_VOLTAGE * numCells + resolution, resolution
-        ):
-            current = self.getCurrentLookup(numCells, voltage, irradiance, temperature)
-            if current >= 0.0:
-                model.append(
-                    (round(voltage, 2), round(current, 3))
-                )  # TODO: this rounding should be a function of resolution
-
-        return model
 
     def getModelType(self):
         return "Nonideal"
