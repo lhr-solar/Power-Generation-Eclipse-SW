@@ -40,20 +40,23 @@ class PVCellNonideal(PVCell):
     def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         # Nonideal single diode model.
         cellTemperature = temperature + 273.15  # Convert cell temperature into kelvin.
+        # print("Reference Temp: "+str(PVCell.refTemp)+" Reference OC Voltage: " 
+        # +str(PVCell.refOCVoltage)+" Reference SC Current: "+ str(PVCell.refSCCurrent)+" K: "+ str(PVCell.k)
+        # +" Q: "+str(PVCell.q) + " Reference Irradiance: "+ str(PVCell.refIrrad))
 
         # Short circuit current.
         SCCurrent = (
             irradiance
-            / self.refIrrad
-            * self.refSCCurrent
-            * (1 + 6e-4 * (cellTemperature - self.refTemp))
+            / PVCell.refIrrad
+            * PVCell.refSCCurrent
+            * (1 + 6e-4 * (cellTemperature - PVCell.refTemp))
         )
 
         # Open circuit voltage.
         OCVoltage = (
-            self.refOCVoltage
-            - 2.2e-3 * (cellTemperature - self.refTemp)
-            + self.k * cellTemperature / self.q * ln(irradiance / self.refIrrad)
+            PVCell.refOCVoltage
+            - 2.2e-3 * (cellTemperature - PVCell.refTemp)
+            + PVCell.k * cellTemperature / PVCell.q * ln(irradiance / PVCell.refIrrad)
         )
 
         # Photovoltatic current.
@@ -61,7 +64,7 @@ class PVCellNonideal(PVCell):
 
         # Reverse saturation current, or dark saturation current.
         revSatCurrent = exp(
-            ln(SCCurrent) - self.q * OCVoltage / (self.k * cellTemperature)
+            ln(SCCurrent) - PVCell.q * OCVoltage / (PVCell.k * cellTemperature)
         )
 
         # Iteratively solve for the implicit parameter.
@@ -73,9 +76,9 @@ class PVCellNonideal(PVCell):
             revSatCurrent
             * (
                 exp(
-                    self.q
-                    * (voltage + currentPrediction + self.rSeries)
-                    / (self.k * cellTemperature)
+                    PVCell.q
+                    * (voltage + currentPrediction * self.rSeries)
+                    / (PVCell.k * cellTemperature)
                 )
                 - 1
             )
@@ -94,9 +97,9 @@ class PVCellNonideal(PVCell):
                 revSatCurrent
                 * (
                     exp(
-                        self.q
-                        * (voltage + currentPrediction + self.rSeries)
-                        / (self.k * cellTemperature)
+                        PVCell.q
+                        * (voltage + currentPrediction * self.rSeries)
+                        / (PVCell.k * cellTemperature)
                     )
                     - 1
                 )
@@ -110,6 +113,7 @@ class PVCellNonideal(PVCell):
             difference = (left - right) ** 2
 
         # TODO: for some reason, I'm bloody off by a factor of 10 at all times.
+       
         return currentPrediction  # * 10
 
     def getCurrentLookup(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
