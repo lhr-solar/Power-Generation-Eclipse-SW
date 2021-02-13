@@ -23,7 +23,7 @@ class Stride:
     to calculate the stride (change of VREF) for various MPPT algorithms.
     """
 
-    def __init__(self, strideType="Fixed", minStride=0.01):
+    def __init__(self, strideType="Fixed", minStride=0.01, VMPP=0.621, error=0.05):
         """
         Sets up the initial source parameters.
 
@@ -33,6 +33,13 @@ class Stride:
             The name of the stride type.
         minStride: float
             The minimum value of the stride, if applicable.
+        VMPP: float
+            Our estimation of the PVSource voltage at the maximum power point.
+            Note that the default value is for a single cell and is an
+            experimental estimate; according to Sunniva the cell VMPP is 0.621.
+        error: float
+            The minimum error percentage of V_best to serve as our minimum
+            stride.
         """
         self._strideType = strideType
         self._minStride = minStride
@@ -41,6 +48,24 @@ class Stride:
         self.pOld = 0.0
         self.irrOld = 0.0
         self.tOld = 0.0
+        self.VMPP = VMPP
+        self.error = error
+
+    def setup(self, VMPP=0.621, error=0.05):
+        """
+        Reinitializes the predicted parameters for the local MPPT algorithms context.
+
+        Parameters
+        ----------
+        VMPP: float
+            Our estimation of the PVSource voltage at the maximum power point.
+            Note that the default value is for a single cell and is an
+            experimental estimate; according to Sunniva the cell VMPP is 0.621.
+        error: float
+            The minimum error percentage of V_best to serve as our minimum stride.
+        """
+        self.VMPP = VMPP
+        self.error = error
 
     def getStride(self, arrVoltage, arrCurrent, irradiance, temperature):
         """

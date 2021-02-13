@@ -61,7 +61,7 @@ class BisectionStride(Stride):
     Derived class of Stride seeking to jump to the VMPP at all times.
     """
 
-    def __init__(self, minStride=0.01, slopeMultiplier=0.01):
+    def __init__(self, minStride=0.01, VMPP=0.621, error=0.05, slopeMultiplier=0.01):
         """
         Sets up the initial source parameters.
 
@@ -73,7 +73,7 @@ class BisectionStride(Stride):
             The multiplier that dictates how large the stride is calculated when
             on the left side of the P-V curve. Empirically determined.
         """
-        super(BisectionStride, self).__init__("Bisection", minStride)
+        super(BisectionStride, self).__init__("Bisection", minStride, VMPP, error)
 
         self.slopeMultiplier = slopeMultiplier
         self._minPowDiff = 0.01
