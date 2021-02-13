@@ -66,7 +66,7 @@ class PVSource:
         self._modelType = None
         self._useLookup = None
 
-    def setupModel(self, modelType="Default", useLookup=False):
+    def setupModel(self, modelType="Default", useLookup=True):
         """
         Sets up the initial source parameters.
 
@@ -82,9 +82,9 @@ class PVSource:
         # Determines the model used by each cell. Every cell gets the same model.
         self._modelType = modelType
         if modelType == "Ideal":
-            self._model = PVCellIdeal()
+            self._model = PVCellIdeal(useLookup)
         elif modelType == "Nonideal":
-            self._model = PVCellNonideal()
+            self._model = PVCellNonideal(useLookup)
         else:
             self._model = None
 

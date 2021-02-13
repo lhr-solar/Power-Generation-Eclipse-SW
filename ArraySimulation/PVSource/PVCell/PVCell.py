@@ -40,7 +40,7 @@ class PVCell:
     k = 1.381e-23  # Boltzmann's constant (J/K).
     q = 1.602e-19  # Electron charge (C).
 
-    def __init__(self):
+    def __init__(self, useLookup=True):
         """
         Sets up the initial cell parameters.
         """
@@ -48,6 +48,10 @@ class PVCell:
         # should actually be a lookup table in the future.
         self.rSeries = 0.032  # Predicted Cell series resistance (Ohms).
         self.rShunt = 36.1  # Predicted Cell shunt resistance (Ohms).
+
+        # Controls whether each cell in a model calculates its current using a
+        # lookup table or not.
+        self._useLookup = useLookup
 
     def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         """
@@ -128,7 +132,13 @@ class PVCell:
         for voltage in np.arange(
             0.0, self.MAX_CELL_VOLTAGE * numCells + resolution, resolution
         ):
-            current = self.getCurrent(numCells, voltage, irradiance, temperature)
+            current = 0
+            if self._useLookup:
+                current = self.getCurrentLookup(
+                    numCells, voltage, irradiance, temperature
+                )
+            else:
+                current = self.getCurrent(numCells, voltage, irradiance, temperature)
             if current >= 0.0:
                 model.append(
                     (round(voltage, 2), round(current, 3))

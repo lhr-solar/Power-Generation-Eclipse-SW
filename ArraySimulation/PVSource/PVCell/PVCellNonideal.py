@@ -28,8 +28,8 @@ class PVCellNonideal(PVCell):
     Maxeon III Bin Le1 solar cells.
     """
 
-    def __init__(self):
-        super(PVCellNonideal, self).__init__()
+    def __init__(self, useLookup=True):
+        super(PVCellNonideal, self).__init__(useLookup)
 
         # Lookup object for pulling a model from a file.
         # parameters=[(0.001, 801), (10, 101), (1, 81)],
@@ -40,20 +40,23 @@ class PVCellNonideal(PVCell):
     def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         # Nonideal single diode model.
         cellTemperature = temperature + 273.15  # Convert cell temperature into kelvin.
+        # print("Reference Temp: "+str(PVCell.refTemp)+" Reference OC Voltage: " 
+        # +str(PVCell.refOCVoltage)+" Reference SC Current: "+ str(PVCell.refSCCurrent)+" K: "+ str(PVCell.k)
+        # +" Q: "+str(PVCell.q) + " Reference Irradiance: "+ str(PVCell.refIrrad))
 
         # Short circuit current.
         SCCurrent = (
             irradiance
-            / self.refIrrad
-            * self.refSCCurrent
-            * (1 + 6e-4 * (cellTemperature - self.refTemp))
+            / PVCell.refIrrad
+            * PVCell.refSCCurrent
+            * (1 + 6e-4 * (cellTemperature - PVCell.refTemp))
         )
 
         # Open circuit voltage.
         OCVoltage = (
-            self.refOCVoltage
-            - 2.2e-3 * (cellTemperature - self.refTemp)
-            + self.k * cellTemperature / self.q * ln(irradiance / self.refIrrad)
+            PVCell.refOCVoltage
+            - 2.2e-3 * (cellTemperature - PVCell.refTemp)
+            + PVCell.k * cellTemperature / PVCell.q * ln(irradiance / PVCell.refIrrad)
         )
 
         # Photovoltatic current.
@@ -61,7 +64,7 @@ class PVCellNonideal(PVCell):
 
         # Reverse saturation current, or dark saturation current.
         revSatCurrent = exp(
-            ln(SCCurrent) - self.q * OCVoltage / (self.k * cellTemperature)
+            ln(SCCurrent) - PVCell.q * OCVoltage / (PVCell.k * cellTemperature)
         )
 
         # Iteratively solve for the implicit parameter.
@@ -73,9 +76,9 @@ class PVCellNonideal(PVCell):
             revSatCurrent
             * (
                 exp(
-                    self.q
-                    * (voltage + currentPrediction + self.rSeries)
-                    / (self.k * cellTemperature)
+                    PVCell.q
+                    * (voltage + currentPrediction * self.rSeries)
+                    / (PVCell.k * cellTemperature)
                 )
                 - 1
             )
@@ -94,9 +97,9 @@ class PVCellNonideal(PVCell):
                 revSatCurrent
                 * (
                     exp(
-                        self.q
-                        * (voltage + currentPrediction + self.rSeries)
-                        / (self.k * cellTemperature)
+                        PVCell.q
+                        * (voltage + currentPrediction * self.rSeries)
+                        / (PVCell.k * cellTemperature)
                     )
                     - 1
                 )
@@ -110,6 +113,7 @@ class PVCellNonideal(PVCell):
             difference = (left - right) ** 2
 
         # TODO: for some reason, I'm bloody off by a factor of 10 at all times.
+       
         return currentPrediction  # * 10
 
     def getCurrentLookup(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
@@ -165,45 +169,6 @@ class PVCellNonideal(PVCell):
         lookup.writeFile()
         lookup.readFile()
         self._lookup = lookup
-
-    def getCellIV(self, numCells=1, resolution=0.001, irradiance=0.001, temperature=0):
-        """
-        Calculates the entire cell model current voltage plot given various
-        environmental parameters.
-
-        Parameters
-        ----------
-        resolution: float
-            Voltage stride across the cell. Occurs within the bounds of [0,
-            MAX_VOLTAGE], inclusive.
-        irradiance: float
-            Irradiance on the cell. In W/M^2.
-        temperature: float
-            Cell surface temperature. In degrees Celsius.
-
-        Returns
-        -------
-        list: [(voltage:float, current:float), ...]
-            A list of paired voltage|current tuples across the cell IV curve.
-
-        Assumptions
-        -----------
-        The IV curve of the cell has a short circuit current of 0A by MAX_VOLTAGE.
-        """
-        model = []
-        if resolution <= 0:
-            resolution = self.MIN_RESOLUTION
-
-        for voltage in np.arange(
-            0.0, self.MAX_CELL_VOLTAGE * numCells + resolution, resolution
-        ):
-            current = self.getCurrentLookup(numCells, voltage, irradiance, temperature)
-            if current >= 0.0:
-                model.append(
-                    (round(voltage, 2), round(current, 3))
-                )  # TODO: this rounding should be a function of resolution
-
-        return model
 
     def getModelType(self):
         return "Nonideal"
