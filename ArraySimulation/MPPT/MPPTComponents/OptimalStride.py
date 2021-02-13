@@ -39,32 +39,10 @@ from ArraySimulation.MPPT.MPPTComponents.Stride import Stride
 
 
 class OptimalStride(Stride):
-    """
-    Derived class of Stride seeking to jump to the VMPP at all times.
-    """
-
-    def __init__(self, minStride=0.01, VMPP=0.47282, error=0.05):
-        """
-        Sets up the initial source parameters.
-
-        Parameters
-        ----------
-        minStride: float
-            The minimum value of the stride, if applicable.
-        VMPP: float
-            Our estimation of the PVSource voltage at the maximum power point.
-            Note that the default value is for a single cell and is an
-            experimental estimate; according to Sunniva the cell VMPP is 0.621.
-        error: float
-            The minimum error percentage of V_best to serve as our minimum
-            stride.
-        """
-        super(OptimalStride, self).__init__("Optimal", minStride)
-
-        self.VMPP = VMPP
-        self.k = error
+    def __init__(self, minStride=0.01, VMPP=0.621, error=0.05):
+        super(OptimalStride, self).__init__("Optimal", minStride, VMPP, error)
 
     def getStride(self, arrVoltage, arrCurrent, irradiance, temperature):
-        minStride = self.k * self.k / (2 * (1 - self.k)) * self.VMPP
+        minStride = self.error * self.error / (2 * (1 - self.error)) * self.VMPP
         stride = abs(self.VMPP - arrVoltage)
         return stride + minStride

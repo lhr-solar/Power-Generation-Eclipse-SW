@@ -129,9 +129,14 @@ class GlobalMPPTAlgorithm:
         steady state behavior by the next MPPT cycle. This should always be
         considered in the algorithms.
         """
-        return self._model.getReferenceVoltage(
-            arrVoltage, arrCurrent, irradiance, temperature
-        )
+        vRef = self._model.getReferenceVoltage(arrVoltage, arrCurrent, irradiance, temperature)
+        (left, right) = self._getBounds()
+        if vRef < left:
+            vRef = left
+        if vRef > right:
+            vRef = right
+
+        return vRef
 
     def reset(self):
         """
@@ -173,3 +178,17 @@ class GlobalMPPTAlgorithm:
         String: Model type name.
         """
         return self._model.getStrideType()
+    
+    def _getBounds(self):
+        """
+        Finds left and right bounds for the global maximum of the P-V curve.
+
+        Parameters
+        ----------
+        None
+
+        Return
+        ------
+        The left and right bounds for the global maximum of the P-V curve.
+        """
+        return (0.0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
