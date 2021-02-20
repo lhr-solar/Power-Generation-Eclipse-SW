@@ -146,9 +146,9 @@ class DataController:
         self._PVEnv.setupModel()
         self._PVSource.setupModel(modelType=modelType)
 
-        # TODO: add support for global algorithms when Afnan merges in his work.
+        # TODO: Generic number of cells in PVEnvironment needed.
         self._MPPT.setupModel(
-            numCells=1,
+            numCells=3,
             MPPTGlobalAlgoType=MPPTGlobalAlgo,
             MPPTLocalAlgoType=MPPTLocalAlgo,
             strideType=MPPTStrideAlgo,
@@ -210,7 +210,7 @@ class DataController:
         self._PVEnv.cycle()
 
         continueBool = True
-        if cycle > 200:
+        if cycle > 400:
             continueBool = False
 
         return (self.datastore, continueBool)

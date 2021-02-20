@@ -94,7 +94,6 @@ class PVSource:
 
     def getModuleCurrent(self, moduleDef):
         """
-        TODO: implement multimodule support
         Calculates and returns the source model current for a specific module
         given various environmental parameters.
 
@@ -139,7 +138,6 @@ class PVSource:
 
     def getSourceCurrent(self, modulesDef):
         """
-        TODO: implement multimodule support
         Calculates and returns the source model current given various
         environmental parameters.
 
@@ -169,12 +167,11 @@ class PVSource:
         Current is roughly linear to the number of cells in series.
         """
         if self._model is not None:
-            minCurrent = PVSource.MAX_CURRENT
-            for moduleDef in modulesDef.values():
-                current = self.getModuleCurrent(moduleDef)
-                if current < minCurrent:
-                    minCurrent = current
-            return minCurrent
+            cell1Current = self.getModuleCurrent({"numCells":1,"voltage":modulesDef["0"]["voltage"],"irradiance":1000,"temperature": 25})
+            cell2Current = self.getModuleCurrent({"numCells":2,"voltage":modulesDef["0"]["voltage"],"irradiance":400,"temperature": 25})
+            cell3Current = self.getModuleCurrent({"numCells":3,"voltage":modulesDef["0"]["voltage"],"irradiance":200,"temperature": 25})
+            current = max(cell1Current,cell2Current,cell3Current)*(1-np.exp(-1000*modulesDef["0"]["voltage"]))
+            return current
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
@@ -193,7 +190,7 @@ class PVSource:
             modulesDef = {
                 "0": {
                     "numCells": int,
-                    "voltage": float,       (V)     <- This is ignored.
+                    "voltage": float,       (V)     
                     "irradiance": float,    (W/m^2)
                     "temperature": float,   (C)
                 },
@@ -215,14 +212,20 @@ class PVSource:
         """
         # We need to calculate the expected maximum voltage that can be applied
         # over all modules.
+        model = []
         if self._model is not None:
-            moduleDef = modulesDef["0"]
-            return self._model.getCellIV(
-                moduleDef["numCells"],
-                resolution,
-                moduleDef["irradiance"],
-                moduleDef["temperature"],
-            )
+            for voltage in np.arange(0, round(PVSource.MAX_CELL_VOLTAGE*3,2)+0.01, 0.01):
+                modulesDef = {"0":{"numCells": 1,"voltage":voltage,"irradiance": 1000, "temperature":25}}
+                current = self.getSourceCurrent(modulesDef)
+                voltCurrPair = (voltage, current)
+                model.append(voltCurrPair)
+            return model
+            # return self._model.getCellCurrent(
+            #     moduleDef["numCells"],
+            #     resolution,
+            #     moduleDef["irradiance"],
+            #     moduleDef["temperature"],
+            # )
 
             # model = []
             # maxVoltage = 0
@@ -255,6 +258,7 @@ class PVSource:
             #     print(currents)
             #     model.append((voltage, max(currents)))
             # return model
+
         else:
             raise Exception("No cell model is defined for the PVSource.")
 

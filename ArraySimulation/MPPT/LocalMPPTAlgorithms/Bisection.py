@@ -4,8 +4,8 @@ Bisection.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
-TODO: Needs update and checking.
+Last Modified: 2/27/21
+TODO: Description needs an update.
 Description: The Bisection class is a derived class that determines a VREF to 
 apply over PSource to maximize the power generated. The Bisection Method looks
 for the root of a unimodal function. In this application, it is the derivative
@@ -77,45 +77,38 @@ class Bisection(LocalMPPTAlgorithm):
     algorithms.
     """
 
+    # Error constant.
     K = 0.01
 
     def __init__(self, numCells=1, strideType="Fixed"):
         super(Bisection, self).__init__(numCells, "Bisection", strideType)
-        self.left = 0
-        self.right = LocalMPPTAlgorithm.MAX_VOLTAGE
+
+        # Current algorithm internal cycle.
         self.cycle = 0
-        self.pNew = 0
-        self.vNew = 0
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
-            self.left = self.leftBound
-            self.right = self.rightBound
-            self.vNew = (self.left + self.right) / 2
-            vRef = self.vNew
+            vRef = (self.leftBound + self.rightBound) / 2
             self.cycle = 1
-            self.vOld = self.left
+            self.vOld = self.leftBound
             self.pOld = arrCurrent * arrVoltage
         elif self.cycle == 1:
-            self.pNew = arrVoltage * arrCurrent
+            pNew = arrVoltage * arrCurrent
             dP_dV = 0
             if arrVoltage - self.vOld != 0:  # Prevent divide by 0 issues.
-                dP_dV = (self.pNew - self.pOld) / (arrVoltage - self.vOld)
+                dP_dV = (pNew - self.pOld) / (arrVoltage - self.vOld)
 
             if abs(dP_dV) <= self.K:
-                self.vNew = arrVoltage
-                vRef = self.vNew
+                vRef = arrVoltage
             elif dP_dV > 0:
-                self.left = arrVoltage
-                self.vNew = (self.left+self.right)/2
-                vRef = self.vNew
+                self.leftBound = arrVoltage
+                vRef = (self.leftBound+self.rightBound)/2
             else:
-                self.right = arrVoltage
-                self.vNew = (self.left+self.right)/2
-                vRef = self.vNew
+                self.rightBound = arrVoltage
+                vRef = (self.leftBound+self.rightBound)/2
             self.vOld = arrVoltage
-            self.pOld = self.pNew
+            self.pOld = pNew
         else:
             raise Exception("self.cycle is not 0 or 1: " + self.cycle)
         
@@ -123,10 +116,4 @@ class Bisection(LocalMPPTAlgorithm):
 
     def reset(self):
         super(Bisection, self).reset()
-        self.left = 0
-        self.right = self.MAX_VOLTAGE
-        self.l1 = self.left
-        self.l2 = self.right
-        self.powerL1 = 0
-        self.powerL2 = 0
         self.cycle = 0
