@@ -56,7 +56,7 @@ class LocalMPPTAlgorithm:
         strideType: String
             The name of the stride algorithm type.
         """
-        self.MAX_VOLTAGE = numCells * self.MAX_VOLTAGE_PER_CELL
+        LocalMPPTAlgorithm.MAX_VOLTAGE = numCells * LocalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL
         self._MPPTLocalAlgoType = MPPTLocalAlgoType
 
         if strideType == "Adaptive":
@@ -76,7 +76,7 @@ class LocalMPPTAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
-    def setup(self, VMPP = 0.621):
+    def setup(self, VMPP = 0.621, leftBound = 0, rightBound = MAX_VOLTAGE):
         """
         Reinitializes the predicted parameters for the local MPPT algorithms context.
 
@@ -85,6 +85,8 @@ class LocalMPPTAlgorithm:
         VMPP: float
             The voltage of the Maximum Power Point.
         """
+        self.leftBound = leftBound
+        self.rightBound = rightBound
         self._strideModel.setup(VMPP)
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):

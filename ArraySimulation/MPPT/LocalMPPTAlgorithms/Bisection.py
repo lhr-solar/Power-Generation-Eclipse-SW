@@ -40,6 +40,7 @@ Bisection Method: https://en.wikipedia.org/wiki/Bisection_method
 
     Cycle 1: Determine our second reference voltage.
         pNew = ArrVoltage * ArrCurrent
+        vNew = ArrVoltage
         dP/dV = (pNew - pOld) / (vNew - vOld)
 
         if dP/dV <= K:                          # Within tolerance. No movement.
@@ -48,7 +49,7 @@ Bisection Method: https://en.wikipedia.org/wiki/Bisection_method
             left = vNew
             VREF = vOld = vNew = (left + right) / 2 # TODO: this is not yet right.
             pOld = pNew
-        else:                                   # Negtive slop. Go left.
+        else:                                   # Negative slope. Go left.
             right = vNew
             VREF = vOld = vNew = (left + right) / 2
             pOld = pNew
@@ -81,39 +82,43 @@ class Bisection(LocalMPPTAlgorithm):
     def __init__(self, numCells=1, strideType="Fixed"):
         super(Bisection, self).__init__(numCells, "Bisection", strideType)
         self.left = 0
-        self.right = self.MAX_VOLTAGE
-        self.l1 = self.left
-        self.l2 = self.right
-        self.powerL1 = 0
-        self.powerL2 = 0
+        self.right = LocalMPPTAlgorithm.MAX_VOLTAGE
         self.cycle = 0
+        self.pNew = 0
+        self.vNew = 0
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
-            vRef = (self.left + self.right) / 2
+            self.left = self.leftBound
+            self.right = self.rightBound
+            self.vNew = (self.left + self.right) / 2
+            vRef = self.vNew
             self.cycle = 1
+            self.vOld = self.left
+            self.pOld = arrCurrent * arrVoltage
         elif self.cycle == 1:
-            self.powerL1 = arrVoltage * arrCurrent
-
+            self.pNew = arrVoltage * arrCurrent
             dP_dV = 0
             if arrVoltage - self.vOld != 0:  # Prevent divide by 0 issues.
-                dP_dV = self.powerL1 / (arrVoltage - self.vOld)
+                dP_dV = (self.pNew - self.pOld) / (arrVoltage - self.vOld)
 
             if abs(dP_dV) <= self.K:
-                vRef = self.vOld
-            # TODO: fix this.
+                self.vNew = arrVoltage
+                vRef = self.vNew
             elif dP_dV > 0:
-                pass
+                self.left = arrVoltage
+                self.vNew = (self.left+self.right)/2
+                vRef = self.vNew
             else:
-                pass
+                self.right = arrVoltage
+                self.vNew = (self.left+self.right)/2
+                vRef = self.vNew
+            self.vOld = arrVoltage
+            self.pOld = self.pNew
         else:
             raise Exception("self.cycle is not 0 or 1: " + self.cycle)
-
-        # Update dependent values.
-        self.vOld = arrVoltage
-        self.pOld = arrVoltage * arrCurrent
-
+        
         return vRef
 
     def reset(self):
