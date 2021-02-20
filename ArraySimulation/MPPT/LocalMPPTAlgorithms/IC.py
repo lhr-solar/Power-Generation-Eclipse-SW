@@ -78,10 +78,10 @@ class IC(LocalMPPTAlgorithm):
         self.vOld = arrVoltage
 
         # Kick the first cycle
-        if not self.firstCycle:
-            return vRef
-        self.firstCycle = False
-        return 0.1
+        # if not self.firstCycle:
+        return vRef
+        # self.firstCycle = False
+        # return 0.1
 
     def reset(self):
         super(IC, self).reset()
