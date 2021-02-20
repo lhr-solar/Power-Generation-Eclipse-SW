@@ -61,7 +61,6 @@ class VoltageSweep(GlobalMPPTAlgorithm):
             (lBound, rBound) = self._getBounds()
             maxPower = max(self.power_peaks)
             maxVoltage = self.voltage_peaks[self.power_peaks.index(maxPower)]
-            print(maxVoltage)
             #TODO: Look at this later
             self._model.setup(maxVoltage)
             if arrVoltage >= self.MAX_VOLTAGE:
