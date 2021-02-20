@@ -76,6 +76,17 @@ class LocalMPPTAlgorithm:
         self.irrOld = 0.0
         self.tOld = 0.0
 
+    def setup(self, VMPP = 0.621):
+        """
+        Reinitializes the predicted parameters for the local MPPT algorithms context.
+
+        Parameters
+        ----------
+        VMPP: float
+            The voltage of the Maximum Power Point.
+        """
+        self._strideModel.setup(VMPP)
+
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         """
         Calculates the reference voltage output for the given PVSource input.
@@ -140,3 +151,4 @@ class LocalMPPTAlgorithm:
         String: Model type name.
         """
         return self._strideModel.getStrideType()
+    

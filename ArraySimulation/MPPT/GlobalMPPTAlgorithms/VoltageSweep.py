@@ -54,11 +54,16 @@ class VoltageSweep(GlobalMPPTAlgorithm):
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = arrVoltage
-        if arrVoltage < self.MAX_VOLTAGE and self.sweeping:
+        if arrVoltage <= self.MAX_VOLTAGE and self.sweeping:
             vRef = self._sweep(arrVoltage, arrCurrent, irradiance, temperature)
         else:
             self.sweeping = False
             (lBound, rBound) = self._getBounds()
+            maxPower = max(self.power_peaks)
+            maxVoltage = self.voltage_peaks[self.power_peaks.index(maxPower)]
+            print(maxVoltage)
+            #TODO: Look at this later
+            self._model.setup(maxVoltage)
             if arrVoltage >= self.MAX_VOLTAGE:
                 vRef = lBound
             elif arrVoltage == lBound:
@@ -67,6 +72,10 @@ class VoltageSweep(GlobalMPPTAlgorithm):
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
+                if vRef < lBound:
+                    vRef = lBound
+                if vRef > rBound:
+                    vRef = rBound
         return vRef
 
     def _sweep(self, arrVoltage, arrCurrent, irradiance, temperature):
@@ -92,8 +101,6 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         """
         pIn = arrVoltage * arrCurrent
         vRef = arrVoltage
-        if arrVoltage >= 0.80:
-            return 0.80
         if pIn < self.pOld and self.increasing:
             self.voltage_peaks.append(self.vOld)
             self.power_peaks.append(self.pOld)
@@ -125,7 +132,9 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         (leftBound, rightBound) = (
             maxVoltage - 0.1,
             maxVoltage + 0.1,
-        )  # 0.1 is a placeholder for now. Will probably have to be some factor of the max voltage
+        )  
+        #TODO: 0.1 is a placeholder for now. Will probably have to be some factor of the max voltage
+         
         return (leftBound, rightBound)
 
     def reset(self):
