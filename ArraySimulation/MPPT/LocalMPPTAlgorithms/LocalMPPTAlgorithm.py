@@ -4,7 +4,7 @@ LocalMPPTAlgorithm.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 2/8/21
+Last Modified: 2/26/22
 
 Description: The MPPTAlgorithm (Maximum Power Point Tracker) class is a concrete
 base class that provides a common API for derived classes to use. The
@@ -70,12 +70,25 @@ class LocalMPPTAlgorithm:
         else:
             self._strideModel = Stride()
 
+        # Previous array voltage value.
         self.vOld = 0.0
+
+        # Previous array current voltage.
         self.iOld = 0.0
+
+        # Previous array power voltage.
         self.pOld = 0.0
+
+        # Previous array irradiance value.
         self.irrOld = 0.0
+
+        # Previous array temperature value.
         self.tOld = 0.0
 
+        # Bounds for the LocalMPPTAlgorithm. A naive assumption is that the
+        # function within these bounds are unimodal.
+        self.leftBound = 0
+        self.rightBound = LocalMPPTAlgorithm.MAX_VOLTAGE
     def setup(self, VMPP = 0.621, leftBound = 0, rightBound = MAX_VOLTAGE):
         """
         Reinitializes the predicted parameters for the local MPPT algorithms context.
@@ -133,6 +146,8 @@ class LocalMPPTAlgorithm:
         self.pOld = 0.0
         self.irrOld = 0.0
         self.tOld = 0.0
+        self.leftBound = 0
+        self.rightBound = LocalMPPTAlgorithm.MAX_VOLTAGE
 
     def getLocalMPPTType(self):
         """

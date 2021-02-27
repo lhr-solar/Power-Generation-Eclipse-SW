@@ -67,8 +67,8 @@ class GlobalMPPTAlgorithm:
             The name of the stride algorithm type.
         TODO: Add stride argument to voltage sweep constructor.
         """
-        GlobalMPPTAlgorithm.MAX_VOLTAGE = (
-            GlobalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL * numCells
+        GlobalMPPTAlgorithm.MAX_VOLTAGE = round(
+            GlobalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL * numCells,2
         )
         self._MPPTGlobalAlgoType = MPPTGlobalAlgoType
 

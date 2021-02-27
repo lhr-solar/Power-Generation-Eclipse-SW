@@ -4,8 +4,8 @@ Ternary.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/24/20
-Last Modified: 11/24/20
-
+Last Modified: 2/27/21
+TODO: Description needs an update.
 Description: The Ternary class is a derived class that determines a VREF to apply
 over PSource to maximize the power generated. Ternary utilizes the change of
 power over time to determine the position of the next VREF. It belongs to the
@@ -74,28 +74,32 @@ class Ternary(LocalMPPTAlgorithm):
 
     def __init__(self, numCells=1, strideType="Fixed"):
         super(Ternary, self).__init__(numCells, "Ternary", strideType)
-        self.left = 0
-        self.right = self.MAX_VOLTAGE
-        self.l1 = self.left
-        self.l2 = self.right
+
+        # Current algorithm internal cycle.
+        self.cycle = 0
+
+        # New left and right bounds.
+        self.l1 = self.leftBound
+        self.l2 = self.rightBound
+
+        # Power associated with the new left and right bounds.
         self.powerL1 = 0
         self.powerL2 = 0
-        self.cycle = 0
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
             self.powerL2 = arrVoltage * arrCurrent
             if self.powerL1 > self.powerL2:
-                self.right = self.l2
+                self.rightBound = self.l2
             else:
-                self.left = self.l1
-            self.l1 = (self.right - self.left) * self.q + self.left
+                self.leftBound = self.l1
+            self.l1 = (self.rightBound - self.leftBound) * self.q + self.leftBound
             vRef = self.l1
             self.cycle = 1
         elif self.cycle == 1:
             self.powerL1 = arrVoltage * arrCurrent
-            self.l2 = self.right - (self.right - self.left) * self.q
+            self.l2 = self.rightBound - (self.rightBound - self.leftBound) * self.q
             vRef = self.l2
             self.cycle = 0
         else:
@@ -105,10 +109,8 @@ class Ternary(LocalMPPTAlgorithm):
 
     def reset(self):
         super(Ternary, self).reset()
-        self.left = 0
-        self.right = self.MAX_VOLTAGE
-        self.l1 = self.left
-        self.l2 = self.right
+        self.cycle = 0
+        self.l1 = self.leftBound
+        self.l2 = self.rightBound
         self.powerL1 = 0
         self.powerL2 = 0
-        self.cycle = 0

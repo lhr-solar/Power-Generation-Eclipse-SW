@@ -4,8 +4,8 @@ Golden.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
-
+Last Modified: 2/27/21
+TODO: Description needs an update.
 Description: The Golden class is a derived class that determines a VREF to apply
 over PSource to maximize the power generated. Golden utilizes the change of
 power over time to determine the position of the next VREF. It belongs to the
@@ -53,7 +53,7 @@ Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
             right = l2                          # Cut the right bound to the right goalpost.
             l2 = l1                             # Shift left goalpost voltage and power to the right side.
             powerL2 = powerL1
-
+            #TODO: Fix the description over here and in line 66
             [l1, l2] = [left, right]            # Reset goalposts and find the next left goalpost.
             l1 = right - (right - left) * phi
             VREF = l1
@@ -96,23 +96,27 @@ class Golden(LocalMPPTAlgorithm):
 
     def __init__(self, numCells=1, strideType="Fixed"):
         super(Golden, self).__init__(numCells, "Golden", strideType)
-        self.left = 0
-        self.right = self.MAX_VOLTAGE
-        self.l1 = self.left
-        self.l2 = self.right
+
+        # Current algorithm internal cycle.
+        self.cycle = 0
+
+        # New left and right bounds.
+        self.l1 = self.leftBound
+        self.l2 = self.rightBound
+
+        # Power associated with the new left and right bounds.
         self.powerL1 = 0
         self.powerL2 = 0
-        self.cycle = 0
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
         if self.cycle == 0:
-            self.l1 = self.right - (self.right - self.left) * self.phi
+            self.l1 = self.rightBound - (self.rightBound - self.leftBound) * Golden.phi
             vRef = self.l1
             self.cycle = 1
         elif self.cycle == 1:
             self.powerL1 = arrVoltage * arrCurrent
-            self.l2 = (self.right - self.left) * self.phi + self.left
+            self.l2 = (self.rightBound - self.leftBound) * Golden.phi + self.leftBound
             vRef = self.l2
             self.cycle = 2
         else:
@@ -124,23 +128,19 @@ class Golden(LocalMPPTAlgorithm):
                 raise Exception("self.cycle is not 2 or 3: " + self.cycle)
 
             if self.powerL1 > self.powerL2:
-                self.right = self.l2
+                self.rightBound = self.l2
                 self.l2 = self.l1
                 self.powerL2 = self.powerL1
 
-                self.l1 = self.left  # TODO: this could possibly be simplified.
-                self.l2 = self.right
-                self.l1 = self.right - (self.right - self.left) * self.phi
+                self.l1 = self.rightBound - (self.rightBound - self.leftBound) * self.phi
                 vRef = self.l1
                 self.cycle = 3
             else:
-                self.left = self.l1
+                self.leftBound = self.l1
                 self.l1 = self.l2
                 self.powerL1 = self.powerL2
 
-                self.l1 = self.left  # TODO: likewise.
-                self.l2 = self.right
-                self.l2 = (self.right - self.left) * self.phi + self.left
+                self.l2 = (self.rightBound - self.leftBound) * self.phi + self.leftBound
                 vRef = self.l2
                 self.cycle = 2
 
@@ -148,10 +148,8 @@ class Golden(LocalMPPTAlgorithm):
 
     def reset(self):
         super(Golden, self).reset()
-        self.left = 0
-        self.right = self.MAX_VOLTAGE
-        self.l1 = self.left
-        self.l2 = self.right
+        self.cycle = 0
+        self.l1 = self.leftBound
+        self.l2 = self.rightBound
         self.powerL1 = 0
         self.powerL2 = 0
-        self.cycle = 0
