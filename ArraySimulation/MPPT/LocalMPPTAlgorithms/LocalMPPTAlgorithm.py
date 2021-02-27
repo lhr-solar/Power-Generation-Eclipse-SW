@@ -89,7 +89,6 @@ class LocalMPPTAlgorithm:
         # function within these bounds are unimodal.
         self.leftBound = 0
         self.rightBound = LocalMPPTAlgorithm.MAX_VOLTAGE
-
     def setup(self, VMPP = 0.621, leftBound = 0, rightBound = MAX_VOLTAGE):
         """
         Reinitializes the predicted parameters for the local MPPT algorithms context.

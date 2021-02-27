@@ -85,6 +85,8 @@ class Bisection(LocalMPPTAlgorithm):
 
         # Current algorithm internal cycle.
         self.cycle = 0
+        self.pNew = 0
+        self.vNew = 0
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
