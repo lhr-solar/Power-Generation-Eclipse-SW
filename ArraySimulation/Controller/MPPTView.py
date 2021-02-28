@@ -329,11 +329,8 @@ class MPPTView(View):
         # Update derived data structures
         VREF = round(cycleResults["mpptOutput"][idx], 2)
         IVList = cycleResults["sourceOutput"][idx]["IV"]
-        MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt,2) == VREF]
-        # print(
-        #     "Searching for:", VREF
-        # )  # TODO: this rounding should be a function of resolution
-        # print(IVList)
+        MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
+
         # Percent Yield
         powerStore["actualPower"] = VREF * MPPTCurrOut[0]
         powerStore["theoreticalPower"] = (

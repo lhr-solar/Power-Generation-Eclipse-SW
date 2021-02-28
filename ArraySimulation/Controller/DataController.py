@@ -176,7 +176,6 @@ class DataController:
         modulesDef = self._PVEnv.getSourceDefinition(self._vREF)
         envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
 
-        # print(modulesDef)
         # Retrieve the source characteristics given the source definition.
         sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
         sourceIV = self._PVSource.getIV(modulesDef)
@@ -207,7 +206,7 @@ class DataController:
         self._vREF = vRef
 
         # Increment the current simulation cycle.
-        self._PVEnv.cycle()
+        self._PVEnv.incrementCycle()
 
         continueBool = True
         if cycle > 400:
@@ -259,9 +258,7 @@ class DataController:
         # We don't care about the voltage input in this case (since we grab the
         # entire I-V curve, which iterates over all voltages).
         modulesDef = self._PVEnv.getSourceDefinition(0.0)
-        print(modulesDef, voltageResolution)
         IVCoordinates = self._PVSource.getIV(modulesDef, voltageResolution)
-        print(IVCoordinates)
 
         # Parse it into a format directly ingestable by the UIController.
         xVals = []

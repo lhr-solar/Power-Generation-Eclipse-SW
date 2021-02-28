@@ -4,12 +4,8 @@ LocalMPPTAlgorithm.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 2/26/22
-
-Description: The MPPTAlgorithm (Maximum Power Point Tracker) class is a concrete
-base class that provides a common API for derived classes to use. The
-MPPTAlgorithm class enables users to calculate or predict voltage setpoints that
-would maximize the output power of the PVSource given a set of input conditions.
+Last Modified: 02/27/22
+Description: Implementation of the LocalMPPTAlgorithm class.
 """
 # Library Imports.
 
@@ -23,11 +19,9 @@ from ArraySimulation.MPPT.MPPTComponents.Stride import Stride
 
 class LocalMPPTAlgorithm:
     """
-    The MPPTAlgorithm (Maximum Power Point Tracker) class is a concrete
-    base class that provides a common API for derived classes to use. The
-    MPPTAlgorithm class enables users to calculate or predict voltage setpoints
-    that would maximize the output power of the PVSource given a set of input
-    conditions.
+    The LocalMPPTAlgorithm class provides the base API for derived classes to
+    calculate or predict voltage setpoints that would maximize the output power
+    of the PVSource given a set of input conditions.
     """
 
     # The upper voltage bound that should be predicted by any model. We expect
@@ -56,7 +50,9 @@ class LocalMPPTAlgorithm:
         strideType: String
             The name of the stride algorithm type.
         """
-        LocalMPPTAlgorithm.MAX_VOLTAGE = numCells * LocalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL
+        LocalMPPTAlgorithm.MAX_VOLTAGE = (
+            numCells * LocalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL
+        )
         self._MPPTLocalAlgoType = MPPTLocalAlgoType
 
         if strideType == "Adaptive":
@@ -89,7 +85,8 @@ class LocalMPPTAlgorithm:
         # function within these bounds are unimodal.
         self.leftBound = 0
         self.rightBound = LocalMPPTAlgorithm.MAX_VOLTAGE
-    def setup(self, VMPP = 0.621, leftBound = 0, rightBound = MAX_VOLTAGE):
+
+    def setup(self, VMPP=0.621, leftBound=0, rightBound=MAX_VOLTAGE):
         """
         Reinitializes the predicted parameters for the local MPPT algorithms context.
 
@@ -168,4 +165,3 @@ class LocalMPPTAlgorithm:
         String: Model type name.
         """
         return self._strideModel.getStrideType()
-    

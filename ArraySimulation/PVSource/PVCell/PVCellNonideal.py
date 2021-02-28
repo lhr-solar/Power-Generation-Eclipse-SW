@@ -40,7 +40,7 @@ class PVCellNonideal(PVCell):
     def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
         # Nonideal single diode model.
         cellTemperature = temperature + 273.15  # Convert cell temperature into kelvin.
-        # print("Reference Temp: "+str(PVCell.refTemp)+" Reference OC Voltage: " 
+        # print("Reference Temp: "+str(PVCell.refTemp)+" Reference OC Voltage: "
         # +str(PVCell.refOCVoltage)+" Reference SC Current: "+ str(PVCell.refSCCurrent)+" K: "+ str(PVCell.k)
         # +" Q: "+str(PVCell.q) + " Reference Irradiance: "+ str(PVCell.refIrrad))
 
@@ -113,7 +113,7 @@ class PVCellNonideal(PVCell):
             difference = (left - right) ** 2
 
         # TODO: for some reason, I'm bloody off by a factor of 10 at all times.
-       
+
         return currentPrediction  # * 10
 
     def getCurrentLookup(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):

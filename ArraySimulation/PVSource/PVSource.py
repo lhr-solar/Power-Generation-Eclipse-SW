@@ -167,10 +167,33 @@ class PVSource:
         Current is roughly linear to the number of cells in series.
         """
         if self._model is not None:
-            cell1Current = self.getModuleCurrent({"numCells":1,"voltage":modulesDef["0"]["voltage"],"irradiance":1000,"temperature": 25})
-            cell2Current = self.getModuleCurrent({"numCells":2,"voltage":modulesDef["0"]["voltage"],"irradiance":400,"temperature": 25})
-            cell3Current = self.getModuleCurrent({"numCells":3,"voltage":modulesDef["0"]["voltage"],"irradiance":200,"temperature": 25})
-            current = max(cell1Current,cell2Current,cell3Current)*(1-np.exp(-1000*modulesDef["0"]["voltage"]))
+            cell1Current = self.getModuleCurrent(
+                {
+                    "numCells": 1,
+                    "voltage": modulesDef["0"]["voltage"],
+                    "irradiance": 1000,
+                    "temperature": 25,
+                }
+            )
+            cell2Current = self.getModuleCurrent(
+                {
+                    "numCells": 2,
+                    "voltage": modulesDef["0"]["voltage"],
+                    "irradiance": 400,
+                    "temperature": 25,
+                }
+            )
+            cell3Current = self.getModuleCurrent(
+                {
+                    "numCells": 3,
+                    "voltage": modulesDef["0"]["voltage"],
+                    "irradiance": 200,
+                    "temperature": 25,
+                }
+            )
+            current = max(cell1Current, cell2Current, cell3Current) * (
+                1 - np.exp(-1000 * modulesDef["0"]["voltage"])
+            )
             return current
         else:
             raise Exception("No cell model is defined for the PVSource.")
@@ -190,7 +213,7 @@ class PVSource:
             modulesDef = {
                 "0": {
                     "numCells": int,
-                    "voltage": float,       (V)     
+                    "voltage": float,       (V)
                     "irradiance": float,    (W/m^2)
                     "temperature": float,   (C)
                 },
@@ -214,8 +237,17 @@ class PVSource:
         # over all modules.
         model = []
         if self._model is not None:
-            for voltage in np.arange(0, round(PVSource.MAX_CELL_VOLTAGE*3,2)+0.01, 0.01):
-                modulesDef = {"0":{"numCells": 1,"voltage":voltage,"irradiance": 1000, "temperature":25}}
+            for voltage in np.arange(
+                0, round(PVSource.MAX_CELL_VOLTAGE * 3, 2) + 0.01, 0.01
+            ):
+                modulesDef = {
+                    "0": {
+                        "numCells": 1,
+                        "voltage": voltage,
+                        "irradiance": 1000,
+                        "temperature": 25,
+                    }
+                }
                 current = self.getSourceCurrent(modulesDef)
                 voltCurrPair = (voltage, current)
                 model.append(voltCurrPair)

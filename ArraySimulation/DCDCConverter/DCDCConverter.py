@@ -4,18 +4,18 @@ DCDCConverter.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 11/24/20
+Last Modified: 02/27/21
 
-Description: The DCDCConverter class is a concrete base class that translate
-MPPT Reference voltages into a roughly equivalent pulse width. This class mainly
-is a pass through component of the simulator, since we assume our MPPT VRef
-equates to a pulse width that applies exactly the MPPT VRef across the source.
+Description: Implementation of the DCDCConverter class.
 
-In a more advanced model, we might tinker with this class to not do convert 1-1,
+In a more advanced model, we might tinker with this class to not do 1-1 conversion,
 and investigate the sampling timing required in a real system. Doing so will
 allow us to develop feedback loop algorithms for the real DC-DC Converter to
 push the source to the correct VRef prior to the MPPT step (which assumes our
 voltage has reached the correct place and is at steady state).
+
+This class is still useful, however, since it provides a base template for
+translation into C/C++ embedded code for the actual MPPT.
 """
 # Library Imports.
 
@@ -30,18 +30,18 @@ class DCDCConverter:
     mainly is a pass through component of the simulator, since we assume our
     MPPT VRef equates to a pulse width that applies exactly the MPPT VRef across
     the source.
-
-    In a more advanced model, we might tinker with this class to not do convert
-    1-1, and investigate the sampling timing required in a real system. Doing so
-    will allow us to develop feedback loop algorithms for the real DC-DC
-    Converter to push the source to the correct VRef prior to the MPPT step
-    (which assumes our voltage has reached the correct place and is at steady
-    state).
     """
 
     def __init__(self):
+        # Pulse width of the converter.
         self.pulseWidth = 0
+
+        # Current array voltage. We want this to be as close to VMPP at all times.
         self.arrayVoltage = 0
+
+        # Current load voltage. The DCDCConverter converts the array voltage to
+        # a voltage strictly higher than the load voltage. The closer to it, the
+        # more power that can be transmitted without being lost as heat.
         self.loadVoltage = 0
 
     def setup(self, arrayVoltage=0.0, loadVoltage=0.6):
@@ -72,9 +72,6 @@ class DCDCConverter:
         ----------
         MPPTTargetVoltage: float
             Expected array output voltage after inputting a specific pulse width.
-
-        Returns:
-            - None
         """
         if MPPTTargetVoltage > 0.0:
             self.pulseWidth = 1 - self.loadVoltage / MPPTTargetVoltage
@@ -84,11 +81,9 @@ class DCDCConverter:
         """
         Gets the current pulse width as a fraction from [0, 1].
 
-        Args:
-            - None
-
-        Returns:
-            - float: pulse width
+        Return
+        ------
+        float: pulse width
         """
         return self.pulseWidth
 
@@ -101,9 +96,6 @@ class DCDCConverter:
         ----------
         loadVoltage: float
             New load voltage constraint.
-
-        Returns:
-            - None
         """
         self.loadVoltage = loadVoltage
 
@@ -113,8 +105,9 @@ class DCDCConverter:
         Reverse of set_pulse_width - this is what we expect the dc-dc converter
         to return.
 
-        Returns:
-            - float: expected array voltage
+        Return
+        ------
+        float: expected array voltage
         """
         return self.array_voltage
 
@@ -122,6 +115,6 @@ class DCDCConverter:
         """
         Resets any internal variables set by the DC-DC Converter during operation.
         """
+        self.pulseWidth = 0
         self.arrayVoltage = 0
         self.loadVoltage = 0
-        self.pulseWidth = 0

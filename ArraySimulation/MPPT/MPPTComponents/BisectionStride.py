@@ -4,9 +4,10 @@ BisectionStride.py
 Author: Afnan Mir and Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
+Last Modified: 02/27/21
+Description: Implementation of the Bisection Stride perturbation function.
 
-Description: Derived class of Stride that implements the perturbation function
+The BisectionStride class implements the perturbation function
 discussed in the following paper:
 
     Bisection Method Based Modified Perturb and Observe MPPT
@@ -45,9 +46,11 @@ discussed in the following paper:
 
     Our new piecewise function is the following:
 
-    f(V) = stride_min               , |dV| < error1, |dP| < error2 (we use 0.01, 0.1, respectively)
-           (V + V_old) / 2 - V_old  , dP/dV < 0
-           dP / dV * .001           , dP/dV > 0
+    f(V) = stride_min                   , |dV| < error1, |dP| < error2 (we use 0.01, 0.1, respectively)
+           (V + V_old) / 2 - V_old      , dP/dV < 0
+           dP / dV * slope_multiplier   , dP/dV > 0
+
+    stride_min is a constant defined by the user.
 """
 # Library Imports.
 
@@ -75,7 +78,10 @@ class BisectionStride(Stride):
         """
         super(BisectionStride, self).__init__("Bisection", minStride, VMPP, error)
 
+        # Constant for determining convergence speed on the left side of the VMPP.
         self.slopeMultiplier = slopeMultiplier
+
+        # Constant for selecting the minimum power and voltage difference.
         self._minPowDiff = 0.01
         self._minVoltDiff = 0.001
 
@@ -87,13 +93,10 @@ class BisectionStride(Stride):
         stride = 0
         if abs(dP) >= self._minPowDiff and abs(dV) >= self._minVoltDiff:
             slope = dP / dV
-            if slope > 0:
-                slope *= self.slopeMultiplier
-                stride = round(slope, 2)
-            elif slope < 0:
-                vNew = (arrVoltage + self.vOld) / 2
-                dVNew = vNew - self.vOld
-                stride = dVNew
+            if slope < 0:
+                stride = (arrVoltage + self.vOld) / 2 - self.vOld
+            elif slope > 0:
+                stride = slope * self.slopeMultiplier
 
         self.vOld = arrVoltage
         self.pOld = pIn

@@ -4,12 +4,8 @@ IC.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/21/20
-Last Modified: 11/24/20
-
-Description: The IC (Incremental Conductance) class is a derived class that
-determines a VREF to apply over PSource to maximize the power generated. IC
-compares the incremental conductance to the instantaneous conductance. It
-belongs to the set of hill climbing algorithms.
+Last Modified: 2/27/21
+Description: Implementation of the Incremental Conductance algorithm.
 
 The implementation of this algorithm is based on the folowing paper:
 
@@ -40,15 +36,17 @@ from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
 
 class IC(LocalMPPTAlgorithm):
     """
-    The IC (Incremental Conductance) class is a derived class that
-    determines a VREF to apply over PSource to maximize the power generated. IC
-    compares the incremental conductance to the instantaneous conductance. It
-    belongs to the set of hill climbing algorithms.
+    The IC (Incremental Conductance) class is a derived class of
+    LocalMPPTAlgorithm, utilizing the comparison of the incremental conductance
+    to the instantaneous conductance. It belongs to the set of hill climbing
+    algorithms.
     """
+
+    # Error tuning parameter.
+    error = 0.01
 
     def __init__(self, numCells=1, strideType="Fixed"):
         super(IC, self).__init__(numCells, "IC", strideType)
-        self.firstCycle = True
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         # Compute secondary values.
@@ -61,14 +59,12 @@ class IC(LocalMPPTAlgorithm):
         )
 
         # Determine the direction of movement and VREF.
-        # TODO: The 0.01 constant might need to become an extra parameter
-        # exposed to the MPPTView for more granular control on subarray level PV
         vRef = arrVoltage
-        if abs(dI * arrVoltage + arrCurrent * dV) < 0.01:  # At MPP.
+        if abs(dI * arrVoltage + arrCurrent * dV) < IC.error:  # At MPP.
             pass
-        elif dI * arrVoltage + arrCurrent * dV > 0.01:  # Left of MPP.
+        elif dI * arrVoltage + arrCurrent * dV > IC.error:  # Left of MPP.
             vRef += stride
-        elif dI * arrVoltage + arrCurrent * dV < -0.01:  # Right o MPP.
+        elif dI * arrVoltage + arrCurrent * dV < -IC.error:  # Right o MPP.
             vRef -= stride
         else:
             raise Exception("[IC][getReferenceVoltage] Invalid region of interest.")
@@ -77,12 +73,4 @@ class IC(LocalMPPTAlgorithm):
         self.iOld = arrCurrent
         self.vOld = arrVoltage
 
-        # Kick the first cycle
-        # if not self.firstCycle:
         return vRef
-        # self.firstCycle = False
-        # return 0.1
-
-    def reset(self):
-        super(IC, self).reset()
-        self.firstCycle = True

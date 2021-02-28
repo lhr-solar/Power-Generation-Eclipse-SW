@@ -4,10 +4,11 @@ AdaptiveStride.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
+Last Modified: 02/27/21
+Description: Implementation of the Adaptive Stride perturbation function.
 
-Description: Derived class of Stride that implements the perturbation function
-discussed in the following paper:
+The AdaptiveStride class implements the perturbation function discussed in the
+following paper:
 
     Adaptive Perturb and Observe Algorithm for Photovoltaic Maximum
     Power Point Tracking (Piegari et Rizzo.)
@@ -26,6 +27,15 @@ discussed in the following paper:
     We see that in the event of the solar cell voltage being to the right of the 
     maximum power point, Piegari et Rizzo use dV_min to shift back towards the 
     maximum power point.
+
+    dV_min is defined as a function of the estimation error, K, which is a user
+    constant. Piegari et Rizzo also proposes that dV_min should be at least
+
+    K^2 / (2 * (1 - K)) * V_best.
+
+    The error estimation allows for correcting the parent local MPPT algorithm
+    to converge at the maximum. However, if the predicted V_best is off mark, so
+    will be the initial convergence.
 """
 # Library Imports.
 from math import exp
@@ -44,7 +54,7 @@ class AdaptiveStride(Stride):
         super(AdaptiveStride, self).__init__("Adaptive", minStride, VMPP, error)
 
     def getStride(self, arrVoltage, arrCurrent, irradiance, temperature):
-        minStride = self.error * self.error / (2 * (1 - self.error)) * self.VMPP
+        minStride = self.error * self.error * self.VMPP / (2 * (1 - self.error))
         stride = 0
         if arrVoltage < self.VMPP:
             stride = exp((self.VMPP - arrVoltage) / 3) - 1

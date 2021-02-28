@@ -4,13 +4,9 @@ PandO.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 11/24/20
+Last Modified: 02/27/21
 
-Description: The PandO (Perturb and Observe) class is a derived class that
-determines a VREF to apply over PSource to maximize the power generated. PandO
-utilizes the change of power and change of voltage over time to determine the
-direction of movement and stride. It belongs to the set of hill climbing
-algorithms.
+Description: Implementation of the PandO hill climbing algorithm.
 """
 # Library Imports.
 
@@ -23,11 +19,10 @@ from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
 
 class PandO(LocalMPPTAlgorithm):
     """
-    The PandO (Perturb and Observe) class is a derived class that
-    determines a VREF to apply over PSource to maximize the power generated.
-    PandO utilizes the change of power and change of voltage over time to
-    determine the direction of movement and stride. It belongs to the set of
-    hill climbing algorithms.
+    The PandO (Perturb and Observe) class is a derived class of
+    LocalMPPTAlgorithm, utilizing the change of power and change of voltage over
+    time to determine the direction of movement and stride of the next reference
+    voltage. It belongs to the classification of hill climbing algorithms.
     """
 
     def __init__(self, numCells=1, strideType="Fixed"):

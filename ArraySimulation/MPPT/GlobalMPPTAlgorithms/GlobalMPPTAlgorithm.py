@@ -4,12 +4,9 @@ GlobalMPPTAlgorithm.py
 Author: Afnan Mir, Array Lead (2021).
 Contact: afnanmir@utexas.edu
 Created: 02/06/2021
-Last Modified: 02/08/2021
+Last Modified: 02/27/2021
 
-Description: The GlobalMPPTAlgorithm class is a concrete base class that
-provides a common API for derived classes to use. The class enables users to
-calculate or predict voltage setpoints that would maximize the output power of
-the PVSource given a set of input conditions.
+Description: Implementation of the GlobalMPPTAlgorithm class.
 """
 # Library Imports.
 
@@ -68,24 +65,22 @@ class GlobalMPPTAlgorithm:
         TODO: Add stride argument to voltage sweep constructor.
         """
         GlobalMPPTAlgorithm.MAX_VOLTAGE = round(
-            GlobalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL * numCells,2
+            GlobalMPPTAlgorithm.MAX_VOLTAGE_PER_CELL * numCells, 2
         )
         self._MPPTGlobalAlgoType = MPPTGlobalAlgoType
 
-        if MPPTLocalAlgoType == "PandO":
-            self._model = PandO(numCells, strideType)
-        elif MPPTLocalAlgoType == "IC":
-            self._model = IC(numCells, strideType)
-        elif MPPTLocalAlgoType == "Ternary":
-            self._model = Ternary(numCells, strideType)
+        if MPPTLocalAlgoType == "Bisection":
+            self._model = Bisection(numCells, strideType)
+        elif MPPTLocalAlgoType == "FC":
+            self._model = FC(numCells, strideType)
         elif MPPTLocalAlgoType == "Golden":
             self._model = Golden(numCells, strideType)
         elif MPPTLocalAlgoType == "IC":
             self._model = IC(numCells, strideType)
-        elif MPPTLocalAlgoType == "Bisection":
-            self._model = Bisection(numCells, strideType)
-        elif MPPTLocalAlgoType == "FC":
-            self._model = FC(numCells, strideType)
+        elif MPPTLocalAlgoType == "PandO":
+            self._model = PandO(numCells, strideType)
+        elif MPPTLocalAlgoType == "Ternary":
+            self._model = Ternary(numCells, strideType)
         elif MPPTLocalAlgoType == "Default":
             self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
         else:
@@ -129,7 +124,9 @@ class GlobalMPPTAlgorithm:
         steady state behavior by the next MPPT cycle. This should always be
         considered in the algorithms.
         """
-        vRef = self._model.getReferenceVoltage(arrVoltage, arrCurrent, irradiance, temperature)
+        vRef = self._model.getReferenceVoltage(
+            arrVoltage, arrCurrent, irradiance, temperature
+        )
         (left, right) = self._getBounds()
         if vRef < left:
             vRef = left
@@ -178,7 +175,7 @@ class GlobalMPPTAlgorithm:
         String: Model type name.
         """
         return self._model.getStrideType()
-    
+
     def _getBounds(self):
         """
         Finds left and right bounds for the global maximum of the P-V curve.
