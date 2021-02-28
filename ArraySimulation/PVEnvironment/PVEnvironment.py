@@ -4,15 +4,9 @@ PVSource.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/14/20
-Last Modified: 11/24/20
+Last Modified: 02/27/21
 
-Description: The PVEnvironment class is a concrete base class that manages the
-environmental conditions received by the PVSource at any cycle. In fact, it
-manages the cycle time of the entire simulation, and outputs the
-environmental conditions based on that cycle. It has the ability to extract
-environmental regimes from JSON files, as well as generate a unit step
-function with a fixed irradiance and temperature for steady state behavior
-testing.
+Description: Implementation of the PVEnvironment class.
 
 TODO: enable extrapolation for data beyond the maxCycle parameter.
 """
@@ -45,27 +39,29 @@ class PVEnvironment:
     def __init__(self):
         pass
 
-    def setupModel(self, sourceType=(1, 1000, 25), maxCycles=200):
+    def setupModel(self, source=(1, 1000, 25), maxCycles=200):
         """
         Sets up the initial source parameters.
 
         Parameters
         ----------
-        sourceType: Union -> tuple `(1, 1000, 255)` or string `single_cell.json`
+        source: Union -> tuple `(1, 1000, 255)` or string `single_cell.json`
             Specifies how and/or where the source model is defined and its
             environmental regime over time. It checks for either a tuple of
-            initial conditions (Step mode) or a string pointing to a JSON file
-            in 'External/'. Step mode can only performed with a single module
-            of arbitrary cell length.
+            initial conditions (Step response mode) or a string pointing to a
+            JSON file in 'External/'. Step response mode can only performed with
+            a single module of arbitrary cell length.
 
             The method builds a data model of the modules in the PVSource and
             a mapping of their environmental regime to return on demand.
+
+            A tuple may only have 1, 2, 4, or 8 cells in the step response.
         maxCycles: int
             Maximum number of cycles our environment should extend to.
         """
         # Current cycle of the PVEnvironment. Dictates what environmental
         # conditions come out at the time. Adjustable.
-        self._cycle = self.MIN_CYCLES
+        self._cycle = PVEnvironment.MIN_CYCLES
 
         # Maximum cycle in the environment. We extrapolate data up to this point.
         self._maxCycle = maxCycles
@@ -73,20 +69,22 @@ class PVEnvironment:
         # Reference to the dictionary containing the environmental properties for
         # each module in the PVSource.
         try:
-            if isinstance(sourceType, str):
-                # Check for relevant filename at /External
-                f = open(self._fileRoot + sourceType)
+            if isinstance(source, str):
+                # Check for relevant filename at /External/
+                f = open(PVEnvironment._fileRoot + source)
                 self._source = json.load(f)
 
-            elif isinstance(sourceType, tuple):
+                # TODO: validate whether the header matches.
+
+            elif isinstance(source, tuple):
                 self._source = {
-                    "name": "Single Cell.",
-                    "description": str(sourceType[0])
+                    "name": "Single String Model.",
+                    "description": str(source[0])
                     + " cell(s) in series. "
                     + "Emulates a step function with irradiance "
-                    + str(sourceType[1])
+                    + str(source[1])
                     + " and temperature "
-                    + str(sourceType[2])
+                    + str(source[2])
                     + " for t => 0.",
                     "num_modules": 1,
                     "pv_model": {
@@ -99,20 +97,23 @@ class PVEnvironment:
                             # We want the keyed version because in the event we
                             # eventually want to save our modules definition
                             # into a JSON file.
-                            "module_type": list(self._cellDefinitions.keys())[
-                                list(self._cellDefinitions.values()).index(
-                                    sourceType[0]
+                            #
+                            # Of course, this limits the amount of cell options
+                            # to 1, 2, 4, or 8 cells.
+                            "module_type": list(PVEnvironment._cellDefinitions.keys())[
+                                list(PVEnvironment._cellDefinitions.values()).index(
+                                    source[0]
                                 )
                             ],
                             "env_type": "Step",
-                            "env_regime": (sourceType[1], sourceType[2]),
+                            "env_regime": (source[1], source[2]),
                         }
                     },
                 }
 
             else:
                 raise Exception(
-                    "Invalid sourceType. Currently supported types are a "
+                    "Invalid source. Currently supported types are a "
                     + "properly formatted JSON file or a step response tuple in "
                     + "the format (irradiance, temperature)."
                 )
@@ -140,7 +141,7 @@ class PVEnvironment:
         cycle: int
             The current moment in time the environment should be set to.
         """
-        if self.MIN_CYCLES <= cycle and cycle <= self._maxCycle:
+        if PVEnvironment.MIN_CYCLES <= cycle and cycle <= self._maxCycle:
             self._cycle = cycle
         else:
             raise Exception(
@@ -148,7 +149,7 @@ class PVEnvironment:
                 + "Nor can we exceed the maximum cycles defined at initialization."
             )
 
-    def cycle(self):
+    def incrementCycle(self):
         """
         Cycles the internal clock once.
         """
@@ -186,8 +187,9 @@ class PVEnvironment:
         for key in modules.keys():
             module = modules[key]
             if module["env_type"] == "Array":
+                # TODO: use getModuleDefinition calls instead.
                 modulesDef[key] = {
-                    "numCells": self._cellDefinitions[module["module_type"]],
+                    "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
                     "voltage": voltage,
                     "irradiance": module["env_regime"][self._cycle][
                         1
@@ -196,7 +198,7 @@ class PVEnvironment:
                 }
             elif module["env_type"] == "Step":
                 modulesDef[key] = {
-                    "numCells": self._cellDefinitions[module["module_type"]],
+                    "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
                     "voltage": voltage,
                     "irradiance": module["env_regime"][0],
                     "temperature": module["env_regime"][1],
@@ -231,21 +233,36 @@ class PVEnvironment:
         -------
         dict:  moduleDef
             A dictionary of the selected module's properties.
+
+        If the entry in the env_regime does not exist for the module, this
+        method will perform a comprehensive interpolation for the profile up
+        until the max cycle. This is because we expect the use case to call
+        getModuleDefinition in successive cycles, which means interpolating each
+        cycle N times (say at best O(NlogN)) is worse than interpolating all
+        cycles the first and only time (O(N)).
         """
         module = self._source["pv_model"].get(moduleName)
         if module is not None:
             if module["env_type"] == "Array":
-                return {
-                    "numCells": self._cellDefinitions[module["module_type"]],
-                    "voltage": voltage,
-                    "irradiance": module["env_regime"][self._cycle][
-                        1
-                    ],  # TODO: This assumes env_regime is evenly spaced and requires no interpolation (each entry is 1 cycle apart from each other)
-                    "temperature": module["env_regime"][self._cycle][2],
-                }
+                envConditions = module["env_regime"].get(self._cycle)
+                if envConditions is None:
+                    # Interpolate the entire profile.
+                    # TODO: perform interpolation.
+                    pass
+                else:
+                    # An array of size 2 is returned.
+                    return {
+                        "numCells": PVEnvironment._cellDefinitions[
+                            module["module_type"]
+                        ],
+                        "voltage": voltage,
+                        "irradiance": envConditions[0],
+                        "temperature": envConditions[1],
+                    }
+
             elif module["env_type"] == "Step":
                 return {
-                    "numCells": self._cellDefinitions[module["module_type"]],
+                    "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
                     "voltage": voltage,
                     "irradiance": module["env_regime"][0],
                     "temperature": module["env_regime"][1],
@@ -274,8 +291,27 @@ class PVEnvironment:
 
         return modulesDict
 
+    def getModuleNumCells(self, moduleName):
+        """
+        Gets the module num cells given the module name.
+
+        Parameters
+        ----------
+        moduleName: String
+            Key to the source dictionary that corresponds to the module
+            selected.
+
+        Returns
+        -------
+        int: Number of cells in series within this module.
+        """
+        modulesDict = self.getModuleMapping()
+        return modulesDict[moduleName]
+
     def getAgglomeratedEnvironmentDefinition(self):
         """
+        TODO: consider whether this should be included at all. May be useful for
+        display.
         Returns a weighted average environment definition of the PVSource model.
 
         The environment definition is in the following format:
@@ -296,7 +332,7 @@ class PVEnvironment:
         modules = self._source["pv_model"]
         for key in modules.keys():
             module = modules[key]
-            numCells = self._cellDefinitions[module["module_type"]]
+            numCells = PVEnvironment._cellDefinitions[module["module_type"]]
             cellCount += numCells
             if module["env_type"] == "Array":
                 totalIrrad += numCells * module["env_regime"][self._cycle][1]
