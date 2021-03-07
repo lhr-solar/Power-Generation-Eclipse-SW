@@ -12,6 +12,7 @@ TODO: enable extrapolation for data beyond the maxCycle parameter.
 """
 # Library Imports.
 import json
+import jsbeautifier
 
 # Custom Imports.
 
@@ -71,11 +72,13 @@ class PVEnvironment:
         try:
             if isinstance(source, str):
                 # Check for relevant filename at /External/
-                f = open(PVEnvironment._fileRoot + source)
+                f = open(PVEnvironment._fileRoot + self._source)
                 self._source = json.load(f)
 
-                # TODO: validate whether the header matches.
+                # Source file input.
+                self._sourceFile = source
 
+                # TODO: validate whether the header matches.
             elif isinstance(source, tuple):
                 self._source = {
                     "name": "Single String Model.",
@@ -106,18 +109,16 @@ class PVEnvironment:
                                 )
                             ],
                             "env_type": "Step",
-                            "env_regime": (source[1], source[2]),
+                            "env_regime": [source[1], source[2]],
                         }
                     },
                 }
-
             else:
                 raise Exception(
                     "Invalid source. Currently supported types are a "
                     + "properly formatted JSON file or a step response tuple in "
                     + "the format (irradiance, temperature)."
                 )
-
         except Exception as e:
             self._source = None
             print(e)
@@ -185,27 +186,7 @@ class PVEnvironment:
 
         modules = self._source["pv_model"]
         for key in modules.keys():
-            module = modules[key]
-            if module["env_type"] == "Array":
-                # TODO: use getModuleDefinition calls instead.
-                modulesDef[key] = {
-                    "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
-                    "voltage": voltage,
-                    "irradiance": module["env_regime"][self._cycle][
-                        1
-                    ],  # TODO: This assumes env_regime is evenly spaced and requires no interpolation (each entry is 1 cycle apart from each other)
-                    "temperature": module["env_regime"][self._cycle][2],
-                }
-            elif module["env_type"] == "Step":
-                modulesDef[key] = {
-                    "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
-                    "voltage": voltage,
-                    "irradiance": module["env_regime"][0],
-                    "temperature": module["env_regime"][1],
-                }
-            else:
-                raise Exception("Undefined environment type.")
-
+            modulesDef[key] = self.getModuleDefinition(key, voltage)
         return modulesDef
 
     def getModuleDefinition(self, moduleName, voltage):
@@ -244,22 +225,45 @@ class PVEnvironment:
         module = self._source["pv_model"].get(moduleName)
         if module is not None:
             if module["env_type"] == "Array":
-                envConditions = module["env_regime"].get(self._cycle)
-                if envConditions is None:
-                    # Interpolate the entire profile.
-                    # TODO: perform interpolation.
-                    pass
-                else:
-                    # An array of size 2 is returned.
-                    return {
-                        "numCells": PVEnvironment._cellDefinitions[
-                            module["module_type"]
-                        ],
-                        "voltage": voltage,
-                        "irradiance": envConditions[0],
-                        "temperature": envConditions[1],
-                    }
+                if module["needs_interp"] == False or module["env_regime"].get(self._cycle, None) == None:
+                    # Take the current and next entry and add all interpolations
+                    # to a new list.
+                    events = []
+                    for (idx, event) in enumerate(module["env_regime"][0:-1]):
+                        currEvent = event
+                        nextEvent = module["env_regime"][(idx+1)%len(module["env_regime"])]
+                        numEntries = nextEvent[0] - currEvent[0]
+                        slopeIrrad = (nextEvent[1] - currEvent[1])/numEntries
+                        slopeTemp = (nextEvent[2] - currEvent[2])/numEntries
 
+                        for idx in range(currEvent[0], nextEvent[0]+1):
+                            events.append([idx, currEvent[1] + slopeIrrad * (idx - currEvent[0]), currEvent[2] + slopeTemp * (idx - currEvent[0])])
+
+                    # Write the last interpolated event for all cycles extending
+                    # to max_cycles.
+                    lastEvent = events[-1]
+                    for (idx, event) in range(lastEvent[0] + 1, self._maxCycle + 1):
+                        events.append([idx, lastEvent[1], lastEvent[2]])
+
+                    module["env_regime"] = events
+                    module["needs_interp"] = True
+                    with open(PVEnvironment._fileRoot + self._sourceFile, 'w') as fp:
+                        options = jsbeautifier.default_options()
+                        options.indent_size = 4
+                        fp.write(jsbeautifier.beautify(json.dumps(self._source), options))
+                        json.dump(self._source, fp)
+
+                envConditions = module["env_regime"].get(self._cycle)
+
+                # An array of size 2 is returned.
+                return {
+                    "numCells": PVEnvironment._cellDefinitions[
+                        module["module_type"]
+                    ],
+                    "voltage": voltage,
+                    "irradiance": envConditions[0],
+                    "temperature": envConditions[1],
+                }
             elif module["env_type"] == "Step":
                 return {
                     "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
