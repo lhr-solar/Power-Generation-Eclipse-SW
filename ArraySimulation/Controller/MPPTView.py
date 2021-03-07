@@ -37,6 +37,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
 import pathlib
+import sys
 
 # Custom Imports.
 from ArraySimulation.Controller.Console import Console
@@ -337,11 +338,18 @@ class MPPTView(View):
         powerStore = self.pipelineData["powerStore"]
 
         # Update derived data structures
-        VREF = round(cycleResults["mpptOutput"][idx], 2)
+        VREF = round(cycleResults["mpptOutput"][idx], 2) # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
         IVList = cycleResults["sourceOutput"][idx]["IV"]
+
         MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
 
         # Percent Yield
+        try:
+            l = MPPTCurrOut[0]
+        except:
+            print("VREF not found:", str(VREF))
+            print("Bodge until GlobalMPPT limits bounds properly.") #TODO: fix this
+            MPPTCurrOut = [0.80]
         powerStore["actualPower"] = VREF * MPPTCurrOut[0]
         powerStore["theoreticalPower"] = (
             cycleResults["sourceOutput"][idx]["edge"][2][0]

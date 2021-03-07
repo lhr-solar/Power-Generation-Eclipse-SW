@@ -151,7 +151,7 @@ class DataController:
         self._PVSource.setupModel(modelType=modelType)
 
         self._MPPT.setupModel(
-            numCells=3, #TODO: set cells defined in def
+            numCells=1, #TODO: set cells defined in def
             MPPTGlobalAlgoType=MPPTGlobalAlgo,
             MPPTLocalAlgoType=MPPTLocalAlgo,
             strideType=MPPTStrideAlgo,

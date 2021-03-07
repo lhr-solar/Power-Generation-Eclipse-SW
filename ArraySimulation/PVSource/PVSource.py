@@ -34,6 +34,7 @@ current and associated IV curve characteristics.
 """
 # Library Imports.
 import numpy as np
+import sys
 
 # Custom Imports.
 from ArraySimulation.PVSource.PVCell.PVCellIdeal import PVCellIdeal
@@ -167,32 +168,28 @@ class PVSource:
         Current is roughly linear to the number of cells in series.
         """
         if self._model is not None:
-            cell1Current = self.getModuleCurrent(
-                {
-                    "numCells": 1,
-                    "voltage": modulesDef["0"]["voltage"],
-                    "irradiance": 1000,
-                    "temperature": 25,
-                }
-            )
-            cell2Current = self.getModuleCurrent(
-                {
-                    "numCells": 2,
-                    "voltage": modulesDef["0"]["voltage"],
-                    "irradiance": 400,
-                    "temperature": 25,
-                }
-            )
-            cell3Current = self.getModuleCurrent(
-                {
-                    "numCells": 3,
-                    "voltage": modulesDef["0"]["voltage"],
-                    "irradiance": 200,
-                    "temperature": 25,
-                }
-            )
-            current = max(cell1Current, cell2Current, cell3Current) * (
-                1 - np.exp(-1000 * modulesDef["0"]["voltage"])
+            # Go through each module and look for the current.
+            moduleCurrents = {}
+            for (moduleKey, moduleVals) in modulesDef.items():
+                moduleCurrents[moduleKey] = self.getModuleCurrent(moduleVals)
+
+            # print(moduleCurrents)
+
+            # Sort the list in descending current order.
+            moduleCurrentsSorted = sorted(moduleCurrents.items(), key=lambda item: -item[1])
+
+            # Get the list of currents again, but each successive module has
+            # numCells incremented by 1.
+            currents = []
+            numCells = 1
+            for moduleKey in moduleCurrentsSorted:
+                module = modulesDef[moduleKey[0]]
+                module["numCells"] = numCells
+                numCells += 1
+                currents.append(self.getModuleCurrent(module))
+
+            current = max(currents) * (
+                1 - np.exp(-1000) # TODO: this is a magic number for now.
             )
             return current
         else:
@@ -238,59 +235,15 @@ class PVSource:
         model = []
         if self._model is not None:
             for voltage in np.arange(
-                0, round(PVSource.MAX_CELL_VOLTAGE * 3, 2) + 0.01, 0.01
+                0, round(PVSource.MAX_CELL_VOLTAGE * 1, 2) + 0.01, 0.01 #TODO: 1 should be numcells across all modules. PVEnv.getnumcells?
             ):
-                modulesDef = {
-                    "0": {
-                        "numCells": 1,
-                        "voltage": voltage,
-                        "irradiance": 1000,
-                        "temperature": 25,
-                    }
-                }
+                for module in modulesDef.values():
+                    module["voltage"] = voltage
                 current = self.getSourceCurrent(modulesDef)
                 voltCurrPair = (voltage, current)
                 model.append(voltCurrPair)
+            # sys.exit()
             return model
-            # return self._model.getCellCurrent(
-            #     moduleDef["numCells"],
-            #     resolution,
-            #     moduleDef["irradiance"],
-            #     moduleDef["temperature"],
-            # )
-
-            # model = []
-            # maxVoltage = 0
-            # for moduleDef in modulesDef.values():
-            #     maxVoltage += moduleDef["numCells"] * PVSource.MAX_CELL_VOLTAGE
-
-            # for voltage in np.arange(0, maxVoltage + resolution, resolution):
-            #     currents = []
-
-            #     # We're looking for the maximum of current of all modules. We
-            #     # can do this by putting each module result into a list and then
-            #     # finding the max of the list.
-            #     # TODO: needs to match desmos.
-            #     for moduleDef in modulesDef.values():
-            #         print(moduleDef)
-            #         if self._useLookup:
-            #             currents.append(self._model.getCurrentLookup(
-            #                 moduleDef["numCells"],
-            #                 voltage,
-            #                 moduleDef["irradiance"],
-            #                 moduleDef["temperature"]
-            #             ))
-            #         else:
-            #             currents.append(self._model.getCurrent(
-            #                 moduleDef["numCells"],
-            #                 voltage,
-            #                 moduleDef["irradiance"],
-            #                 moduleDef["temperature"]
-            #             ))
-            #     print(currents)
-            #     model.append((voltage, max(currents)))
-            # return model
-
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
