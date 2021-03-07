@@ -4,7 +4,7 @@ DataController.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
+Last Modified: 03/06/21
 
 Description: The DataController class manages the data passed throughout the
 program. It exposes objects that represent the state of the application (what
@@ -121,13 +121,14 @@ class DataController:
             "sourceOutput": [],
             "mpptOutput": [],
             "dcdcOutput": [],
+            "maxCycle": 200
         }
 
         # The reference voltage applied at the start of every cycle.
         self._vREF = 0.0
 
     # Simulation pipeline management.
-    def resetPipeline(self, modelType, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo):
+    def resetPipeline(self, modelType, environment, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo):
         """
         Resets components within the pipeline to the default state.
         By default, voltage applied across the source is 0V, and the cycle is 0.
@@ -136,6 +137,8 @@ class DataController:
         ----------
         modelType: String
             The source model type.
+        environment: String or Tuple
+            PVEnvironment model used.
         MPPTGlobalAlgo: String
             The global MPPT algorithm type.
         MPPTAlgo: String
@@ -143,12 +146,12 @@ class DataController:
         MPPTStrideAlgo: String
             The stride MPPT algorithm type.
         """
-        self._PVEnv.setupModel()
+        self.datastore["maxCycle"] = 1000 #TODO: input as param
+        self._PVEnv.setupModel(source=environment, maxCycles=self.datastore["maxCycle"])
         self._PVSource.setupModel(modelType=modelType)
 
-        # TODO: Generic number of cells in PVEnvironment needed.
         self._MPPT.setupModel(
-            numCells=3,
+            numCells=3, #TODO: set cells defined in def
             MPPTGlobalAlgoType=MPPTGlobalAlgo,
             MPPTLocalAlgoType=MPPTLocalAlgo,
             strideType=MPPTStrideAlgo,
@@ -160,6 +163,7 @@ class DataController:
             "sourceOutput": [],
             "mpptOutput": [],
             "dcdcOutput": [],
+            "maxCycle": 1000 #TODO: input as param
         }
 
         self._vREF = 0.0
@@ -209,7 +213,7 @@ class DataController:
         self._PVEnv.incrementCycle()
 
         continueBool = True
-        if cycle > 400:
+        if cycle >= self.datastore["maxCycle"]:
             continueBool = False
 
         return (self.datastore, continueBool)

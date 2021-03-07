@@ -4,7 +4,7 @@ MPPTView.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/17/20
-Last Modified: 11/24/20
+Last Modified: 03/06/21
 
 Description: The MPPTView class represents a visual tab of the Display class
 (and the PVSim application window). It displays a simulation of the MPPT
@@ -36,6 +36,7 @@ from PyQt5.QtWidgets import (
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
+import pathlib
 
 # Custom Imports.
 from ArraySimulation.Controller.Console import Console
@@ -247,6 +248,13 @@ class MPPTView(View):
             "AlgorithmStrideSelection", (0, 4), (1, 1), MPPTView.MPPT_STRIDE_MODELS
         )
 
+        # TODO: may put p somewhere else so it's constantly being updated. Of
+        # course, keep in mind changing indices can mess with algorithm execution.
+        p = pathlib.Path('./External/')
+        self._console.addComboBox(
+            "EnvironmentSelection", (0, 5), (1, 1), [x.stem for x in p.glob('*.json')]
+        )
+
         self._console.addLabel("StatusLbl", (1, 0), (1, 3))
 
         self._layout.layout.addWidget(
@@ -279,6 +287,7 @@ class MPPTView(View):
 
         # Get options from combo boxes.
         sourceModel = self._console.getReference("ModelSelection").currentText()
+        environmentProfile = self._console.getReference("EnvironmentSelection").currentText()
         MPPTGlobalAlgo = self._console.getReference(
             "GlobalMPPTAlgorithmSelection"
         ).currentText()
@@ -291,7 +300,8 @@ class MPPTView(View):
 
         controller = self._datastoreParent
         controller.resetPipeline(
-            sourceModel, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+            # TODO: case for tuple.
+            sourceModel, environmentProfile + ".json", MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
         )
         (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
@@ -364,6 +374,7 @@ class MPPTView(View):
         self.pipelineData["cycleResults"] = cycleResults
         self.pipelineData["powerStore"] = powerStore
 
+        print(self.pipelineData["continueBool"], continueBool)
         if not self.pipelineData["continueBool"]:
             self.timer.timeout.disconnect()
 

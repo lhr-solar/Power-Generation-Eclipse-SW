@@ -4,11 +4,9 @@ PVSource.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/14/20
-Last Modified: 02/27/21
+Last Modified: 03/06/21
 
 Description: Implementation of the PVEnvironment class.
-
-TODO: enable extrapolation for data beyond the maxCycle parameter.
 """
 # Library Imports.
 import json
@@ -72,7 +70,7 @@ class PVEnvironment:
         try:
             if isinstance(source, str):
                 # Check for relevant filename at /External/
-                f = open(PVEnvironment._fileRoot + self._source)
+                f = open(PVEnvironment._fileRoot + source)
                 self._source = json.load(f)
 
                 # Source file input.
@@ -120,8 +118,8 @@ class PVEnvironment:
                     + "the format (irradiance, temperature)."
                 )
         except Exception as e:
-            self._source = None
             print(e)
+            self._source = None
 
     def getCycle(self):
         """
@@ -225,7 +223,7 @@ class PVEnvironment:
         module = self._source["pv_model"].get(moduleName)
         if module is not None:
             if module["env_type"] == "Array":
-                if module["needs_interp"] == False or module["env_regime"].get(self._cycle, None) == None:
+                if module["needs_interp"] == False or module["env_regime"][self._cycle][0] != self._cycle:
                     # Take the current and next entry and add all interpolations
                     # to a new list.
                     events = []
@@ -236,24 +234,22 @@ class PVEnvironment:
                         slopeIrrad = (nextEvent[1] - currEvent[1])/numEntries
                         slopeTemp = (nextEvent[2] - currEvent[2])/numEntries
 
-                        for idx in range(currEvent[0], nextEvent[0]+1):
+                        for idx in range(currEvent[0], nextEvent[0]):
                             events.append([idx, currEvent[1] + slopeIrrad * (idx - currEvent[0]), currEvent[2] + slopeTemp * (idx - currEvent[0])])
+
+                    # Append the last event.
+                    events.append(module["env_regime"][-1])
 
                     # Write the last interpolated event for all cycles extending
                     # to max_cycles.
                     lastEvent = events[-1]
-                    for (idx, event) in range(lastEvent[0] + 1, self._maxCycle + 1):
+                    for idx in range(lastEvent[0] + 1, self._maxCycle + 1):
                         events.append([idx, lastEvent[1], lastEvent[2]])
 
                     module["env_regime"] = events
                     module["needs_interp"] = True
-                    with open(PVEnvironment._fileRoot + self._sourceFile, 'w') as fp:
-                        options = jsbeautifier.default_options()
-                        options.indent_size = 4
-                        fp.write(jsbeautifier.beautify(json.dumps(self._source), options))
-                        json.dump(self._source, fp)
 
-                envConditions = module["env_regime"].get(self._cycle)
+                envConditions = module["env_regime"][self._cycle]
 
                 # An array of size 2 is returned.
                 return {
@@ -261,8 +257,8 @@ class PVEnvironment:
                         module["module_type"]
                     ],
                     "voltage": voltage,
-                    "irradiance": envConditions[0],
-                    "temperature": envConditions[1],
+                    "irradiance": envConditions[1],
+                    "temperature": envConditions[2],
                 }
             elif module["env_type"] == "Step":
                 return {
@@ -310,7 +306,20 @@ class PVEnvironment:
         int: Number of cells in series within this module.
         """
         modulesDict = self.getModuleMapping()
-        return modulesDict[moduleName]
+        return PVEnvironment._cellDefinitions[modulesDict[moduleName]]
+
+    def getSourceNumCells(self):
+        """
+        Gets the total num cells in the array.
+
+        Returns
+        -------
+        int: Number of cells in series within the entire array.
+        """
+        numCells = 0
+        for moduleName in self._source["pv_model"].keys():
+            numCells += self.getModuleNumCells(moduleName)
+        return numCells
 
     def getAgglomeratedEnvironmentDefinition(self):
         """
@@ -351,3 +360,14 @@ class PVEnvironment:
             "irradiance": totalIrrad / cellCount,
             "temperature": totalTemp / cellCount,
         }
+
+    def saveEnvironment(self):
+        """
+        This function saves the environment file in place of the previous
+        environment file. Useful if the user wants to retain interpolation.
+        """
+        with open(PVEnvironment._fileRoot + self._sourceFile, 'w') as fp:
+            options = jsbeautifier.default_options()
+            options.indent_size = 4
+            fp.write(jsbeautifier.beautify(json.dumps(self._source), options))
+            json.dump(self._source, fp)

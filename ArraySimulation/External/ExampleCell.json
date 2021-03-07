@@ -6,7 +6,7 @@
 
     As you can see here, we have two types of module formats; one that is a profiled array and the other which is a step response.
 
-    The Array mode has a set of entries with the metadata [cycle, irradiance, temperature]. The program can pull out this metadata for each cycle. A profiled array must have each and every cycle specified (see SingleCell.json as an example), but you can set the `needs_interp` flag to true and the program will do the internal interpolation and update the file for you on the first execution.
+    The Array mode has a set of entries with the metadata [cycle, irradiance, temperature]. The program can pull out this metadata for each cycle. A profiled array must have each and every cycle specified (see SingleCell.json as an example), but you can set the `needs_interp` flag to true and the program will do the internal interpolation and store it for the duration of the program. We don't save it back to the file (for now) to retain readability.
 
     The Step response mode has a single list (technically it should be a tuple). The tuple order is [irradiance, temperature]. The program executes the simulation with solely that irradiance and temperature at all times, starting at cycle 0. This mode is good for examining algorithm steady state response and convergence speeds.",
     "num_modules": 2,
