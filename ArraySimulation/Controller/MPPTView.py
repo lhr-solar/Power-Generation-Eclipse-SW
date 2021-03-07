@@ -374,7 +374,6 @@ class MPPTView(View):
         self.pipelineData["cycleResults"] = cycleResults
         self.pipelineData["powerStore"] = powerStore
 
-        print(self.pipelineData["continueBool"], continueBool)
         if not self.pipelineData["continueBool"]:
             self.timer.timeout.disconnect()
 
