@@ -46,14 +46,20 @@ for (key1, module) in source["pv_model"].items():
 
             for idx, entry in enumerate(entries[0:-1]):
                 thisElem = entry
-                nextElem = entries[(idx+1)%len(entries)]
+                nextElem = entries[(idx + 1) % len(entries)]
                 numEntries = nextElem[0] - thisElem[0]
-                slopeIrrad = (nextElem[1] - thisElem[1])/numEntries
+                slopeIrrad = (nextElem[1] - thisElem[1]) / numEntries
                 print(slopeIrrad)
-                slopeTemp = (nextElem[2] - thisElem[2])/numEntries
+                slopeTemp = (nextElem[2] - thisElem[2]) / numEntries
                 print(slopeTemp)
-                for idx in range(thisElem[0], nextElem[0]+1):
-                    newEntries.append([idx, thisElem[1] + slopeIrrad * (idx-thisElem[0]), thisElem[2] + slopeTemp * (idx-thisElem[0])])
+                for idx in range(thisElem[0], nextElem[0] + 1):
+                    newEntries.append(
+                        [
+                            idx,
+                            thisElem[1] + slopeIrrad * (idx - thisElem[0]),
+                            thisElem[2] + slopeTemp * (idx - thisElem[0]),
+                        ]
+                    )
                 print(thisElem, nextElem)
 
             # Write the last interpolated event for all cycles extending
@@ -69,7 +75,7 @@ for (key1, module) in source["pv_model"].items():
 
             module["needs_interp"] = False
             # Write back to file. JSBeautifier puts internal arrays on a single line.
-            with open(fn, 'w') as fp:
+            with open(fn, "w") as fp:
                 options = jsbeautifier.default_options()
                 options.indent_size = 4
                 fp.write(jsbeautifier.beautify(json.dumps(source), options))

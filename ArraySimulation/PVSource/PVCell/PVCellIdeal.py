@@ -27,6 +27,8 @@ class PVCellIdeal(PVCell):
         super(PVCellIdeal, self).__init__(useLookup)
 
     def getCurrent(self, numCells=1, voltage=0, irradiance=0.001, temperature=0):
+        # TODO: numCells here may be abused and should be revised.
+
         # Ideal single diode model.
         cellTemperature = temperature + 273.15  # Convert cell temperature into kelvin.
 

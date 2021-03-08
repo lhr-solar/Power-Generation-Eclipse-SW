@@ -64,7 +64,11 @@ class PVSource:
     MIN_CURRENT = 0
 
     def __init__(self):
+        # Determines the model used by each cell. Every cell gets the same model.
         self._modelType = None
+
+        # Controls whether each cell in a model calculates its current using a
+        # lookup table or not.
         self._useLookup = None
 
     def setupModel(self, modelType="Default", useLookup=True):
@@ -80,7 +84,6 @@ class PVSource:
             doesn't, we default to the getCurrent function that doesn't use
             lookups.
         """
-        # Determines the model used by each cell. Every cell gets the same model.
         self._modelType = modelType
         if modelType == "Ideal":
             self._model = PVCellIdeal(useLookup)
@@ -89,8 +92,6 @@ class PVSource:
         else:
             self._model = None
 
-        # Controls whether each cell in a model calculates its current using a
-        # lookup table or not.
         self._useLookup = useLookup
 
     def getModuleCurrent(self, moduleDef):
@@ -114,6 +115,7 @@ class PVSource:
         -------
         float|None:
             Current of the module model or None if the model is not defined.
+        Throws an exception for undefined cell model.
 
         Assumptions
         -----------
@@ -173,29 +175,37 @@ class PVSource:
             for (moduleKey, moduleVals) in modulesDef.items():
                 moduleCurrents[moduleKey] = self.getModuleCurrent(moduleVals)
 
-            # print(moduleCurrents)
-
             # Sort the list in descending current order.
-            moduleCurrentsSorted = sorted(moduleCurrents.items(), key=lambda item: -item[1])
+            moduleCurrentsSorted = sorted(
+                moduleCurrents.items(), key=lambda item: -item[1]
+            )
 
             # Get the list of currents again, but each successive module has
             # numCells incremented by 1.
             currents = []
-            numCells = 1
+            curCellNum = 0
             for moduleKey in moduleCurrentsSorted:
                 module = modulesDef[moduleKey[0]]
-                module["numCells"] = numCells
-                numCells += 1
-                currents.append(self.getModuleCurrent(module))
+                currents.append(
+                    self.getModuleCurrent(
+                        {
+                            "numCells": module["numCells"] + curCellNum,
+                            "voltage": module["voltage"], # TODO: getModuleCurrent can't deal with >1 cell
+                            "irradiance": module["irradiance"],
+                            "temperature": module["temperature"],
+                        }
+                    )
+                )
+                curCellNum += module["numCells"]
 
             current = max(currents) * (
-                1 - np.exp(-1000) # TODO: this is a magic number for now.
+                1 - np.exp(-1000)  # TODO: this is a magic number for now.
             )
             return current
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
-    def getIV(self, modulesDef, resolution=0.01):
+    def getIV(self, modulesDef, numCells, resolution=0.01):
         """
         TODO: implement multimodule support
         Calculates the entire source model current voltage plot given various
@@ -216,6 +226,8 @@ class PVSource:
                 },
                 ...
             }
+        numCells: int
+            Total number of cells in the source.
         resolution: float
             Voltage stride across the source. Occurs within the bounds of [0,
             MAX_VOLTAGE], inclusive.
@@ -235,21 +247,19 @@ class PVSource:
         model = []
         if self._model is not None:
             for voltage in np.arange(
-                0, round(PVSource.MAX_CELL_VOLTAGE * 1, 2) + 0.01, 0.01 #TODO: 1 should be numcells across all modules. PVEnv.getnumcells?
+                0, round(PVSource.MAX_CELL_VOLTAGE * numCells, 2) + 0.01, 0.01
             ):
                 for module in modulesDef.values():
                     module["voltage"] = voltage
                 current = self.getSourceCurrent(modulesDef)
                 voltCurrPair = (voltage, current)
                 model.append(voltCurrPair)
-            # sys.exit()
             return model
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
-    def getEdgeCharacteristics(self, modulesDef, resolution=0.01):
+    def getEdgeCharacteristics(self, modulesDef, numCells, resolution=0.01):
         """
-        TODO: implement multimodule support
         Calculates the source model edge characteristics given various
         environmental parameters.
 
@@ -268,6 +278,8 @@ class PVSource:
                 },
                 ...
             }
+        numCells: int
+            Total number of cells in the source.
         resolution: float
             Voltage stride across the source. Occurs within the bounds of [0,
             MAX_VOLTAGE], inclusive.
@@ -280,13 +292,25 @@ class PVSource:
             and current.
         """
         if self._model is not None:
-            moduleDef = modulesDef["0"]
-            return self._model.getCellEdgeCharacteristics(
-                moduleDef["numCells"],
-                resolution,
-                moduleDef["irradiance"],
-                moduleDef["temperature"],
-            )
+            mpp = (0, 0)  # voltage, current list
+            OCVoltage = 0.0
+
+            if resolution <= 0:
+                resolution = self.MIN_RESOLUTION
+
+            model = self.getIV(modulesDef, numCells, resolution)
+
+            if model != []:
+                SCCurrent = model[0][1]  # Current in first entry
+                for (voltage, current) in model:
+                    if mpp[0] * mpp[1] < voltage * current:
+                        mpp = (voltage, current)
+                    if OCVoltage != 0.0 and current == 0:
+                        OCVoltage = voltage
+
+                return (OCVoltage, SCCurrent, mpp)
+            else:
+                return (0, 0, (0, 0))
         else:
             raise Exception("No cell model is defined for the PVSource.")
 

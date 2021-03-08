@@ -251,9 +251,9 @@ class MPPTView(View):
 
         # TODO: may put p somewhere else so it's constantly being updated. Of
         # course, keep in mind changing indices can mess with algorithm execution.
-        p = pathlib.Path('./External/')
+        p = pathlib.Path("./External/")
         self._console.addComboBox(
-            "EnvironmentSelection", (0, 5), (1, 1), [x.stem for x in p.glob('*.json')]
+            "EnvironmentSelection", (0, 5), (1, 1), [x.stem for x in p.glob("*.json")]
         )
 
         self._console.addLabel("StatusLbl", (1, 0), (1, 3))
@@ -288,7 +288,9 @@ class MPPTView(View):
 
         # Get options from combo boxes.
         sourceModel = self._console.getReference("ModelSelection").currentText()
-        environmentProfile = self._console.getReference("EnvironmentSelection").currentText()
+        environmentProfile = self._console.getReference(
+            "EnvironmentSelection"
+        ).currentText()
         MPPTGlobalAlgo = self._console.getReference(
             "GlobalMPPTAlgorithmSelection"
         ).currentText()
@@ -302,7 +304,11 @@ class MPPTView(View):
         controller = self._datastoreParent
         controller.resetPipeline(
             # TODO: case for tuple.
-            sourceModel, environmentProfile + ".json", MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+            sourceModel,
+            environmentProfile + ".json",
+            MPPTGlobalAlgo,
+            MPPTLocalAlgo,
+            MPPTStrideAlgo,
         )
         (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
@@ -338,18 +344,14 @@ class MPPTView(View):
         powerStore = self.pipelineData["powerStore"]
 
         # Update derived data structures
-        VREF = round(cycleResults["mpptOutput"][idx], 2) # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
+        VREF = round(
+            cycleResults["mpptOutput"][idx], 2
+        )  # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
         IVList = cycleResults["sourceOutput"][idx]["IV"]
 
         MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
 
         # Percent Yield
-        try:
-            l = MPPTCurrOut[0]
-        except:
-            print("VREF not found:", str(VREF))
-            print("Bodge until GlobalMPPT limits bounds properly.") #TODO: fix this
-            MPPTCurrOut = [0.80]
         powerStore["actualPower"] = VREF * MPPTCurrOut[0]
         powerStore["theoreticalPower"] = (
             cycleResults["sourceOutput"][idx]["edge"][2][0]
