@@ -121,14 +121,16 @@ class DataController:
             "sourceOutput": [],
             "mpptOutput": [],
             "dcdcOutput": [],
-            "maxCycle": 200
+            "maxCycle": 200,
         }
 
         # The reference voltage applied at the start of every cycle.
         self._vREF = 0.0
 
     # Simulation pipeline management.
-    def resetPipeline(self, modelType, environment, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo):
+    def resetPipeline(
+        self, modelType, environment, maxCycles, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+    ):
         """
         Resets components within the pipeline to the default state.
         By default, voltage applied across the source is 0V, and the cycle is 0.
@@ -139,6 +141,8 @@ class DataController:
             The source model type.
         environment: String or Tuple
             PVEnvironment model used.
+        maxCycles: Int
+            Maximum number of cycles to execute for.
         MPPTGlobalAlgo: String
             The global MPPT algorithm type.
         MPPTAlgo: String
@@ -146,25 +150,25 @@ class DataController:
         MPPTStrideAlgo: String
             The stride MPPT algorithm type.
         """
-        self.datastore["maxCycle"] = 1000 #TODO: input as param
-        self._PVEnv.setupModel(source=environment, maxCycles=self.datastore["maxCycle"])
-        self._PVSource.setupModel(modelType=modelType)
-
-        self._MPPT.setupModel(
-            numCells=3, #TODO: set cells defined in def
-            MPPTGlobalAlgoType=MPPTGlobalAlgo,
-            MPPTLocalAlgoType=MPPTLocalAlgo,
-            strideType=MPPTStrideAlgo,
-        )
-        self._DCDCConverter.reset()
         self.datastore = {
             "cycle": [],
             "sourceDef": [],
             "sourceOutput": [],
             "mpptOutput": [],
             "dcdcOutput": [],
-            "maxCycle": 1000 #TODO: input as param
+            "maxCycle": maxCycles,
         }
+
+        self._PVEnv.setupModel(source=environment, maxCycles=self.datastore["maxCycle"])
+        self._PVSource.setupModel(modelType=modelType)
+
+        self._MPPT.setupModel(
+            numCells=self._PVEnv.getSourceNumCells(),
+            MPPTGlobalAlgoType=MPPTGlobalAlgo,
+            MPPTLocalAlgoType=MPPTLocalAlgo,
+            strideType=MPPTStrideAlgo,
+        )
+        self._DCDCConverter.reset()
 
         self._vREF = 0.0
 
@@ -178,14 +182,16 @@ class DataController:
 
         # Retrieve the source definition for the current simulation cycle.
         modulesDef = self._PVEnv.getSourceDefinition(self._vREF)
-        envDef = self._PVEnv.getAgglomeratedEnvironmentDefinition()
+        numCells = self._PVEnv.getSourceNumCells()
+        envDef = self._PVEnv.getSourceEnvironmentDefinition()
 
         # Retrieve the source characteristics given the source definition.
         sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
-        sourceIV = self._PVSource.getIV(modulesDef)
-        sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef)
+        sourceIV = self._PVSource.getIV(modulesDef, numCells)
+        sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
 
         # Retrieve the MPPT VREF guess given the source output current.
+        print(cycle, end='\t')
         vRef = self._MPPT.getReferenceVoltage(
             self._vREF,
             sourceCurrent,
@@ -210,10 +216,8 @@ class DataController:
         self._vREF = vRef
 
         # Increment the current simulation cycle.
-        self._PVEnv.incrementCycle()
-
         continueBool = True
-        if cycle >= self.datastore["maxCycle"]:
+        if not self._PVEnv.incrementCycle():
             continueBool = False
 
         return (self.datastore, continueBool)
@@ -262,7 +266,7 @@ class DataController:
         # We don't care about the voltage input in this case (since we grab the
         # entire I-V curve, which iterates over all voltages).
         modulesDef = self._PVEnv.getSourceDefinition(0.0)
-        IVCoordinates = self._PVSource.getIV(modulesDef, voltageResolution)
+        IVCoordinates = self._PVSource.getIV(modulesDef, numCells, voltageResolution)
 
         # Parse it into a format directly ingestable by the UIController.
         xVals = []

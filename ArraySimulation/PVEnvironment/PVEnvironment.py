@@ -4,7 +4,7 @@ PVSource.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/14/20
-Last Modified: 03/06/21
+Last Modified: 03/07/21
 
 Description: Implementation of the PVEnvironment class.
 """
@@ -57,6 +57,11 @@ class PVEnvironment:
             A tuple may only have 1, 2, 4, or 8 cells in the step response.
         maxCycles: int
             Maximum number of cycles our environment should extend to.
+
+        Return
+        ------
+        bool: True for success, False elsewise. Upon encountering an exception,
+        the PVEnvironment source becomes None.
         """
         # Current cycle of the PVEnvironment. Dictates what environmental
         # conditions come out at the time. Adjustable.
@@ -69,12 +74,13 @@ class PVEnvironment:
         # each module in the PVSource.
         try:
             if isinstance(source, str):
-                # Check for relevant filename at /External/
-                f = open(PVEnvironment._fileRoot + source)
-                self._source = json.load(f)
-
                 # Source file input.
                 self._sourceFile = source
+
+                # Check for relevant filename at /External/
+                self._source = json.load(open(PVEnvironment._fileRoot + source))
+
+                return True
 
                 # TODO: validate whether the header matches.
             elif isinstance(source, tuple):
@@ -107,10 +113,12 @@ class PVEnvironment:
                                 )
                             ],
                             "env_type": "Step",
+                            "needs_interp": False,
                             "env_regime": [source[1], source[2]],
                         }
                     },
                 }
+                return True
             else:
                 raise Exception(
                     "Invalid source. Currently supported types are a "
@@ -120,6 +128,7 @@ class PVEnvironment:
         except Exception as e:
             print(e)
             self._source = None
+            return False
 
     def getCycle(self):
         """
@@ -133,59 +142,42 @@ class PVEnvironment:
 
     def setCycle(self, cycle):
         """
-        Sets the internal cycle of the PVEnvironment.
+        Sets the internal cycle of the PVEnvironment. Cannot be larger than max
+        cycle.
 
         Parameters
         ----------
         cycle: int
             The current moment in time the environment should be set to.
+
+        Return
+        ------
+        bool: Whether cycle was successfully incremented or not.
         """
         if PVEnvironment.MIN_CYCLES <= cycle and cycle <= self._maxCycle:
             self._cycle = cycle
+            return True
         else:
-            raise Exception(
-                "We can never have a negative cycle in the PVEnvironment. "
-                + "Nor can we exceed the maximum cycles defined at initialization."
+            print(
+                "We can never have a negative cycle in the PVEnvironment, nor "
+                + "can we exceed the maximum cycles defined at initialization. "
+                + "As such, the current cycle is not changed."
             )
+            return False
 
     def incrementCycle(self):
         """
-        Cycles the internal clock once.
+        Cycles the internal clock once. Halts the clock when the max cycle is
+        reached.
+
+        Return
+        ------
+        bool: Whether cycle was successfully incremented or not.
         """
-        self._cycle += 1
-
-    def getSourceDefinition(self, voltage):
-        """
-        Gets the source definition at the current cycle.
-
-        The modules definition is in the following format:
-
-            modulesDef = {
-                "0": {
-                    "numCells": int,
-                    "voltage": float,       (V)
-                    "irradiance": float,    (W/m^2)
-                    "temperature": float,   (C)
-                },
-                ...
-            }
-
-        Parameters
-        ----------
-        voltage: float
-            Voltage across the module in Volts.
-
-        Returns
-        -------
-        dict:  modulesDef
-            A dictionary of the source properties.
-        """
-        modulesDef = {}
-
-        modules = self._source["pv_model"]
-        for key in modules.keys():
-            modulesDef[key] = self.getModuleDefinition(key, voltage)
-        return modulesDef
+        if self._cycle < self._maxCycle:
+            self._cycle += 1
+            return True
+        return False
 
     def getModuleDefinition(self, moduleName, voltage):
         """
@@ -212,30 +204,39 @@ class PVEnvironment:
         -------
         dict:  moduleDef
             A dictionary of the selected module's properties.
+        Throws an exception for non existent modules and invalid module types.
 
         If the entry in the env_regime does not exist for the module, this
         method will perform a comprehensive interpolation for the profile up
-        until the max cycle. This is because we expect the use case to call
-        getModuleDefinition in successive cycles, which means interpolating each
-        cycle N times (say at best O(NlogN)) is worse than interpolating all
-        cycles the first and only time (O(N)).
+        until the max cycle.
         """
         module = self._source["pv_model"].get(moduleName)
         if module is not None:
             if module["env_type"] == "Array":
-                if module["needs_interp"] == False or module["env_regime"][self._cycle][0] != self._cycle:
+                if (
+                    module["needs_interp"] == False
+                    or module["env_regime"][self._cycle][0] != self._cycle
+                ):
                     # Take the current and next entry and add all interpolations
                     # to a new list.
                     events = []
                     for (idx, event) in enumerate(module["env_regime"][0:-1]):
                         currEvent = event
-                        nextEvent = module["env_regime"][(idx+1)%len(module["env_regime"])]
+                        nextEvent = module["env_regime"][
+                            (idx + 1) % len(module["env_regime"])
+                        ]
                         numEntries = nextEvent[0] - currEvent[0]
-                        slopeIrrad = (nextEvent[1] - currEvent[1])/numEntries
-                        slopeTemp = (nextEvent[2] - currEvent[2])/numEntries
+                        slopeIrrad = (nextEvent[1] - currEvent[1]) / numEntries
+                        slopeTemp = (nextEvent[2] - currEvent[2]) / numEntries
 
                         for idx in range(currEvent[0], nextEvent[0]):
-                            events.append([idx, currEvent[1] + slopeIrrad * (idx - currEvent[0]), currEvent[2] + slopeTemp * (idx - currEvent[0])])
+                            events.append(
+                                [
+                                    idx,
+                                    currEvent[1] + slopeIrrad * (idx - currEvent[0]),
+                                    currEvent[2] + slopeTemp * (idx - currEvent[0]),
+                                ]
+                            )
 
                     # Append the last event.
                     events.append(module["env_regime"][-1])
@@ -249,13 +250,12 @@ class PVEnvironment:
                     module["env_regime"] = events
                     module["needs_interp"] = True
 
+                # Get current model conditions.
                 envConditions = module["env_regime"][self._cycle]
 
                 # An array of size 2 is returned.
                 return {
-                    "numCells": PVEnvironment._cellDefinitions[
-                        module["module_type"]
-                    ],
+                    "numCells": PVEnvironment._cellDefinitions[module["module_type"]],
                     "voltage": voltage,
                     "irradiance": envConditions[1],
                     "temperature": envConditions[2],
@@ -268,28 +268,44 @@ class PVEnvironment:
                     "temperature": module["env_regime"][1],
                 }
             else:
-                raise Exception("Undefined environment type.")
+                raise Exception("Undefined environment type " + module["env_type"])
         else:
             raise Exception(
                 "Module does not exist in PVEnvironment with the name " + moduleName
             )
 
-    def getModuleMapping(self):
+    def getSourceDefinition(self, voltage):
         """
-        Returns a stripped dictionary of modules, and the number of cells in
-        each.
+        Gets the source definition at the current cycle.
 
-        Return
-        ------
-        dict: {"module1": "1x1", "module2": "2x4", ...}
-            A dictionary of modules where each module key defines the cell
-            layout of the module.
+        The modules definition is in the following format:
+
+            modulesDef = {
+                "0": {
+                    "numCells": int,
+                    "voltage": float,       (V)
+                    "irradiance": float,    (W/m^2)
+                    "temperature": float,   (C)
+                },
+                ...
+            }
+
+        Parameters
+        ----------
+        voltage: float
+            Voltage across the module in Volts.
+
+        Returns
+        -------
+        dict:  modulesDef
+            A dictionary of the source properties.
+        Throws an exception for non existent modules and invalid module types.
         """
-        modulesDict = {}
-        for module in self._source["pv_model"].items():
-            modulesDict[module[0]] = module[1]["module_type"]
-
-        return modulesDict
+        modulesDef = {}
+        modules = self._source["pv_model"]
+        for key in modules.keys():
+            modulesDef[key] = self.getModuleDefinition(key, voltage)
+        return modulesDef
 
     def getModuleNumCells(self, moduleName):
         """
@@ -321,10 +337,38 @@ class PVEnvironment:
             numCells += self.getModuleNumCells(moduleName)
         return numCells
 
-    def getAgglomeratedEnvironmentDefinition(self):
+    def getModuleEnvironmentDefinition(self, moduleName):
         """
-        TODO: consider whether this should be included at all. May be useful for
-        display.
+        A stripped down version of getModuleDefinition. Returns just the
+        environment definition of the module referenced.
+
+        The environment definition is in the following format:
+
+            envDef = {
+                "irradiance": float,    (W/m^2)
+                "temperature": float,   (C)
+            }
+
+        Parameters
+        ----------
+        moduleName: String
+            Key to the source dictionary that corresponds to the module
+            selected. The moduleDef of this module is constructed and returned.
+
+        Returns
+        -------
+        dict:  moduleDef
+            A dictionary of the source environment properties.
+        Throws an exception for non existent modules and invalid module types.
+        """
+        moduleDef = self.getModuleDefinition(moduleName, 0)
+        return {
+            "irradiance": moduleDef["irradiance"],
+            "temperature": moduleDef["temperature"],
+        }
+
+    def getSourceEnvironmentDefinition(self):
+        """
         Returns a weighted average environment definition of the PVSource model.
 
         The environment definition is in the following format:
@@ -361,12 +405,28 @@ class PVEnvironment:
             "temperature": totalTemp / cellCount,
         }
 
+    def getModuleMapping(self):
+        """
+        Returns a stripped dictionary of modules, and the number of cells in
+        each.
+
+        Return
+        ------
+        dict: {"module1": "1x1", "module2": "2x4", ...}
+            A dictionary of modules where each module key defines the cell
+            layout of the module.
+        """
+        modulesDict = {}
+        for module in self._source["pv_model"].items():
+            modulesDict[module[0]] = module[1]["module_type"]
+        return modulesDict
+
     def saveEnvironment(self):
         """
         This function saves the environment file in place of the previous
         environment file. Useful if the user wants to retain interpolation.
         """
-        with open(PVEnvironment._fileRoot + self._sourceFile, 'w') as fp:
+        with open(PVEnvironment._fileRoot + self._sourceFile, "w") as fp:
             options = jsbeautifier.default_options()
             options.indent_size = 4
             fp.write(jsbeautifier.beautify(json.dumps(self._source), options))

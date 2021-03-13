@@ -120,6 +120,8 @@ class PVCell:
         -------
         list: [(voltage:float, current:float), ...]
             A list of paired voltage|current tuples across the cell IV curve.
+        Throws an exception for undefined cell models or negative current
+            outputs.
 
         Assumptions
         -----------
@@ -143,6 +145,8 @@ class PVCell:
                 model.append(
                     (round(voltage, 2), round(current, 3))
                 )  # TODO: this rounding should be a function of resolution
+            else:
+                raise Exception("Negative current output from the model: ", current)
 
         return model
 
@@ -170,6 +174,8 @@ class PVCell:
         tuple: (V_OC:float, I_SC:float, (V_MPP:float, I_MPP:float)):
             A tuple of tuples indicating the open circuit voltage, the short
             circuit current, and the maximum power point (MPP) voltage and current.
+        Throws an exception for undefined cell models or negative current
+            outputs.
 
         Assumptions
         -----------
@@ -192,11 +198,10 @@ class PVCell:
             for (voltage, current) in model:
                 if mpp[0] * mpp[1] < voltage * current:
                     mpp = (voltage, current)
-                if OCVoltage != 0.0 and current <= 0:
+                if OCVoltage != 0.0 and current == 0:
                     OCVoltage = voltage
 
             return (OCVoltage, SCCurrent, mpp)
-
         else:
             return (0, 0, (0, 0))
 
