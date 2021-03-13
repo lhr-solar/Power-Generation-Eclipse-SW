@@ -4,12 +4,8 @@ Ternary.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/24/20
-Last Modified: 2/27/21
-TODO: Description needs an update.
-Description: The Ternary class is a derived class that determines a VREF to apply
-over PSource to maximize the power generated. Ternary utilizes the change of
-power over time to determine the position of the next VREF. It belongs to the
-set of divide and conquer algorithms.
+Last Modified: 02/27/21
+Description: Implementation of the Ternary Search algorithm.
 
 The implementation of this algorithm is based on the wikipedia page for the
 Ternary Search: https://en.wikipedia.org/wiki/Ternary_search
@@ -64,12 +60,12 @@ from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
 
 class Ternary(LocalMPPTAlgorithm):
     """
-    The Ternary class is a derived class that determines a VREF to apply
-    over PSource to maximize the power generated. Ternary utilizes the change of
-    power over time to determine the position of the next VREF. It belongs to
-    the set of divide and conquer algorithms.
+    The Ternary class is a derived class of LocalMPPTAlgorithm. Ternary utilizes
+    splitting the search space into third to determine the position of the next
+    VREF. It belongs to the set of divide and conquer algorithms.
     """
 
+    # Convergence constant.
     q = 0.33  # Roughly the same as dividing by 3.
 
     def __init__(self, numCells=1, strideType="Fixed"):

@@ -4,12 +4,8 @@ Golden.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 2/27/21
-TODO: Description needs an update.
-Description: The Golden class is a derived class that determines a VREF to apply
-over PSource to maximize the power generated. Golden utilizes the change of
-power over time to determine the position of the next VREF. It belongs to the
-set of divide and conquer algorithms.
+Last Modified: 02/27/21
+Description: Implementation of the Golden Section Search algorithm.
 
 The implementation of this algorithm is based on the wikipedia page for the
 Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
@@ -51,20 +47,18 @@ Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
     Cycle X, X + 1:
         if powerL1 > powerL2:                   # Move right goalpost.
             right = l2                          # Cut the right bound to the right goalpost.
-            l2 = l1                             # Shift left goalpost voltage and power to the right side.
+            l2 = l1                             # Set right goalpost voltage, power to the left goalpost's.
             powerL2 = powerL1
-            #TODO: Fix the description over here and in line 66
-            [l1, l2] = [left, right]            # Reset goalposts and find the next left goalpost.
-            l1 = right - (right - left) * phi
+
+            l1 = right - (right - left) * phi   # Set left goalpost to a new spot.
             VREF = l1
             GOTO Cycle X + 1
         else:                                   # Move left goalpost
             left = l1                           # Cut the left bound to the left goalpost.
-            l1 = l2                             # Shift right goalpost voltage and power to the left side.
+            l1 = l2                             # Set left goalpost voltage, power to the right goalpost's.
             powerL1 = powerL2
 
-            [l1, l2] = [left, right]            # Reset goalposts and find the next left goalpost.
-            l2 = (right - left) * phi + left
+            l2 = (right - left) * phi + left    # Set right goalpost to a new spot.
             VREF = l2
             GOTO Cycle X
 
@@ -73,7 +67,7 @@ Golden Section Search: https://en.wikipedia.org/wiki/Golden-section_search
 
     Note that this method needs two starting cycles to begin convergence.
     Unlike Ternary Search, it can converge every cycle rather than every
-    two cycles.
+    other cycles.
 """
 # Library Imports.
 from math import sqrt
@@ -87,9 +81,9 @@ from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
 class Golden(LocalMPPTAlgorithm):
     """
     The Golden class is a derived class that determines a VREF to apply
-    over PSource to maximize the power generated. Golden utilizes the change of
-    power over time to determine the position of the next VREF. It belongs to
-    the set of divide and conquer algorithms.
+    over PSource to maximize the power generated. Golden splitting the search
+    space into gtheold ratio to determine the position of the next
+    VREF. It belongs to the set of divide and conquer algorithms.
     """
 
     phi = (sqrt(5) + 1) / 2 - 1
@@ -110,6 +104,7 @@ class Golden(LocalMPPTAlgorithm):
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
+
         if self.cycle == 0:
             self.l1 = self.rightBound - (self.rightBound - self.leftBound) * Golden.phi
             vRef = self.l1
@@ -132,7 +127,9 @@ class Golden(LocalMPPTAlgorithm):
                 self.l2 = self.l1
                 self.powerL2 = self.powerL1
 
-                self.l1 = self.rightBound - (self.rightBound - self.leftBound) * self.phi
+                self.l1 = (
+                    self.rightBound - (self.rightBound - self.leftBound) * Golden.phi
+                )
                 vRef = self.l1
                 self.cycle = 3
             else:
@@ -140,7 +137,9 @@ class Golden(LocalMPPTAlgorithm):
                 self.l1 = self.l2
                 self.powerL1 = self.powerL2
 
-                self.l2 = (self.rightBound - self.leftBound) * self.phi + self.leftBound
+                self.l2 = (
+                    self.rightBound - self.leftBound
+                ) * Golden.phi + self.leftBound
                 vRef = self.l2
                 self.cycle = 2
 

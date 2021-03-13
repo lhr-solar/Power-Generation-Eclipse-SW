@@ -4,11 +4,8 @@ Stride.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
-
-Description: The Stride class is a concrete base class that provides a common 
-API for derived classes to use. The Stride class has roughly one function: to
-calculate the stride (change of VREF) for various MPPT algorithms.
+Last Modified: 02/27/21
+Description: Implementation of the Stride class.
 """
 # Library Imports.
 
@@ -18,9 +15,11 @@ calculate the stride (change of VREF) for various MPPT algorithms.
 
 class Stride:
     """
-    The Stride class is a concrete base class that provides a common
-    API for derived classes to use. The Stride class has roughly one function:
-    to calculate the stride (change of VREF) for various MPPT algorithms.
+    The Stride class provides the base API for derived classes to
+    calculate the stride (change of VREF) for various MPPT algorithms.
+
+    By default, the stride function implemented by the concrete base class is a
+    fixed stride.
     """
 
     def __init__(self, strideType="Fixed", minStride=0.01, VMPP=0.621, error=0.05):
@@ -41,14 +40,23 @@ class Stride:
             The minimum error percentage of V_best to serve as our minimum
             stride.
         """
+        # Name of the explicit stride function used.
         self._strideType = strideType
+
+        # The minimum stride attempted in any iteration.
         self._minStride = minStride
+
+        # The previous iteration characteristics.
         self.vOld = 0.0
         self.iOld = 0.0
         self.pOld = 0.0
         self.irrOld = 0.0
         self.tOld = 0.0
+
+        # The anticipated VMPP to aim for.
         self.VMPP = VMPP
+
+        # User defined error for determining variable minimum stride distance.
         self.error = error
 
     def setup(self, VMPP=0.621, error=0.05):

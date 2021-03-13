@@ -1,0 +1,38 @@
+{
+    "name": "Example Cell",
+    "description": "An example module format. A double module string with two types of regimes.",
+    "explanation": "
+    Each module has a couple keys: `module_type` (how many cells are in the module), `env_type` (how env_regime is formatted), `needs_interp` (whether the program should run interpolation schemes for you), and `env_regime` (the actual environmental data itself).
+
+    As you can see here, we have two types of module formats; one that is a profiled array and the other which is a step response.
+
+    The Array mode has a set of entries with the metadata [cycle, irradiance, temperature]. The program can pull out this metadata for each cycle. A profiled array must have each and every cycle specified (see SingleCell.json as an example), but you can set the `needs_interp` flag to true and the program will do the internal interpolation and store it for the duration of the program. We don't save it back to the file (for now) to retain readability.
+
+    The Step response mode has a single list (technically it should be a tuple). The tuple order is [irradiance, temperature]. The program executes the simulation with solely that irradiance and temperature at all times, starting at cycle 0. This mode is good for examining algorithm steady state response and convergence speeds.",
+    "num_modules": 2,
+    "pv_model": {
+        "0": {
+            "module_type": "1x1",
+            "env_type": "Array",
+            "needs_interp": true,
+            "env_regime": [
+                [0, 1000, 25],
+                [200, 1000, 25],
+                [250, 1000, 50],
+                [275, 1000, 75],
+                [300, 1000, 25],
+                [500, 1000, 25],
+                [550, 750, 25],
+                [575, 500, 25],
+                [600, 1000, 25],
+                [800, 1000, 25]
+            ]
+        },
+        "1": {
+            "module_type": "2x2",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [1000, 25]
+        }
+    }
+}
