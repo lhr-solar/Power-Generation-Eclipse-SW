@@ -50,7 +50,7 @@ class UIController:
     """
 
     def __init__(self):
-        self._framerate = 60
+        self._framerate = 30
         self.sourceSimData = None
         self.MPPTSimData = None
 
