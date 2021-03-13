@@ -373,6 +373,3 @@ class Graph(View):
             graphLayout.layout.addWidget(widget)
 
             self._layout = graphLayout
-
-
-# TODO: go back a couple commits and add back in clear points

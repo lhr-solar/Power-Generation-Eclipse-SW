@@ -4,12 +4,9 @@ MPPT.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/18/20
-Last Modified: 2/8/21
+Last Modified: 02/27/21
 
-Description: The MPPT (Maximum Power Point Tracker) class is a concrete class
-that manages the data flow and operation of MPPT Algorithms. More properly, it
-is a wrapper class that allows the main program to swap between MPPT Algorithms
-and Stride models (see MPPTComponents) on demand.
+Description: Implementation of the MPPT class.
 """
 # Library Imports.
 
@@ -61,7 +58,7 @@ class MPPT:
 
         if MPPTGlobalAlgoType == "Voltage Sweep":
             self._model = VoltageSweep(numCells, MPPTLocalAlgoType, strideType)
-        elif MPPTLocalAlgoType == "Default":
+        elif MPPTGlobalAlgoType == "Default":
             self._model = GlobalMPPTAlgorithm(
                 numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType
             )

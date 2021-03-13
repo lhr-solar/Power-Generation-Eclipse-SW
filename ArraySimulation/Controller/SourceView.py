@@ -18,6 +18,7 @@ It shows the following IV-PV Curve graphs:
   - Nonideal model Irradiance as the independent variable at 25 C
 """
 # Library Imports.
+from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import (
     QGridLayout,
@@ -25,7 +26,7 @@ from PyQt5.QtWidgets import (
 )
 import csv
 import numpy as np
-from time import sleep
+import sys
 
 # Custom Imports.
 from ArraySimulation.Controller.Console import Console
@@ -69,13 +70,13 @@ class SourceView(View):
                 "TempIndependent": Graph(
                     title="Ideal Model Temperature Independent @ 1000G",
                     xAxisLabel="Voltage (V)",
-                    yAxisLabel="Characteristics",
+                    yAxisLabel="Current (A)",
                     series={"list": []},
                 ),
                 "IrradIndependent": Graph(
                     title="Ideal Model Irradiance Independent @ 25C",
                     xAxisLabel="Voltage (V)",
-                    yAxisLabel="Characteristics",
+                    yAxisLabel="Current (A)",
                     series={"list": []},
                 ),
             },
@@ -83,13 +84,13 @@ class SourceView(View):
                 "TempIndependent": Graph(
                     title="Nonideal Model Temperature Independent @ 1000G",
                     xAxisLabel="Voltage (V)",
-                    yAxisLabel="Characteristics",
+                    yAxisLabel="Current (A)",
                     series={"list": []},
                 ),
                 "IrradIndependent": Graph(
                     title="Nonideal Model Irradiance Independent @ 25C",
                     xAxisLabel="Voltage (V)",
-                    yAxisLabel="Characteristics",
+                    yAxisLabel="Current (A)",
                     series={"list": []},
                 ),
             },
@@ -97,7 +98,7 @@ class SourceView(View):
                 graphType="Scatter",
                 title="Single Shot Model",
                 xAxisLabel="Voltage (V)",
-                yAxisLabel="Characteristics",
+                yAxisLabel="Current (A)",
                 # TODO: split into multiple series based on RGB color of
                 #  data points? Needs preprocessing.
                 series={
@@ -277,7 +278,7 @@ class SourceView(View):
         """
         Clears the source curves for the SingleShot mode UI.
         """
-        self._datastore["Arbitrary"].clearPoints()
+        self._datastore["Arbitrary"].clearAllSeries()
 
     def _executeSingleShotMode(self):
         """
@@ -395,12 +396,10 @@ class SourceView(View):
         Curves graphs.
         """
         # Clear points for each graph.
-        self._datastore["Ideal"]["TempIndependent"].clearPoints()
-        self._datastore["Nonideal"]["TempIndependent"].clearPoints()
-        self._datastore["Ideal"]["IrradIndependent"].clearPoints()
-        self._datastore["Nonideal"]["IrradIndependent"].clearPoints()
-
-        controller = self._datastoreParent
+        self._datastore["Ideal"]["TempIndependent"].clearAllSeries()
+        self._datastore["Nonideal"]["TempIndependent"].clearAllSeries()
+        self._datastore["Ideal"]["IrradIndependent"].clearAllSeries()
+        self._datastore["Nonideal"]["IrradIndependent"].clearAllSeries()
 
         # Get textbox values from the console.
         irradResolution = self._console.getReference("IrradResTxtbx").text()
@@ -419,118 +418,129 @@ class SourceView(View):
         errors += voltageRes[0]
 
         if not errors:
-            # Generate the source curves.
-            for model in ["Ideal", "Nonideal"]:
-                # Build temperature independent graphs.
-                self._console.getReference("StatusLbl").setText(
-                    "Building the " + model + " temperature independent graph."
-                )
-                for temperature in np.arange(
-                    SourceView.TEMPERATURE_RANGE[0],
-                    SourceView.TEMPERATURE_RANGE[1] + tempRes[1],
-                    tempRes[1],
-                ):
-                    # Note that by default we try to use lookups.
-                    (voltages, currents) = controller.generateSourceCurve(
-                        1, 1000, temperature, voltageRes[1], model, True
-                    )
-                    powers = [
-                        voltage * current
-                        for voltage, current in zip(voltages, currents)
-                    ]
+            self._indCurvesDatastore = {
+                "controller": self._datastoreParent,
+                "irradRes": irradRes[1],
+                "tempRes": tempRes[1],
+                "voltageRes": voltageRes[1],
+                "temp": SourceView.TEMPERATURE_RANGE[0],
+                "irrad": SourceView.IRRADIANCE_RANGE[0],
+                "execution": True,
+                "timer": QTimer(),
+            }
 
-                    # Update the graph.
-                    self._datastore[model]["TempIndependent"].addSeries(
-                        model + ".current:temp." + str(temperature),
-                        {
-                            "data": {"x": voltages, "y": currents},
-                            "multiplier": 1,
-                            "label": "Current (A): Temperature "
-                            + str(temperature)
-                            + " C",
-                            "color": (
-                                temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
-                                255
-                                - temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
-                                255
-                                - temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
-                            ),
-                        },
-                    )
-                    self._datastore[model]["TempIndependent"].addSeries(
-                        model + ".power:temp." + str(temperature),
-                        {
-                            "data": {"x": voltages, "y": powers},
-                            "multiplier": 1,
-                            "label": "Power (W): Temperature "
-                            + str(temperature)
-                            + " C",
-                            "color": (
-                                temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
-                                255
-                                - temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
-                                temperature * 255 / SourceView.TEMPERATURE_RANGE[1],
-                            ),
-                        },
-                    )
+            self._console.getReference("StatusLbl").setText(
+                "Building the temperature and irradiance independent graphs "
+                + "for the following models: "
+                + str(SourceView.MODELS)
+                + "."
+            )
 
-                # Build irradiance independent graphs.
-                self._console.getReference("StatusLbl").setText(
-                    "Building the " + model + " irradiance independent graph."
-                )
-                for irradiance in np.arange(
-                    SourceView.IRRADIANCE_RANGE[0],
-                    SourceView.IRRADIANCE_RANGE[1] + irradRes[1],
-                    irradRes[1],
-                ):
-                    # Note that by default we try to use lookups.
-                    (voltages, currents) = controller.generateSourceCurve(
-                        1, irradiance, 25, voltageRes[1], model, True
-                    )
-                    powers = [
-                        voltage * current
-                        for voltage, current in zip(voltages, currents)
-                    ]
-
-                    # Update the graph.
-                    self._datastore[model]["IrradIndependent"].addSeries(
-                        model + ".current:irrad." + str(irradiance),
-                        {
-                            "data": {"x": voltages, "y": currents},
-                            "multiplier": 1,
-                            "label": "Current (A): Irradiance "
-                            + str(irradiance)
-                            + " G",
-                            "color": (
-                                122
-                                + irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
-                                122
-                                + irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
-                                255 - irradiance * 255 / SourceView.IRRADIANCE_RANGE[1],
-                            ),
-                        },
-                    )
-                    self._datastore[model]["IrradIndependent"].addSeries(
-                        model + ".power:irrad." + str(irradiance),
-                        {
-                            "data": {"x": voltages, "y": powers},
-                            "multiplier": 1,
-                            "label": "Power (W): Irradiance " + str(irradiance) + " G",
-                            "color": (
-                                122
-                                + irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
-                                255
-                                - irradiance * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
-                                255 - irradiance * 255 / SourceView.IRRADIANCE_RANGE[1],
-                            ),
-                        },
-                    )
-
-            self._console.getReference("StatusLbl").setText("Success.")
+            self._indCurvesDatastore["timer"].timeout.connect(
+                self._executeIndCurvesHelper
+            )
+            self._indCurvesDatastore["timer"].start(self._SECOND / self._framerate)
         else:
             self._console.getReference("StatusLbl").setText(
                 "\n".join(str(error) for error in errors)
             )
+
+    def _executeIndCurvesHelper(self):
+        controller = self._indCurvesDatastore["controller"]
+        irradRes = self._indCurvesDatastore["irradRes"]
+        tempRes = self._indCurvesDatastore["tempRes"]
+        voltageRes = self._indCurvesDatastore["voltageRes"]
+        temp = self._indCurvesDatastore["temp"]
+        irrad = self._indCurvesDatastore["irrad"]
+
+        # Generate the source curves.
+        isTempGenerated = True
+        if temp <= SourceView.TEMPERATURE_RANGE[1]:
+            for model in SourceView.MODELS:
+                # Note that by default we try to use lookups.
+                (voltages, currents) = controller.generateSourceCurve(
+                    1, 1000, temp, voltageRes, model, True
+                )
+                powers = [
+                    voltage * current for voltage, current in zip(voltages, currents)
+                ]
+
+                # Update the graph.
+                self._datastore[model]["TempIndependent"].addSeries(
+                    model + ".current:temp." + str(temp),
+                    {
+                        "data": {"x": voltages, "y": currents},
+                        "multiplier": 1,
+                        "label": "Current (A): Temperature " + str(temp) + " C",
+                        "color": (
+                            temp * 255 / SourceView.TEMPERATURE_RANGE[1],
+                            255 - temp * 255 / SourceView.TEMPERATURE_RANGE[1],
+                            255 - temp * 255 / SourceView.TEMPERATURE_RANGE[1],
+                        ),
+                    },
+                )
+                self._datastore[model]["TempIndependent"].addSeries(
+                    model + ".power:temp." + str(temp),
+                    {
+                        "data": {"x": voltages, "y": powers},
+                        "multiplier": 1,
+                        "label": "Power (W): Temperature " + str(temp) + " C",
+                        "color": (
+                            temp * 255 / SourceView.TEMPERATURE_RANGE[1],
+                            255 - temp * 255 / SourceView.TEMPERATURE_RANGE[1],
+                            temp * 255 / SourceView.TEMPERATURE_RANGE[1],
+                        ),
+                    },
+                )
+                isTempGenerated = False
+
+        isIrradGenerated = True
+        if irrad <= SourceView.IRRADIANCE_RANGE[1]:
+            for model in SourceView.MODELS:
+                # Note that by default we try to use lookups.
+                (voltages, currents) = controller.generateSourceCurve(
+                    1, irrad, 25, voltageRes, model, True
+                )
+                powers = [
+                    voltage * current for voltage, current in zip(voltages, currents)
+                ]
+
+                # Update the graph.
+                self._datastore[model]["IrradIndependent"].addSeries(
+                    model + ".current:irrad." + str(irrad),
+                    {
+                        "data": {"x": voltages, "y": currents},
+                        "multiplier": 1,
+                        "label": "Current (A): Irradiance " + str(irrad) + " G",
+                        "color": (
+                            122 + irrad * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
+                            122 + irrad * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
+                            255 - irrad * 255 / SourceView.IRRADIANCE_RANGE[1],
+                        ),
+                    },
+                )
+                self._datastore[model]["IrradIndependent"].addSeries(
+                    model + ".power:irrad." + str(irrad),
+                    {
+                        "data": {"x": voltages, "y": powers},
+                        "multiplier": 1,
+                        "label": "Power (W): Irradiance " + str(irrad) + " G",
+                        "color": (
+                            122 + irrad * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
+                            255 - irrad * 255 / SourceView.IRRADIANCE_RANGE[1] / 2,
+                            255 - irrad * 255 / SourceView.IRRADIANCE_RANGE[1],
+                        ),
+                    },
+                )
+            isIrradGenerated = False
+
+        # Update parameters until both reach the end.
+        if isTempGenerated and isIrradGenerated:
+            self._indCurvesDatastore["timer"].timeout.disconnect()
+            self._console.getReference("StatusLbl").setText("Success.")
+        else:
+            self._indCurvesDatastore["temp"] += tempRes
+            self._indCurvesDatastore["irrad"] += irradRes
 
     def _validate(self, _type, value):
         """

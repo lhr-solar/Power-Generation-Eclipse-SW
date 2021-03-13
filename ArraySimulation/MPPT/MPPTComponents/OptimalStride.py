@@ -4,9 +4,10 @@ OptimalStride.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 11/24/20
+Last Modified: 02/27/21
+Description: Implementation of the Optimal Stride perturbation function.
 
-Description: Derived class of Stride that implements the perturbation function
+The OptimalStride class implements the perturbation function
 discussed in the following paper:
 
     Optimized Adaptive Perturb and Observe Maximum Power Point Tracking  
@@ -43,6 +44,6 @@ class OptimalStride(Stride):
         super(OptimalStride, self).__init__("Optimal", minStride, VMPP, error)
 
     def getStride(self, arrVoltage, arrCurrent, irradiance, temperature):
-        minStride = self.error * self.error / (2 * (1 - self.error)) * self.VMPP
+        minStride = self.error * self.error * self.VMPP / (2 * (1 - self.error))
         stride = abs(self.VMPP - arrVoltage)
         return stride + minStride

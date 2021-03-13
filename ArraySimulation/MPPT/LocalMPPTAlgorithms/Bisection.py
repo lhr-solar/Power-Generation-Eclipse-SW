@@ -4,12 +4,8 @@ Bisection.py
 Author: Matthew Yu, Array Lead (2020).
 Contact: matthewjkyu@gmail.com
 Created: 11/19/20
-Last Modified: 2/27/21
-TODO: Description needs an update.
-Description: The Bisection class is a derived class that determines a VREF to 
-apply over PSource to maximize the power generated. The Bisection Method looks
-for the root of a unimodal function. In this application, it is the derivative
-of the P-V function. It belongs to the set of divide and conquer algorithms.
+Last Modified: 02/27/21
+Description: Implementation of the Bisection method algorithm.
 
 The implementation of this algorithm is based on the wikipedia page for the
 Bisection Method: https://en.wikipedia.org/wiki/Bisection_method
@@ -27,37 +23,35 @@ Bisection Method: https://en.wikipedia.org/wiki/Bisection_method
     At initialization:
         [left, right] = [0, MAX_VOLTAGE]        # Bounds
         pNew = 0
-        vNew = 0
         pOld = 0
         vOld = 0
         cycle = 0
         K = 0.01
 
     Cycle 0: Determine our first reference voltage.
-        vNew = (left + right) / 2
-        VREF = vNew
+        VREF = (left + right) / 2
+        vOld = left
+        pOld = ArrVoltage * ArrCurrent
         GOTO Cycle 1
 
     Cycle 1: Determine our second reference voltage.
         pNew = ArrVoltage * ArrCurrent
-        vNew = ArrVoltage
-        dP/dV = (pNew - pOld) / (vNew - vOld)
+        dP/dV = (pNew - pOld) / (ArrVoltage - vOld)
 
         if dP/dV <= K:                          # Within tolerance. No movement.
-            VREF = vOld = vNew
+            VREF = ArrVoltage
         elif dP/dV > 0:                         # Positive slope. Go right.
-            left = vNew
-            VREF = vOld = vNew = (left + right) / 2 # TODO: this is not yet right.
-            pOld = pNew
+            left = ArrVoltage
+            VREF = (left + right) / 2
         else:                                   # Negative slope. Go left.
-            right = vNew
-            VREF = vOld = vNew = (left + right) / 2
-            pOld = pNew
+            right = ArrVoltage
+            VREF = (left + right) / 2
+
+        vOld = ArrVoltage
+        pOld = pNew
 
     As this algorithm standalone can only support unimodal functions,
     it is a subcomponent for a larger, global MPPT algorithm.
-
-    Note that this method requires an assumption
 """
 # Library Imports.
 from math import sqrt
@@ -70,23 +64,20 @@ from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
 
 class Bisection(LocalMPPTAlgorithm):
     """
-    The Bisection class is a derived class that determines a VREF to
-    apply over PSource to maximize the power generated. The Bisection Method
-    looks for the root of a unimodal function. In this application, it is the
-    derivative of the P-V function. It belongs to the set of divide and conquer
-    algorithms.
+    The Bisection class is a derived class of LocalMPPTAlgorithm. The Bisection
+    Method looks for the root of a unimodal function. In this application, it is
+    the derivative of the P-V function. It belongs to the set of divide and
+    conquer algorithms.
     """
 
-    # Error constant.
-    K = 0.01
+    # Error tuning parameter.
+    error = 0.01
 
     def __init__(self, numCells=1, strideType="Fixed"):
         super(Bisection, self).__init__(numCells, "Bisection", strideType)
 
         # Current algorithm internal cycle.
         self.cycle = 0
-        self.pNew = 0
-        self.vNew = 0
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = 0
@@ -100,20 +91,19 @@ class Bisection(LocalMPPTAlgorithm):
             dP_dV = 0
             if arrVoltage - self.vOld != 0:  # Prevent divide by 0 issues.
                 dP_dV = (pNew - self.pOld) / (arrVoltage - self.vOld)
-
-            if abs(dP_dV) <= self.K:
+            if abs(dP_dV) <= Bisection.error:
                 vRef = arrVoltage
             elif dP_dV > 0:
                 self.leftBound = arrVoltage
-                vRef = (self.leftBound+self.rightBound)/2
+                vRef = (self.leftBound + self.rightBound) / 2
             else:
                 self.rightBound = arrVoltage
-                vRef = (self.leftBound+self.rightBound)/2
+                vRef = (self.leftBound + self.rightBound) / 2
             self.vOld = arrVoltage
             self.pOld = pNew
         else:
             raise Exception("self.cycle is not 0 or 1: " + self.cycle)
-        
+
         return vRef
 
     def reset(self):
