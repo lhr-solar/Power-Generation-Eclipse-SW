@@ -189,6 +189,7 @@ class DataController:
         sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
 
         # Retrieve the MPPT VREF guess given the source output current.
+        print(cycle, end='\t')
         vRef = self._MPPT.getReferenceVoltage(
             self._vREF,
             sourceCurrent,

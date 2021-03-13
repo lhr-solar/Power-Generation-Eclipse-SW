@@ -484,10 +484,15 @@ class MPPTView(View):
         self._datastore["VRefPosition"].addPoints("power", voltageList, powerList)
 
         self._datastore["VRefPosition"].clearSeries("MPPTVREF")
+
+        idx = self.pipelineData["executionIdx"]
+        cycleResults = self.pipelineData["cycleResults"]
+        vMax = cycleResults["sourceOutput"][idx]["edge"][2][0]
+        iMax = cycleResults["sourceOutput"][idx]["edge"][2][1]
         self._datastore["VRefPosition"].addPoints(
             "MPPTVREF",
-            [VREF, VREF],
-            [MPPTCurrOut[0], VREF * MPPTCurrOut[0]],
+            [VREF, VREF, vMax, vMax],
+            [MPPTCurrOut[0], VREF * MPPTCurrOut[0], iMax, vMax * iMax]
         )
 
     def _plotPowerComparison(self, MPPTCurrOut):
