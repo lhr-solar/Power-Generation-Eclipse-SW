@@ -129,7 +129,7 @@ class DataController:
 
     # Simulation pipeline management.
     def resetPipeline(
-        self, modelType, environment, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+        self, modelType, environment, maxCycles, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
     ):
         """
         Resets components within the pipeline to the default state.
@@ -141,6 +141,8 @@ class DataController:
             The source model type.
         environment: String or Tuple
             PVEnvironment model used.
+        maxCycles: Int
+            Maximum number of cycles to execute for.
         MPPTGlobalAlgo: String
             The global MPPT algorithm type.
         MPPTAlgo: String
@@ -148,25 +150,25 @@ class DataController:
         MPPTStrideAlgo: String
             The stride MPPT algorithm type.
         """
-        self.datastore["maxCycle"] = 1000  # TODO: input as param
-        self._PVEnv.setupModel(source=environment, maxCycles=self.datastore["maxCycle"])
-        self._PVSource.setupModel(modelType=modelType)
-
-        self._MPPT.setupModel(
-            numCells=1,  # TODO: set cells defined in def
-            MPPTGlobalAlgoType=MPPTGlobalAlgo,
-            MPPTLocalAlgoType=MPPTLocalAlgo,
-            strideType=MPPTStrideAlgo,
-        )
-        self._DCDCConverter.reset()
         self.datastore = {
             "cycle": [],
             "sourceDef": [],
             "sourceOutput": [],
             "mpptOutput": [],
             "dcdcOutput": [],
-            "maxCycle": 1000,  # TODO: input as param
+            "maxCycle": maxCycles,
         }
+
+        self._PVEnv.setupModel(source=environment, maxCycles=self.datastore["maxCycle"])
+        self._PVSource.setupModel(modelType=modelType)
+
+        self._MPPT.setupModel(
+            numCells=self._PVEnv.getSourceNumCells(),
+            MPPTGlobalAlgoType=MPPTGlobalAlgo,
+            MPPTLocalAlgoType=MPPTLocalAlgo,
+            strideType=MPPTStrideAlgo,
+        )
+        self._DCDCConverter.reset()
 
         self._vREF = 0.0
 

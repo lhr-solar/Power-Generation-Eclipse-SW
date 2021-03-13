@@ -238,25 +238,36 @@ class MPPTView(View):
             self._executeMPPTAlgorithm,
         )
 
-        self._console.addComboBox("ModelSelection", (0, 1), (1, 1), MPPTView.MODELS)
+        self._console.addTextbox(
+            "MaxCycleTextbx",
+            (0, 1),
+            (1, 1),
+            "Maximum cycle to execute to.",
+        )
+
+        self._console.addLabel(
+            "StatusLbl",
+            (1, 0),
+            (1, 2)
+        )
+
+        self._console.addComboBox("ModelSelection", (0, 2), (1, 1), MPPTView.MODELS)
         self._console.addComboBox(
-            "GlobalMPPTAlgorithmSelection", (0, 2), (1, 1), MPPTView.MPPT_GLOBAL_MODELS
+            "GlobalMPPTAlgorithmSelection", (0, 3), (1, 1), MPPTView.MPPT_GLOBAL_MODELS
         )
         self._console.addComboBox(
-            "LocalMPPTAlgorithmSelection", (0, 3), (1, 1), MPPTView.MPPT_LOCAL_MODELS
+            "LocalMPPTAlgorithmSelection", (0, 4), (1, 1), MPPTView.MPPT_LOCAL_MODELS
         )
         self._console.addComboBox(
-            "AlgorithmStrideSelection", (0, 4), (1, 1), MPPTView.MPPT_STRIDE_MODELS
+            "AlgorithmStrideSelection", (0, 5), (1, 1), MPPTView.MPPT_STRIDE_MODELS
         )
 
         # TODO: may put p somewhere else so it's constantly being updated. Of
         # course, keep in mind changing indices can mess with algorithm execution.
         p = pathlib.Path("./External/")
         self._console.addComboBox(
-            "EnvironmentSelection", (0, 5), (1, 1), [x.stem for x in p.glob("*.json")]
+            "EnvironmentSelection", (0, 6), (1, 1), [x.stem for x in p.glob("*.json")]
         )
-
-        self._console.addLabel("StatusLbl", (1, 0), (1, 3))
 
         self._layout.layout.addWidget(
             self._datastore["SourceChars"].getLayout(), 1, 0, 1, 1
@@ -286,7 +297,7 @@ class MPPTView(View):
         """
         self._clearGraphs()
 
-        # Get options from combo boxes.
+        # Get options from combo boxes and textboxes.
         sourceModel = self._console.getReference("ModelSelection").currentText()
         environmentProfile = self._console.getReference(
             "EnvironmentSelection"
@@ -301,36 +312,48 @@ class MPPTView(View):
             "AlgorithmStrideSelection"
         ).currentText()
 
-        controller = self._datastoreParent
-        controller.resetPipeline(
-            # TODO: case for tuple.
-            sourceModel,
-            environmentProfile + ".json",
-            MPPTGlobalAlgo,
-            MPPTLocalAlgo,
-            MPPTStrideAlgo,
-        )
-        (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
+        maxCycle = self._console.getReference("MaxCycleTextbx").text()
+        maxCycleRes = self._validate("MaxCycle", maxCycle)
 
-        powerStore = {  # TODO: maybe change naming later? Or never...
-            "actualPower": 0,  # Current Cycle Actual Power
-            "theoreticalPower": 0,  # Current Cycle Theoretical Power
-            "cycleData": [0, 0],  # [Num cycles below threshold, Total cycles]
-            "energyData": [0, 0],  # [Total Energy Generated, Total Theoretical Energy]
-        }
+        errors = []
+        errors += maxCycleRes[0]
 
-        self.pipelineData = {
-            "continueBool": continueBool,
-            "executionIdx": 0,
-            "cycleResults": cycleResults,
-            "powerStore": powerStore,
-        }
+        if not errors:
+            controller = self._datastoreParent
+            controller.resetPipeline(
+                # TODO: case for tuple.
+                sourceModel,
+                environmentProfile + ".json",
+                maxCycleRes[1],
+                MPPTGlobalAlgo,
+                MPPTLocalAlgo,
+                MPPTStrideAlgo,
+            )
+            (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
-        # Execute a timer thread for the duration of the generating the MPPT
-        # algorithm graphs.
-        self.timer = QTimer()
-        self.timer.timeout.connect(self._executeMPPTAlgorithmHelper)
-        self.timer.start(self._SECOND / self._framerate)
+            powerStore = {  # TODO: maybe change naming later? Or never...
+                "actualPower": 0,  # Current Cycle Actual Power
+                "theoreticalPower": 0,  # Current Cycle Theoretical Power
+                "cycleData": [0, 0],  # [Num cycles below threshold, Total cycles]
+                "energyData": [0, 0],  # [Total Energy Generated, Total Theoretical Energy]
+            }
+
+            self.pipelineData = {
+                "continueBool": continueBool,
+                "executionIdx": 0,
+                "cycleResults": cycleResults,
+                "powerStore": powerStore,
+            }
+
+            # Execute a timer thread for the duration of the generating the MPPT
+            # algorithm graphs.
+            self.timer = QTimer()
+            self.timer.timeout.connect(self._executeMPPTAlgorithmHelper)
+            self.timer.start(self._SECOND / self._framerate)
+        else:
+            self._console.getReference("StatusLbl").setText(
+                "\n".join(str(error) for error in errors)
+            )
 
     def _executeMPPTAlgorithmHelper(self):
         """
@@ -386,6 +409,7 @@ class MPPTView(View):
 
         if not self.pipelineData["continueBool"]:
             self.timer.timeout.disconnect()
+            self._console.getReference("StatusLbl").setText("Success.")
 
     def _plotSourceCharacteristics(self):
         """
@@ -551,6 +575,57 @@ class MPPTView(View):
         )
         self._datastore["Efficiency"].addPoint("cyclesThreshold", idx, percentThreshold)
         self._datastore["Efficiency"].addPoint("trackingEff", idx, trackingEff)
+
+    def _validate(self, _type, value):
+        """
+        Attempts to validate the value of an assumed type. Returns an error
+        array upon failure.
+
+        Parameters
+        ----------
+        _type: String
+            String defined value type.
+        value: String
+            Value to be parsed.
+
+        Returns
+        -------
+        A tuple of the format:
+            ([errors], val)
+
+        Upon success, errors is an empty list and val has a value.
+        Upon failure, errors is a populated list of errors and val is None.
+        """
+        errors = []
+        val = None
+
+        if value is None or value == "":
+            errors.append("No value. Please type something in!")
+        elif _type == "MaxCycle":
+            try:
+                valCandidate = int(value)
+                if (0 < valCandidate):
+                    val = valCandidate
+                else:
+                    errors.append(
+                        "The max cycle value is outside of range ["
+                        + str(1)
+                        + ","
+                        + "inf"
+                        + "]: "
+                        + str(valCandidate)
+                        + "."
+                    )
+            except ValueError:
+                errors.append(
+                    "The max cycle value is not of type int: "
+                    + str(val)
+                    + "."
+                )
+        else:
+            errors.append("The input type is not defined: " + _type + ".")
+
+        return (errors, val)
 
     def _clearGraphs(self):
         """
