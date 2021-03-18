@@ -129,7 +129,13 @@ class DataController:
 
     # Simulation pipeline management.
     def resetPipeline(
-        self, modelType, environment, maxCycles, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+        self,
+        modelType,
+        environment,
+        maxCycles,
+        MPPTGlobalAlgo,
+        MPPTLocalAlgo,
+        MPPTStrideAlgo,
     ):
         """
         Resets components within the pipeline to the default state.
@@ -191,7 +197,7 @@ class DataController:
         sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
 
         # Retrieve the MPPT VREF guess given the source output current.
-        print(cycle, end='\t')
+        print(cycle, end="\t")
         vRef = self._MPPT.getReferenceVoltage(
             self._vREF,
             sourceCurrent,

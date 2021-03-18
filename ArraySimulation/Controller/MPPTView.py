@@ -245,11 +245,7 @@ class MPPTView(View):
             "Maximum cycle to execute to.",
         )
 
-        self._console.addLabel(
-            "StatusLbl",
-            (1, 0),
-            (1, 2)
-        )
+        self._console.addLabel("StatusLbl", (1, 0), (1, 2))
 
         self._console.addComboBox("ModelSelection", (0, 2), (1, 1), MPPTView.MODELS)
         self._console.addComboBox(
@@ -335,7 +331,10 @@ class MPPTView(View):
                 "actualPower": 0,  # Current Cycle Actual Power
                 "theoreticalPower": 0,  # Current Cycle Theoretical Power
                 "cycleData": [0, 0],  # [Num cycles below threshold, Total cycles]
-                "energyData": [0, 0],  # [Total Energy Generated, Total Theoretical Energy]
+                "energyData": [
+                    0,
+                    0,
+                ],  # [Total Energy Generated, Total Theoretical Energy]
             }
 
             self.pipelineData = {
@@ -516,7 +515,7 @@ class MPPTView(View):
         self._datastore["VRefPosition"].addPoints(
             "MPPTVREF",
             [VREF, VREF, vMax, vMax],
-            [MPPTCurrOut[0], VREF * MPPTCurrOut[0], iMax, vMax * iMax]
+            [MPPTCurrOut[0], VREF * MPPTCurrOut[0], iMax, vMax * iMax],
         )
 
     def _plotPowerComparison(self, MPPTCurrOut):
@@ -604,7 +603,7 @@ class MPPTView(View):
         elif _type == "MaxCycle":
             try:
                 valCandidate = int(value)
-                if (0 < valCandidate):
+                if 0 < valCandidate:
                     val = valCandidate
                 else:
                     errors.append(
@@ -618,9 +617,7 @@ class MPPTView(View):
                     )
             except ValueError:
                 errors.append(
-                    "The max cycle value is not of type int: "
-                    + str(val)
-                    + "."
+                    "The max cycle value is not of type int: " + str(val) + "."
                 )
         else:
             errors.append("The input type is not defined: " + _type + ".")

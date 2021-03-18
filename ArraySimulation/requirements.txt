@@ -1,4 +1,8 @@
-pytest-6.1.2
+# Development dependencies.
+black
+pytest
+
+# Normal dependencies.
 pyqt5
 pyqtgraph
 jsbeautifier
