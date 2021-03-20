@@ -89,6 +89,8 @@ class GlobalMPPTAlgorithm:
         self.tOld = 0.0
         self.irrOld = 0.0
         self.pOld = 0.0
+        self.runningHistory = []
+        self.pastHistories = []
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         """
