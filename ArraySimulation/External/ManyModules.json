@@ -1,0 +1,109 @@
+{
+    "name": "Many Modules",
+    "description": "17 modules in series, all at slightly different irradiances.",
+    "num_modules": 17,
+    "pv_model": {
+        "0": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [1000, 25]
+        },
+        "1": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [950, 25]
+        },
+        "2": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [900, 25]
+        },
+        "3": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [850, 25]
+        },
+        "4": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [800, 25]
+        },
+        "5": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [750, 25]
+        },
+        "6": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [700, 25]
+        },
+        "7": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [650, 25]
+        },
+        "8": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [600, 25]
+        },
+        "9": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [550, 25]
+        },
+        "10": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [500, 25]
+        },
+        "11": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [450, 25]
+        },
+        "12": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [400, 25]
+        },
+        "13": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [350, 25]
+        },
+        "14": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [300, 25]
+        },
+        "15": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [250, 25]
+        },
+        "16": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [200, 25]
+        }
+    }
+}

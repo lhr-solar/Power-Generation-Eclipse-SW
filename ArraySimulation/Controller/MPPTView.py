@@ -66,6 +66,9 @@ class MPPTView(View):
     # List of MPPT stride algorithms that can be used.
     MPPT_STRIDE_MODELS = ["Fixed", "Adaptive", "Bisection", "Optimal"]
 
+    # List of PV configuration file names.
+    ARRAY_CONFIGS = None
+
     def __init__(self, dataController, framerate):
         """
         Upon initialization, we perform any data and UI setup required to get
@@ -74,6 +77,8 @@ class MPPTView(View):
         super(MPPTView, self).__init__(
             dataController=dataController, framerate=framerate
         )
+
+        MPPTView.ARRAY_CONFIGS = [x.stem for x in pathlib.Path("./External/").glob("*.json")]
 
         self._datastore = {
             "SourceChars": Graph(
@@ -258,11 +263,8 @@ class MPPTView(View):
             "AlgorithmStrideSelection", (0, 5), (1, 1), MPPTView.MPPT_STRIDE_MODELS
         )
 
-        # TODO: may put p somewhere else so it's constantly being updated. Of
-        # course, keep in mind changing indices can mess with algorithm execution.
-        p = pathlib.Path("./External/")
         self._console.addComboBox(
-            "EnvironmentSelection", (0, 6), (1, 1), [x.stem for x in p.glob("*.json")]
+            "EnvironmentSelection", (0, 6), (1, 1), MPPTView.ARRAY_CONFIGS
         )
 
         self._layout.layout.addWidget(
@@ -315,9 +317,10 @@ class MPPTView(View):
         errors += maxCycleRes[0]
 
         if not errors:
+            # Grab the data controller reference, reset it, and go through one
+            # iteration.
             controller = self._datastoreParent
             controller.resetPipeline(
-                # TODO: case for tuple.
                 sourceModel,
                 environmentProfile + ".json",
                 maxCycleRes[1],
@@ -327,6 +330,8 @@ class MPPTView(View):
             )
             (cycleResults, continueBool) = controller.iteratePipelineCycleMPPT()
 
+            # Power store struct provides some context on power and efficiency
+            # metrics.
             powerStore = {  # TODO: maybe change naming later? Or never...
                 "actualPower": 0,  # Current Cycle Actual Power
                 "theoreticalPower": 0,  # Current Cycle Theoretical Power
@@ -337,6 +342,8 @@ class MPPTView(View):
                 ],  # [Total Energy Generated, Total Theoretical Energy]
             }
 
+            # Pipeline data instance variable is updated by the
+            # _executeMPPTAlgorithmHelper and used for displaying data.
             self.pipelineData = {
                 "continueBool": continueBool,
                 "executionIdx": 0,
@@ -366,12 +373,9 @@ class MPPTView(View):
         powerStore = self.pipelineData["powerStore"]
 
         # Update derived data structures
-        VREF = round(
-            cycleResults["mpptOutput"][idx], 2
-        )  # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
+        VREF = cycleResults["mpptOutput"][idx]
         IVList = cycleResults["sourceOutput"][idx]["IV"]
-
-        MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
+        MPPTCurrOut = [curr for (volt, curr) in IVList if volt == VREF]
 
         # Percent Yield
         powerStore["actualPower"] = VREF * MPPTCurrOut[0]

@@ -1,0 +1,31 @@
+{
+    "name": "Few Modules",
+    "description": "4 modules in series, all at slightly different irradiances.",
+    "num_modules": 4,
+    "pv_model": {
+        "0": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [1000, 25]
+        },
+        "1": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [950, 25]
+        },
+        "2": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [900, 25]
+        },
+        "3": {
+            "module_type": "2x4",
+            "env_type": "Step",
+            "needs_interp": false,
+            "env_regime": [850, 25]
+        }
+    }
+}

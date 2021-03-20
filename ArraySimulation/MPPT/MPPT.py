@@ -75,9 +75,9 @@ class MPPT:
             self._model.reset()
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
-        return self._model.getReferenceVoltage(
+        return round(self._model.getReferenceVoltage(
             arrVoltage, arrCurrent, irradiance, temperature
-        )
+        ), 3)
 
     def getGlobalMPPTType(self):
         """

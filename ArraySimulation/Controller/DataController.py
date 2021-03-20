@@ -193,8 +193,7 @@ class DataController:
 
         # Retrieve the source characteristics given the source definition.
         sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
-        sourceIV = self._PVSource.getIV(modulesDef, numCells)
-        sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
+        sourceChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
 
         # Retrieve the MPPT VREF guess given the source output current.
         print(cycle, end="\t")
@@ -213,7 +212,7 @@ class DataController:
         self.datastore["cycle"].append(cycle)
         self.datastore["sourceDef"].append(modulesDef)
         self.datastore["sourceOutput"].append(
-            {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
+            {"current": sourceCurrent, "IV": sourceChar[3], "edge": (sourceChar[0], sourceChar[1], sourceChar[2])}
         )
         self.datastore["mpptOutput"].append(vRef)
         self.datastore["dcdcOutput"].append(pulseWidth)

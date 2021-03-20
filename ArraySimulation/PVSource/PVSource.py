@@ -28,13 +28,12 @@ variable shading:
     Mark Mikofski, Bennet Meyers, Chetan Chaudhari (2018).
     “PVMismatch Project: https://github.com/SunPower/PVMismatch".
     SunPower Corporation, Richmond, CA.
-
-TODO: for now, we'll just use the first module we come across when generating
-current and associated IV curve characteristics.
 """
 # Library Imports.
 import numpy as np
 import sys
+import time
+import multiprocessing as mp
 
 # Custom Imports.
 from ArraySimulation.PVSource.PVCell.PVCellIdeal import PVCellIdeal
@@ -115,6 +114,7 @@ class PVSource:
         -------
         float|None:
             Current of the module model or None if the model is not defined.
+            Rounded to the thousandth.
         Throws an exception for undefined cell model.
 
         Assumptions
@@ -123,19 +123,19 @@ class PVSource:
         """
         if self._model is not None:
             if self._useLookup:
-                return self._model.getCurrentLookup(
+                return round(self._model.getCurrentLookup(
                     moduleDef["numCells"],
                     moduleDef["voltage"],
                     moduleDef["irradiance"],
                     moduleDef["temperature"],
-                )
+                ), 3)
             else:
-                return self._model.getCurrent(
+                return round(self._model.getCurrent(
                     moduleDef["numCells"],
                     moduleDef["voltage"],
                     moduleDef["irradiance"],
                     moduleDef["temperature"],
-                )
+                ), 3)
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
@@ -164,6 +164,7 @@ class PVSource:
         -------
         float|None:
             Current of the source model or None if the model is not defined.
+            Rounded to the thousandth.
 
         Assumptions
         -----------
@@ -203,13 +204,36 @@ class PVSource:
             current = max(currents) * (
                 1 - np.exp(-1000)  # TODO: this is a magic number for now.
             )
-            return current
+            return round(current, 3)
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
+    def getIVHelper(self, voltage):
+        """
+        Helper function for pulling out source current values given a voltage
+        across all modules.
+
+        Parameters
+        ----------
+        voltage: Float
+            Voltage to set across all modules in the dictionary. See
+            modulesDef in getIV for formatting.
+
+        Returns
+        -------
+        (float, float): Voltage Current tuple.
+        """
+        # Set the voltage for this run
+        modulesDefCopy = self._modulesDef.copy()
+        for module in modulesDefCopy.values():
+            module["voltage"] = voltage
+
+        # Get the current for this set of sources.
+        current = self.getSourceCurrent(modulesDefCopy)
+        return (voltage, current)
+
     def getIV(self, modulesDef, numCells, resolution=0.01):
         """
-        TODO: implement multimodule support
         Calculates the entire source model current voltage plot given various
         environmental parameters.
 
@@ -238,6 +262,7 @@ class PVSource:
         -------
         list: [(voltage:float, current:float), ...]
             A list of paired voltage|current tuples across the cell IV curve.
+            Rounded to the thousandth.
 
         Assumptions
         -----------
@@ -248,14 +273,25 @@ class PVSource:
         # over all modules.
         model = []
         if self._model is not None:
+            # Build list of voltages to test.
+            voltages = []
             for voltage in np.arange(
-                0, round(PVSource.MAX_CELL_VOLTAGE * numCells, 2) + 0.01, 0.01
+                0, round(PVSource.MAX_CELL_VOLTAGE * numCells, 3) + 0.001, 0.01
             ):
-                for module in modulesDef.values():
-                    module["voltage"] = voltage
-                current = self.getSourceCurrent(modulesDef)
-                voltCurrPair = (voltage, current)
-                model.append(voltCurrPair)
+                voltage = round(voltage, 3)
+                voltages.append(voltage)
+
+            # Use multiprocessing module for when the number of modules > 4.
+            if len(modulesDef) > 4:
+                self._modulesDef = modulesDef
+                pool = mp.Pool(processes=mp.cpu_count())
+                model = pool.map(self.getIVHelper, voltages)
+
+            else:
+                for voltage in voltages:
+                    current = self.getIVHelper(voltage)
+                    model.append((voltage, current))
+
             return model
         else:
             raise Exception("No cell model is defined for the PVSource.")
@@ -285,13 +321,14 @@ class PVSource:
         resolution: float
             Voltage stride across the source. Occurs within the bounds of [0,
             MAX_VOLTAGE], inclusive.
+            Rounded to the thousandth.
 
         Returns
         -------
-        tuple: (V_OC:float, I_SC:float, (V_MPP:float, I_MPP:float)):
+        tuple: (V_OC:float, I_SC:float, (V_MPP:float, I_MPP:float), [IVList]):
             A tuple of tuples indicating the open circuit voltage, the short
-            circuit current, and the GLOBAL maximum power point (MPP) voltage
-            and current.
+            circuit current, the GLOBAL maximum power point (MPP) voltage
+            and current, and the IVList.
         """
         if self._model is not None:
             mpp = (0, 0)  # voltage, current list
@@ -310,9 +347,9 @@ class PVSource:
                     if OCVoltage != 0.0 and current == 0:
                         OCVoltage = voltage
 
-                return (OCVoltage, SCCurrent, mpp)
+                return (OCVoltage, SCCurrent, mpp, model)
             else:
-                return (0, 0, (0, 0))
+                return (0, 0, (0, 0), model)
         else:
             raise Exception("No cell model is defined for the PVSource.")
 
