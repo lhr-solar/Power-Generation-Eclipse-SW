@@ -193,11 +193,12 @@ class DataController:
 
         # Retrieve the source characteristics given the source definition.
         sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
+        # print("SOURCE CURRENT: " + str(sourceCurrent))
         sourceIV = self._PVSource.getIV(modulesDef, numCells)
         sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
 
         # Retrieve the MPPT VREF guess given the source output current.
-        print(cycle, end="\t")
+        # print(cycle, end="\t")
         vRef = self._MPPT.getReferenceVoltage(
             self._vREF,
             sourceCurrent,

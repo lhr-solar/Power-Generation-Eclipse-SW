@@ -58,7 +58,7 @@ class MPPTView(View):
     MODELS = ["Ideal", "Nonideal"]
 
     # List of Global MPPT algorithms that can be used.
-    MPPT_GLOBAL_MODELS = ["Voltage Sweep"]
+    MPPT_GLOBAL_MODELS = ["Voltage Sweep","Simulated Annealing","None"]
 
     # List of Local MPPT algorithms that can be used.
     MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
@@ -307,7 +307,6 @@ class MPPTView(View):
         MPPTStrideAlgo = self._console.getReference(
             "AlgorithmStrideSelection"
         ).currentText()
-
         maxCycle = self._console.getReference("MaxCycleTextbx").text()
         maxCycleRes = self._validate("MaxCycle", maxCycle)
 
@@ -370,9 +369,9 @@ class MPPTView(View):
             cycleResults["mpptOutput"][idx], 2
         )  # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
         IVList = cycleResults["sourceOutput"][idx]["IV"]
-
+        # print("VREF: " + str(VREF))
+        # print(IVList)
         MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
-
         # Percent Yield
         powerStore["actualPower"] = VREF * MPPTCurrOut[0]
         powerStore["theoreticalPower"] = (
@@ -546,6 +545,7 @@ class MPPTView(View):
             cycleResults["cycle"][idx],
             cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
         )
+        print(str(cycleResults["cycle"][idx]) + ", "  + str(cycleResults["mpptOutput"][idx] * MPPTCurrOut[0]) + ", "+ str(cycleResults["sourceOutput"][idx]["edge"][2][0]*cycleResults["sourceOutput"][idx]["edge"][2][1]))
 
     def _plotEfficiencyMetrics(self, percentYield, percentThreshold, trackingEff):
         """

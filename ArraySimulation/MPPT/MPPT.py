@@ -16,6 +16,7 @@ from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
     GlobalMPPTAlgorithm,
 )
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.VoltageSweep import VoltageSweep
+from ArraySimulation.MPPT.GlobalMPPTAlgorithms.SimulatedAnnealing import SimulatedAnnealing
 
 
 class MPPT:
@@ -58,6 +59,8 @@ class MPPT:
 
         if MPPTGlobalAlgoType == "Voltage Sweep":
             self._model = VoltageSweep(numCells, MPPTLocalAlgoType, strideType)
+        elif MPPTGlobalAlgoType == "Simulated Annealing":
+            self._model = SimulatedAnnealing(numCells,MPPTLocalAlgoType,strideType)
         elif MPPTGlobalAlgoType == "Default":
             self._model = GlobalMPPTAlgorithm(
                 numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType

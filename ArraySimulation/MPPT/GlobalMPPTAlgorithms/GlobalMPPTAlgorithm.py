@@ -77,12 +77,13 @@ class GlobalMPPTAlgorithm:
             self._model = IC(numCells, strideType)
         elif MPPTLocalAlgoType == "PandO":
             self._model = PandO(numCells, strideType)
+            print("stride Type: " + str(strideType))
         elif MPPTLocalAlgoType == "Ternary":
             self._model = Ternary(numCells, strideType)
         elif MPPTLocalAlgoType == "Default":
-            self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
+            self._model = LocalMPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
         else:
-            self._model = MPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
+            self._model = LocalMPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
 
         self.vOld = 0.0
         self.iOld = 0.0
@@ -122,6 +123,11 @@ class GlobalMPPTAlgorithm:
         steady state behavior by the next MPPT cycle. This should always be
         considered in the algorithms.
         """
+        if(arrVoltage == 0):
+            self.vOld = arrVoltage
+            self.iOld = arrCurrent
+            self.pOld = arrCurrent*arrVoltage
+            return arrVoltage + 0.02
         vRef = self._model.getReferenceVoltage(
             arrVoltage, arrCurrent, irradiance, temperature
         )

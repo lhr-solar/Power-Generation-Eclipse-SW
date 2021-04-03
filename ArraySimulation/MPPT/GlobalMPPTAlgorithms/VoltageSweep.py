@@ -49,12 +49,13 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         # Sets the bounds for the first cycle of the LocalMPPTAlgorithm
         self.setup = True
 
-        self.stride = 0.01
+        self.stride = 0.02
         self.vOld = 0.0
         self.iOld = 0.0
         self.tOld = 0.0
         self.irrOld = 0.0
         self.pOld = 0.0
+        self.maxPower = 0.0
     #TODO: round the values at a lower level like PVCell or MPPTAlgorithm instead of rounding the hell out of everything here
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = round(arrVoltage,2)
@@ -66,9 +67,11 @@ class VoltageSweep(GlobalMPPTAlgorithm):
                 self.sweeping = False
                 maxPower = max(self.power_peaks)
                 maxVoltage = self.voltage_peaks[self.power_peaks.index(maxPower)]
+                self.maxPower = maxPower
                 #TODO: Look at this later
                 self._model.setup(maxVoltage, lBound, rBound)
                 self.setup = False
+            
 
             if arrVoltage >= GlobalMPPTAlgorithm.MAX_VOLTAGE:
                 vRef = lBound
@@ -136,6 +139,7 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         The left and right bounds for the global maximum of the P-V curve.
         """
         maxPower = max(self.power_peaks)
+        self.maxPower = maxPower
         index = self.power_peaks.index(maxPower)
         maxVoltage = self.voltage_peaks[index]
         (leftBound, rightBound) = (
@@ -156,8 +160,9 @@ class VoltageSweep(GlobalMPPTAlgorithm):
     def reset(self):
         super(VoltageSweep, self).reset()
         self.stride = 0.01
-        self.voltage_peaks = [0]
+        self.voltage_peaks = []
         self.power_peaks = [0]
         self.sweeping = True
         self.increasing = True
         self.setup = True
+        self.maxPower = 0.0

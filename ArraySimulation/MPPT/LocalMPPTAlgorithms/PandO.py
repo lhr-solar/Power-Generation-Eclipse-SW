@@ -45,31 +45,31 @@ class PandO(LocalMPPTAlgorithm):
         if dP > 0:
             if dV > 0:  # Increase vRef.
                 vRef += stride
-                print(
-                    "Right dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
-                    end="\t",
-                )
+                # print(
+                #     "Right dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
+                #     end="\t",
+                # )
             elif dV < 0:  # Decrease vRef.
                 vRef -= stride
-                print(
-                    "Left dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
-                    end="\t",
-                )
+                # print(
+                #     "Left dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
+                #     end="\t",
+                # )
         else:
             if dV > 0:  # Decrease vRef.
                 vRef -= stride
-                print(
-                    "Left dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
-                    end="\t",
-                )
+                # print(
+                #     "Left dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
+                #     end="\t",
+                # )
             elif dV < 0:  # Increase vRef.
                 vRef += stride
-                print(
-                    "Right dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
-                    end="\t",
-                )
+                # print(
+                #     "Right dp=" + str(round(dP, 3)) + " dV=" + str(round(dV, 3)),
+                #     end="\t",
+                # )
 
-        print(" to ", round(vRef, 3))
+        # print(" to ", round(vRef, 3))
 
         # Update dependent values.
         self.vOld = arrVoltage
