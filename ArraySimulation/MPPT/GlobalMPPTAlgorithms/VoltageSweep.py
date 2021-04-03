@@ -63,29 +63,59 @@ class VoltageSweep(GlobalMPPTAlgorithm):
             vRef = round(self._sweep(round(arrVoltage,2), arrCurrent, irradiance, temperature),2)
         else:
             (lBound, rBound) = self._getBounds()
+            print("Left Bound: "+ str(lBound) + " Right Bound: "+ str(rBound))
             if self.setup:
                 self.sweeping = False
                 maxPower = max(self.power_peaks)
                 maxVoltage = self.voltage_peaks[self.power_peaks.index(maxPower)]
-                self.maxPower = maxPower
                 #TODO: Look at this later
                 self._model.setup(maxVoltage, lBound, rBound)
                 self.setup = False
-            
+            if(len(self.runningHistory) == 10):
+                # previousAverage = sum(self.runningHistory)/len(self.runningHistory)
+                self.runningHistory.remove(self.runningHistory[0])
+                self.runningHistory.append(arrCurrent * arrVoltage)
+                if(len(self.pastHistories)==10):
+                    pastAverage = self.pastHistories[0]
+                    self.pastHistories.remove(self.pastHistories[0])
+                    self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
+                    if((self.pastHistories[len(self.pastHistories)-1] - pastAverage)/pastAverage <= -0.1):
+                        self.sweeping = True
+                        vRef = 0
+                        self.setup = True
+                        self.runningHistory.clear()
+                        self.pastHistories.clear()
+                        self.power_peaks.clear()
+                        self.voltage_peaks.clear()
+                        return vRef
+                else:
+                    self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
+                # averageNow = sum(self.runningHistory)/len(self.runningHistory)
+                # if((averageNow - previousAverage)/previousAverage <= -0.1):
+                #     self.sweeping = True
+                #     vRef = 0
+                #     self.setup = True
+                #     self.runningHistory.clear()
+                #     return vRef
 
+            else:
+                self.runningHistory.append(arrCurrent*arrVoltage)
             if arrVoltage >= GlobalMPPTAlgorithm.MAX_VOLTAGE:
                 vRef = lBound
             elif arrVoltage == lBound:
                 #TODO: Optimize this out
                 vRef = lBound + 0.02
-            else:
+            elif vRef != 0:
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
+                print("Vref: "+str(vRef))
                 if vRef < lBound:
                     vRef = lBound
                 if vRef > rBound:
                     vRef = rBound
+        # if(self.sweeping == False):
+        #     print(sum(self.runningHistory)/len(self.runningHistory))
         return vRef
 
     def _sweep(self, arrVoltage, arrCurrent, irradiance, temperature):
