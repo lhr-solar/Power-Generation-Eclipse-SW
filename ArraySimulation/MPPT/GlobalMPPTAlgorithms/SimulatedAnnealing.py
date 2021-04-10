@@ -71,14 +71,44 @@ class SimulatedAnnealing(GlobalMPPTAlgorithm):
                 self.startLocal = False
                 self.vOld =arrVoltage
                 self.pOld = arrCurrent * arrVoltage
+                self._model._strideModel.vOld = arrVoltage
+                self._model._strideModel.pOld = self.pOld
                 self.iOld = arrCurrent
             else:
                 print("Hello")
                 print("arrVoltage: " + str(arrVoltage) )
+                print("SELF.POLD: "+ str(self.pOld))
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
-                print(vRef)
+                if(len(self.runningHistory) == 10):
+                    # previousAverage = sum(self.runningHistory)/len(self.runningHistory)
+                    self.runningHistory.remove(self.runningHistory[0])
+                    self.runningHistory.append(arrCurrent * arrVoltage)
+                    if(len(self.pastHistories)==10):
+                        pastAverage = self.pastHistories[0]
+                        self.pastHistories.remove(self.pastHistories[0])
+                        self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
+                        if((self.pastHistories[len(self.pastHistories)-1] - pastAverage)/pastAverage <= -0.3):
+                            vRef = 0
+                            self.cycle = 0
+                            self.temp = SimulatedAnnealing.INIT_TEMP
+                            self.startLocal = True
+                            self.runningHistory.clear()
+                            self.pastHistories.clear()
+                            return vRef
+                    else:
+                        self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
+                # averageNow = sum(self.runningHistory)/len(self.runningHistory)
+                # if((averageNow - previousAverage)/previousAverage <= -0.1):
+                #     self.sweeping = True
+                #     vRef = 0
+                #     self.setup = True
+                #     self.runningHistory.clear()
+                #     return vRef
+
+                else:
+                    self.runningHistory.append(arrCurrent*arrVoltage)
 
         return vRef
         # print(self.cycle)

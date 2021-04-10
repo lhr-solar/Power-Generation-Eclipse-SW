@@ -89,10 +89,17 @@ class BisectionStride(Stride):
         pIn = arrVoltage * arrCurrent
         dV = arrVoltage - self.vOld
         dP = pIn - self.pOld
+        print("pOld: " + str(self.pOld))
+        print("pIn: "+ str(pIn))
 
         stride = 0
         if abs(dP) >= self._minPowDiff and abs(dV) >= self._minVoltDiff:
             slope = dP / dV
+            print("dP: "+ str(dP))
+            print("dV: "+ str(dV))
+            print("slope: "+ str(slope))
+            print("arrV: "+ str(arrVoltage))
+            print("vOld: "+ str(self.vOld))
             if slope < 0:
                 stride = (arrVoltage + self.vOld) / 2 - self.vOld
             elif slope > 0:

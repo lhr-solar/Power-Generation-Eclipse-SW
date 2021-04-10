@@ -369,7 +369,7 @@ class MPPTView(View):
             cycleResults["mpptOutput"][idx], 2
         )  # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
         IVList = cycleResults["sourceOutput"][idx]["IV"]
-        # print("VREF: " + str(VREF))
+        print("VREF: " + str(VREF))
         # print(IVList)
         MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
         # Percent Yield
