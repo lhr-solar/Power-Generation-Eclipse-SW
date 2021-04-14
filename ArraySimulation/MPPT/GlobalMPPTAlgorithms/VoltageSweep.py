@@ -64,6 +64,9 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         else:
             (lBound, rBound) = self._getBounds()
             print("Left Bound: "+ str(lBound) + " Right Bound: "+ str(rBound))
+            print("Peaks: "+ str(self.voltage_peaks))
+            print("Troughs: " + str(self.voltage_troughs))
+            print("Power Peaks: " + str(self.power_peaks))
             if self.setup:
                 self.sweeping = False
                 maxPower = max(self.power_peaks)
@@ -83,10 +86,13 @@ class VoltageSweep(GlobalMPPTAlgorithm):
                         self.sweeping = True
                         vRef = 0
                         self.setup = True
+                        self.increasing = True
                         self.runningHistory.clear()
                         self.pastHistories.clear()
                         self.power_peaks.clear()
                         self.voltage_peaks.clear()
+                        self.voltage_troughs = [0]
+                        self._model.reset()
                         return vRef
                 else:
                     self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
