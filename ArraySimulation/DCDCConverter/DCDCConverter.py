@@ -18,7 +18,7 @@ This class is still useful, however, since it provides a base template for
 translation into C/C++ embedded code for the actual MPPT.
 """
 # Library Imports.
-
+import math
 
 # Custom Imports.
 
@@ -32,7 +32,7 @@ class DCDCConverter:
     the source.
     """
 
-    def __init__(self):
+    def __init__(self, timestepRatio = 1):
         # Pulse width of the converter.
         self.pulseWidth = 0
 
@@ -43,6 +43,8 @@ class DCDCConverter:
         # a voltage strictly higher than the load voltage. The closer to it, the
         # more power that can be transmitted without being lost as heat.
         self.loadVoltage = 0
+        self.history = []
+        self.timestepRatio = timestepRatio
 
     def setup(self, arrayVoltage=0.0, loadVoltage=0.6):
         """
@@ -62,6 +64,8 @@ class DCDCConverter:
         self.arrayVoltage = arrayVoltage
         self.loadVoltage = loadVoltage
         self.pulseWidth = 0
+        self.deltaVoltage = 0
+        
 
     def setPulseWidth(self, MPPTTargetVoltage):
         """
@@ -75,7 +79,8 @@ class DCDCConverter:
         """
         if MPPTTargetVoltage > 0.0:
             self.pulseWidth = 1 - self.loadVoltage / MPPTTargetVoltage
-            self.arrayVoltage = MPPTTargetVoltage
+            self.deltaVoltage = MPPTTargetVoltage - self.arrayVoltage
+            self.arrayVoltage = MPPTTargetVoltage - (self.deltaVoltage)*math.exp(-self.timestepRatio)
 
     def getPulseWidth(self):
         """
@@ -85,6 +90,7 @@ class DCDCConverter:
         ------
         float: pulse width
         """
+
         return self.pulseWidth
 
     def setLoadVoltage(self, loadVoltage):
@@ -109,7 +115,7 @@ class DCDCConverter:
         ------
         float: expected array voltage
         """
-        return self.array_voltage
+        return self.arrayVoltage
 
     def reset(self):
         """

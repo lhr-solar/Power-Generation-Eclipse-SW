@@ -112,7 +112,7 @@ class DataController:
         self._PVEnv = PVEnvironment()
         self._PVSource = PVSource()
         self._MPPT = MPPT()
-        self._DCDCConverter = DCDCConverter()
+        self._DCDCConverter = DCDCConverter(timestepRatio = 1)
 
         # Data storage.
         self.datastore = {
@@ -216,7 +216,7 @@ class DataController:
         self.datastore["sourceOutput"].append(
             {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
         )
-        self.datastore["mpptOutput"].append(vRef)
+        self.datastore["mpptOutput"].append(self._DCDCConverter.getVoltageOut())
         self.datastore["dcdcOutput"].append(pulseWidth)
 
         # Assign the VREF to apply across the source in the next simulation cycle.
@@ -226,7 +226,7 @@ class DataController:
         continueBool = True
         if not self._PVEnv.incrementCycle():
             continueBool = False
-
+        
         return (self.datastore, continueBool)
 
     def generateSourceCurve(
