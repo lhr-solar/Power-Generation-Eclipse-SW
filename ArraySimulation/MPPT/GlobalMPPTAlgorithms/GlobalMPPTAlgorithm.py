@@ -77,7 +77,6 @@ class GlobalMPPTAlgorithm:
             self._model = IC(numCells, strideType)
         elif MPPTLocalAlgoType == "PandO":
             self._model = PandO(numCells, strideType)
-            print("stride Type: " + str(strideType))
         elif MPPTLocalAlgoType == "Ternary":
             self._model = Ternary(numCells, strideType)
         elif MPPTLocalAlgoType == "Default":
