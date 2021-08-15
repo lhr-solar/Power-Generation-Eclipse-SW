@@ -58,7 +58,7 @@ class MPPTView(View):
     MODELS = ["Ideal", "Nonideal"]
 
     # List of Global MPPT algorithms that can be used.
-    MPPT_GLOBAL_MODELS = ["Voltage Sweep","Simulated Annealing","Improved Simulated Annealing","None"]
+    MPPT_GLOBAL_MODELS = ["Voltage Sweep","Simulated Annealing","Improved Simulated Annealing","Particle Swarm Optimization","None"]
 
     # List of Local MPPT algorithms that can be used.
     MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
