@@ -418,6 +418,7 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
             #     print(self.agents[i])
         else:
             if(self.startLocal):
+                self._model.setup(self.gBestVolt,0,GlobalMPPTAlgorithm.MAX_VOLTAGE)
                 vRef = self.gBestVolt
                 self.startLocal = False #start converging to global maximum
             elif(self.kick): #start local mppt algorithm.

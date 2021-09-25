@@ -102,6 +102,7 @@ class ImprovedSA(GlobalMPPTAlgorithm):
             if(self.startLocal):
                 vRef = self.vOld
                 self.startLocal = False #start converging to global maximum
+                self._model.setup(self.vOld, 0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
             elif(self.kick): #start local mppt algorithm.
                 vRef = arrVoltage + 0.02
                 self.kick = False
