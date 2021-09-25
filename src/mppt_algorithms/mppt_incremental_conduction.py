@@ -8,6 +8,8 @@ Last Modified: 5/28/20
 Description: Incremental Conduction Algorithm.
 """
 from .mppt import MPPT
+
+
 class IC(MPPT):
     # overload iterate method
     def iterate(self, v_in, i_in, t_in, cycle):
@@ -28,7 +30,7 @@ class IC(MPPT):
             1. Incremental Conductance Based Maximum Power Point Tracking (MPPT) for Photovoltaic System (Lokanadham et Bhaskar)
                 - VI. Incremental Conductance MPPT Algorithm
         """
-        if (cycle % self.sample_rate) == 0: # sampling this run
+        if (cycle % self.sample_rate) == 0:  # sampling this run
             # determine deltas
             dV = v_in - self.v_old
             dI = i_in - self.i_old
@@ -46,12 +48,12 @@ class IC(MPPT):
                     else:
                         self.v_ref += dV_ref
             else:
-                dC = (i_in + (dI / dV) * v_in) # instantaneous conductance
+                dC = i_in + (dI / dV) * v_in  # instantaneous conductance
                 print("[IC] Incremental Conductance: ", dC)
-                if dI/dV*v_in == -i_in:
+                if dI / dV * v_in == -i_in:
                     pass
                 else:
-                    if dI/dV*v_in > -i_in:
+                    if dI / dV * v_in > -i_in:
                         self.v_ref += dV_ref
                     else:
                         self.v_ref -= dV_ref
@@ -59,7 +61,7 @@ class IC(MPPT):
             # update values
             self.v_old = v_in
             self.i_old = i_in
-            self.p_old = v_in*i_in
+            self.p_old = v_in * i_in
 
         return self.v_ref
 

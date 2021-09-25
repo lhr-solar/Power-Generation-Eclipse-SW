@@ -32,7 +32,7 @@ class DCDCConverter:
     the source.
     """
 
-    def __init__(self, timestepRatio = 1):
+    def __init__(self, timestepRatio=1):
         # Pulse width of the converter.
         self.pulseWidth = 0
 
@@ -65,7 +65,6 @@ class DCDCConverter:
         self.loadVoltage = loadVoltage
         self.pulseWidth = 0
         self.deltaVoltage = 0
-        
 
     def setPulseWidth(self, MPPTTargetVoltage):
         """
@@ -80,7 +79,9 @@ class DCDCConverter:
         if MPPTTargetVoltage > 0.0:
             self.pulseWidth = 1 - self.loadVoltage / MPPTTargetVoltage
             self.deltaVoltage = MPPTTargetVoltage - self.arrayVoltage
-            self.arrayVoltage = MPPTTargetVoltage - (self.deltaVoltage)*math.exp(-self.timestepRatio)
+            self.arrayVoltage = MPPTTargetVoltage - (self.deltaVoltage) * math.exp(
+                -self.timestepRatio
+            )
 
     def getPulseWidth(self):
         """

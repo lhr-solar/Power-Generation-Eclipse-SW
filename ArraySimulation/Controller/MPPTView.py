@@ -27,12 +27,7 @@ It shows the following IV-PV Curve graphs:
 # Library Imports.
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import (
-    QGridLayout,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
@@ -58,7 +53,13 @@ class MPPTView(View):
     MODELS = ["Ideal", "Nonideal"]
 
     # List of Global MPPT algorithms that can be used.
-    MPPT_GLOBAL_MODELS = ["Voltage Sweep","Simulated Annealing","Improved Simulated Annealing","Particle Swarm Optimization","None"]
+    MPPT_GLOBAL_MODELS = [
+        "Voltage Sweep",
+        "Simulated Annealing",
+        "Improved Simulated Annealing",
+        "Particle Swarm Optimization",
+        "None",
+    ]
 
     # List of Local MPPT algorithms that can be used.
     MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
@@ -239,10 +240,7 @@ class MPPTView(View):
         )
 
         self._console.addTextbox(
-            "MaxCycleTextbx",
-            (0, 1),
-            (1, 1),
-            "Maximum cycle to execute to.",
+            "MaxCycleTextbx", (0, 1), (1, 1), "Maximum cycle to execute to."
         )
 
         self._console.addLabel("StatusLbl", (1, 0), (1, 2))
@@ -567,11 +565,7 @@ class MPPTView(View):
         idx = self.pipelineData["executionIdx"]
 
         # Plot Efficiencies.
-        self._datastore["Efficiency"].addPoint(
-            "percentYield",
-            idx,
-            percentYield,
-        )
+        self._datastore["Efficiency"].addPoint("percentYield", idx, percentYield)
         self._datastore["Efficiency"].addPoint("cyclesThreshold", idx, percentThreshold)
         self._datastore["Efficiency"].addPoint("trackingEff", idx, trackingEff)
 

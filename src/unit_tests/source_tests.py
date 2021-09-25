@@ -1,10 +1,12 @@
 # TODO: This entire file is Failing and incomplete.
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
 from cell import Cell
 from source import Source
+
 
 class TestSource(unittest.TestCase):
     file_path = "source_models/two_cells_with_diode.json"
@@ -80,16 +82,24 @@ class TestSource(unittest.TestCase):
 
         env = (1000, 25)
         self.assertTrue(self.cell.setup(setup_type="Impulse", impulse=env), "Bad setup")
-        self.assertEqual(self.cell.get_env_conditions(), (1000, 25, 0), "Impulse Env does not match up")
+        self.assertEqual(
+            self.cell.get_env_conditions(),
+            (1000, 25, 0),
+            "Impulse Env does not match up",
+        )
 
         regime = [[0, 1000, 25], [1, 700, 50]]
         self.assertTrue(self.cell.setup(setup_type="Array", regime=regime), "Bad setup")
-        self.assertEqual(self.cell.get_env_conditions(), (1000, 25, 0), "Array Env does not match up")
-        
+        self.assertEqual(
+            self.cell.get_env_conditions(), (1000, 25, 0), "Array Env does not match up"
+        )
+
         # update env variable
         self.cell.increment_cycle()
         self.cell.iterate(0)
-        self.assertEqual(self.cell.get_env_conditions(), (700, 50, 0), "Array Env does not match up")
+        self.assertEqual(
+            self.cell.get_env_conditions(), (700, 50, 0), "Array Env does not match up"
+        )
 
     def test_get_model_type(self):
         self.init()
@@ -107,11 +117,15 @@ class TestSource(unittest.TestCase):
 
         # single source
         env = (1000, 25)
-        self.assertTrue(self.source.setup(setup_type="Impulse", impulse=env), "Bad setup")
+        self.assertTrue(
+            self.source.setup(setup_type="Impulse", impulse=env), "Bad setup"
+        )
         self.assertIsNotNone(self.source.get_modules(), "Result is not None")
 
         # multiple sources
-        self.assertTrue(self.source.setup(setup_type="File", file_name=self.file_path), "Bad setup")
+        self.assertTrue(
+            self.source.setup(setup_type="File", file_name=self.file_path), "Bad setup"
+        )
 
     def test_set_current_cycle(self):
         self.init()
@@ -127,5 +141,6 @@ class TestSource(unittest.TestCase):
         self.cell.increment_cycle()
         self.assertEqual(self.cell.cycle, 1, "Cycle does not match 1")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

@@ -4,22 +4,23 @@ ParticleSwarm.py
 Author: Afnan Mir, Array Lead (2021).
 Contact: afnanmir@utexas.edu
 Created: 08/08/2021
-Last Modified: 08/08/2021
+Last Modified: 09/25/2021
 
 Description: Implementation of Particle Swarm Optimization GlobalMPPTAlgortihm.
 """
 
-#library imports
+# library imports
 from hashlib import new
 import random
 import math
 
-#custom imports
+# custom imports
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
     GlobalMPPTAlgorithm,
 )
 
-class Particle():
+
+class Particle:
     """
     Class that represents an agent in the Particle Swarm Optimization. Each agent travels to a voltage value and calculates the power at the voltage and reports it to the swarm.
     The agent then takes a step in some direction of the PV curve depending on:
@@ -27,6 +28,7 @@ class Particle():
         - Its current best voltage value for power
         - The swarm's global best voltage value for power.
     """
+
     def __init__(self, xPos, vel):
         """
         Constructor for a Particle in the Particle Swarm Optimization algorithm.
@@ -46,8 +48,8 @@ class Particle():
         self.personalBestVolt = 0.0
         self.xPos = xPos
         self.vel = vel
-    
-    def changeXPos(self,vel):
+
+    def changeXPos(self, vel):
         """
         Given a velocity vector, change the current voltage position of the agent
 
@@ -61,7 +63,7 @@ class Particle():
         None.
         """
         self.xPos += vel
-    
+
     def changeVel(self, newVel):
         """
         Set the velocity vector of the agent to its new value
@@ -77,7 +79,7 @@ class Particle():
         """
 
         self.vel = newVel
-    
+
     def getPBest(self):
         """
         Return the power value of the best position on the curve the agent has found
@@ -125,7 +127,7 @@ class Particle():
         """
 
         return self.xPos
-    
+
     def getVel(self):
         """
         Return the current velocity of the agent
@@ -139,7 +141,7 @@ class Particle():
         vel : float
             The current velocity vector of the agent.
         """
-        
+
         return self.vel
 
     def changePBest(self, newBest, newBestVolt):
@@ -159,6 +161,7 @@ class Particle():
         """
         self.personalBest = newBest
         self.personalBestVolt = newBestVolt
+
     def __str__(self):
         return f"Position: {self.xPos}\n Velocity: {self.vel}\nPersonal Best: {self.personalBestVolt}"
 
@@ -168,15 +171,13 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
     Class to implement the Particle Swarm Optimization Algorithm for Maximium Power Point Tracking
     (https://www.ieeexplore-ieee-org.ezproxy.lib.texas.edu/document/7233061)
     """
+
     NUM_AGENTS = 4
     C1 = 0.02
     C2 = 0.5
     W = 0.35
 
-    def __init__(self, 
-        numCells=1, 
-        MPPTLocalAlgoType="Default",
-        strideType="Fixed"):
+    def __init__(self, numCells=1, MPPTLocalAlgoType="Default", strideType="Fixed"):
         """
         Constructor for the Particle Swarm Optimization algorithm
 
@@ -193,7 +194,9 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
         -------
         None
         """
-        super(ParticleSwarm, self).__init__(numCells, "Particle Swarm", MPPTLocalAlgoType, strideType)
+        super(ParticleSwarm, self).__init__(
+            numCells, "Particle Swarm", MPPTLocalAlgoType, strideType
+        )
         self.gBest = 0.0
         self.gBestVolt = 0.0
         self.agents = []
@@ -202,13 +205,14 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
         self.startLocal = True
         self.kick = True
         self.totalCycle = 0
-        interval = GlobalMPPTAlgorithm.MAX_VOLTAGE/5
+        interval = GlobalMPPTAlgorithm.MAX_VOLTAGE / 5
         for i in range(ParticleSwarm.NUM_AGENTS):
-            self.agents.append(Particle((random.random()*interval)+(interval*i), 0.0))
+            self.agents.append(
+                Particle((random.random() * interval) + (interval * i), 0.0)
+            )
         self.cycle = -1
         for i in self.agents:
             print(i.getXPos())
-
 
     def getVelocityVector(self, agent):
         """
@@ -234,7 +238,11 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
         """
         r1 = random.random()
         r2 = random.random()
-        newVel = ParticleSwarm.W*agent.getVel() + ParticleSwarm.C1*r1*(agent.getVoltBest() - agent.getXPos()) + ParticleSwarm.C2*r2*(self.gBestVolt - agent.getXPos())
+        newVel = (
+            ParticleSwarm.W * agent.getVel()
+            + ParticleSwarm.C1 * r1 * (agent.getVoltBest() - agent.getXPos())
+            + ParticleSwarm.C2 * r2 * (self.gBestVolt - agent.getXPos())
+        )
         # print(newVel)
         return newVel
 
@@ -260,41 +268,41 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
             next array voltage to output
         """
         agentPower = arrVoltage * arrCurrent
-        if(self.cycle == -1):
+        if self.cycle == -1:
             self.cycle = 0
             self.totalCycle += 1
-            vRef =  self.agents[0].getXPos()
-        elif(self.cycle == 0 and self._setup):
-            if(agentPower > self.agents[0].getPBest()):
+            vRef = self.agents[0].getXPos()
+        elif self.cycle == 0 and self._setup:
+            if agentPower > self.agents[0].getPBest():
                 self.agents[0].changePBest(agentPower, arrVoltage)
-            if(agentPower > self.gBest):
+            if agentPower > self.gBest:
                 self.gBest = agentPower
                 self.gBestVolt = arrVoltage
             self.cycle += 1
             self.totalCycle += 1
             vRef = self.agents[1].getXPos()
-        elif(self.cycle == 1 and self._setup):
-            if(agentPower > self.agents[1].getPBest()):
+        elif self.cycle == 1 and self._setup:
+            if agentPower > self.agents[1].getPBest():
                 self.agents[1].changePBest(agentPower, arrVoltage)
-            if(agentPower > self.gBest):
+            if agentPower > self.gBest:
                 self.gBest = agentPower
                 self.gBestVolt = arrVoltage
             self.totalCycle += 1
             self.cycle += 1
             vRef = self.agents[2].getXPos()
-        elif(self.cycle == 2 and self._setup):
-            if(agentPower > self.agents[2].getPBest()):
+        elif self.cycle == 2 and self._setup:
+            if agentPower > self.agents[2].getPBest():
                 self.agents[2].changePBest(agentPower, arrVoltage)
-            if(agentPower > self.gBest):
+            if agentPower > self.gBest:
                 self.gBest = agentPower
                 self.gBestVolt = arrVoltage
             self.cycle += 1
             self.totalCycle += 1
             vRef = self.agents[3].getXPos()
-        elif(self.cycle == 3 and self._setup):
-            if(agentPower > self.agents[3].getPBest()):
+        elif self.cycle == 3 and self._setup:
+            if agentPower > self.agents[3].getPBest():
                 self.agents[3].changePBest(agentPower, arrVoltage)
-            if(agentPower > self.gBest):
+            if agentPower > self.gBest:
                 self.gBest = agentPower
                 self.gBestVolt = arrVoltage
             self.totalCycle += 1
@@ -303,6 +311,7 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
             self.goForward = False
             vRef = self.agents[2].getXPos()
         return vRef
+
     def agentUpdate(self, arrVoltage, arrCurrent, irradiance, temperature):
         """
         Method that updates the current state of the particles on the curve.
@@ -324,15 +333,15 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
             array voltage to output
         """
         vRef = arrVoltage
-        if(self._setup):
+        if self._setup:
             vRef = self.setUp(arrVoltage, arrCurrent, irradiance, temperature)
         else:
             vRef = arrVoltage
             agentPower = arrVoltage * arrCurrent
-            if(self.cycle == 0):
-                if(agentPower > self.agents[0].getPBest()):
+            if self.cycle == 0:
+                if agentPower > self.agents[0].getPBest():
                     self.agents[0].changePBest(agentPower, arrVoltage)
-                if(agentPower > self.gBest):
+                if agentPower > self.gBest:
                     self.gBest = agentPower
                     self.gBestVolt = arrVoltage
                 newVel = self.getVelocityVector(self.agents[0])
@@ -342,42 +351,42 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
                 self.cycle = 1
                 self.totalCycle += 1
                 vRef = self.agents[1].getXPos()
-            elif(self.cycle % 4 == 1):
-                if(agentPower > self.agents[1].getPBest()):
+            elif self.cycle % 4 == 1:
+                if agentPower > self.agents[1].getPBest():
                     self.agents[1].changePBest(agentPower, arrVoltage)
-                if(agentPower > self.gBest):
+                if agentPower > self.gBest:
                     self.gBest = agentPower
                     self.gBestVolt = arrVoltage
                 newVel = self.getVelocityVector(self.agents[1])
                 self.agents[1].changeXPos(newVel)
                 self.agents[1].changeVel(newVel)
-                if(self.goForward):
+                if self.goForward:
                     vRef = self.agents[2].getXPos()
                     self.cycle = 2
                 else:
                     vRef = self.agents[0].getXPos()
                     self.cycle = 0
                 self.totalCycle += 1
-            elif(self.cycle % 4 == 2):
-                if(agentPower > self.agents[2].getPBest()):
+            elif self.cycle % 4 == 2:
+                if agentPower > self.agents[2].getPBest():
                     self.agents[2].changePBest(agentPower, arrVoltage)
-                if(agentPower > self.gBest):
+                if agentPower > self.gBest:
                     self.gBest = agentPower
                     self.gBestVolt = arrVoltage
                 newVel = self.getVelocityVector(self.agents[2])
                 self.agents[2].changeXPos(newVel)
                 self.agents[2].changeVel(newVel)
-                if(self.goForward):
+                if self.goForward:
                     vRef = self.agents[3].getXPos()
                     self.cycle = 3
                 else:
                     vRef = self.agents[1].getXPos()
                     self.cycle = 1
                 self.totalCycle += 1
-            elif(self.cycle % 4 == 3):
-                if(agentPower > self.agents[3].getPBest()):
+            elif self.cycle % 4 == 3:
+                if agentPower > self.agents[3].getPBest():
                     self.agents[3].changePBest(agentPower, arrVoltage)
-                if(agentPower > self.gBest):
+                if agentPower > self.gBest:
                     self.gBest = agentPower
                     self.gBestVolt = arrVoltage
                 newVel = self.getVelocityVector(self.agents[3])
@@ -409,22 +418,22 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
         vRef : float
             array voltage to output
         """
-        
-        if(self.totalCycle <= 45):
-            vRef =  self.agentUpdate(arrVoltage,arrVoltage, irradiance, temperature)
+
+        if self.totalCycle <= 45:
+            vRef = self.agentUpdate(arrVoltage, arrVoltage, irradiance, temperature)
             # print(f"Cycle {self.totalCycle}")
             # for i in range(len(self.agents)):
             #     print("Particle" + str(i))
             #     print(self.agents[i])
         else:
-            if(self.startLocal):
-                self._model.setup(self.gBestVolt,0,GlobalMPPTAlgorithm.MAX_VOLTAGE)
+            if self.startLocal:
+                self._model.setup(self.gBestVolt, 0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
                 vRef = self.gBestVolt
-                self.startLocal = False #start converging to global maximum
-            elif(self.kick): #start local mppt algorithm.
+                self.startLocal = False  # start converging to global maximum
+            elif self.kick:  # start local mppt algorithm.
                 vRef = arrVoltage + 0.02
                 self.kick = False
-                self.vOld =arrVoltage
+                self.vOld = arrVoltage
                 self.pOld = arrCurrent * arrVoltage
                 self._model._strideModel.vOld = arrVoltage
                 self._model._strideModel.pOld = self.pOld
@@ -435,7 +444,7 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
                 )
                 needsChange = self.checkEnvironmentalChanges(irradiance)
                 print(self.runningHistory)
-                if(needsChange):
+                if needsChange:
                     print("hello")
                     self.gBest = 0.0
                     self.gBestVolt = 0.0
@@ -446,14 +455,17 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
                     self.startLocal = True
                     self.kick = True
                     self.totalCycle = 0
-                    interval = GlobalMPPTAlgorithm.MAX_VOLTAGE/5
+                    interval = GlobalMPPTAlgorithm.MAX_VOLTAGE / 5
                     for i in range(ParticleSwarm.NUM_AGENTS):
-                        self.agents.append(Particle((random.random()*interval)+(interval*i), 0.0))
+                        self.agents.append(
+                            Particle((random.random() * interval) + (interval * i), 0.0)
+                        )
                     self.cycle = -1
             self.totalCycle += 1
             # print(self.totalCycle)
             return vRef
         return vRef
+
     def reset(self):
         """
         Method to reset the pipeline
@@ -474,11 +486,11 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
         self.startLocal = True
         self.kick = True
         self.totalCycle = 0
-        interval = GlobalMPPTAlgorithm.MAX_VOLTAGE/5
+        interval = GlobalMPPTAlgorithm.MAX_VOLTAGE / 5
         for i in range(ParticleSwarm.NUM_AGENTS):
-            self.agents.append(Particle((random.random()*interval)+(interval*i), 0.0))
+            self.agents.append(
+                Particle((random.random() * interval) + (interval * i), 0.0)
+            )
         self.cycle = -1
         for i in self.agents:
             print(i.getXPos())
-        
-

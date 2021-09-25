@@ -8,6 +8,8 @@ Last Modified: 5/28/20
 Description: Ripple Correlation Control Algorithm.
 """
 from .mppt import MPPT
+
+
 class RCC(MPPT):
     # overload iterate method
     def iterate(self, v_in, i_in, t_in, cycle):

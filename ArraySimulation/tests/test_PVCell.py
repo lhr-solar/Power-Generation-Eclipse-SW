@@ -79,11 +79,7 @@ class TestPVCell:
             )
             assert cell.getCellEdgeCharacteristics(
                 numCells=1, resolution=0.1, irradiance=1000, temperature=25
-            ) != (
-                0,
-                0,
-                (0, 0),
-            )
+            ) != (0, 0, (0, 0))
             assert cell.getModelType() == "Ideal"
         except Exception as e:
             pytest.fail(str(e))
@@ -116,11 +112,7 @@ class TestPVCell:
                 )
                 != []
             )
-            assert cell.getCellEdgeCharacteristics(1, 0.1, 1000, 25) != (
-                0,
-                0,
-                (0, 0),
-            )
+            assert cell.getCellEdgeCharacteristics(1, 0.1, 1000, 25) != (0, 0, (0, 0))
             assert cell.getModelType() == "Nonideal"
         except Exception as e:
             pytest.fail(str(e))

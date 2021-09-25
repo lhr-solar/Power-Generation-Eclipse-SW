@@ -18,11 +18,13 @@ showcase its functionality. It runs a simulation for a file with multiple module
         efficiencies between algorithms.
 """
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from source import Source
 from simulation import Simulation
 from mppt_algorithms.mppt_perturb_and_observe import PandO
+
 
 def main():
     env_regime = [
@@ -57,14 +59,16 @@ def main():
         [185, 1000, 50],
         [190, 1000, 80],
         [195, 1000, 110],
-        [200, 1000, 140]
+        [200, 1000, 140],
     ]
     single_cell = "single_cell.json"
     multi_cell = "two_cells_with_diode.json"
 
     # Nonideal model of a single cell impulse regime
     source = Source("Nonideal")
-    source.setup(setup_type="File", file_name=multi_cell, regime=env_regime, impulse=(1000, 25))
+    source.setup(
+        setup_type="File", file_name=multi_cell, regime=env_regime, impulse=(1000, 25)
+    )
     # PandO MPPT running Fixed step stride
     mppt = PandO()
     mppt.setup()
@@ -77,9 +81,9 @@ def main():
     max_cycle = 50
     v_ref = 0
     while cycle < max_cycle:
-        if cycle%20 == 0:
+        if cycle % 20 == 0:
             print("\nCycle: " + str(cycle))
-        
+
         # get source power point
         (v_mpp, i_mpp, p_mpp) = source.get_source_gmpp()
 
@@ -93,10 +97,11 @@ def main():
 
         # pipe source into the mppt to find the new v_ref
         print(
-            "Cycle: ", cycle, 
-            "\tV: {:.2f}".format(v_out), 
-            "\tI: {:.2f}".format(i_out), 
-            "\tP: {:.2f}".format(v_out*i_out)
+            "Cycle: ",
+            cycle,
+            "\tV: {:.2f}".format(v_out),
+            "\tI: {:.2f}".format(i_out),
+            "\tP: {:.2f}".format(v_out * i_out),
         )
         v_ref = mppt.iterate(v_out, i_out, temp, cycle)
 
@@ -107,7 +112,8 @@ def main():
     simulation.display(0, max_cycle)
     input("Halted at the end of the cycle " + str(max_cycle))
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     if sys.version_info[0] < 3:
         raise Exception("This program only supports Python 3.")
     main()

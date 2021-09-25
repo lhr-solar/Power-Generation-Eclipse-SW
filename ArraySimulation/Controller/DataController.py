@@ -112,7 +112,7 @@ class DataController:
         self._PVEnv = PVEnvironment()
         self._PVSource = PVSource()
         self._MPPT = MPPT()
-        self._DCDCConverter = DCDCConverter(timestepRatio = 1)
+        self._DCDCConverter = DCDCConverter(timestepRatio=1)
 
         # Data storage.
         self.datastore = {
@@ -200,10 +200,7 @@ class DataController:
         # Retrieve the MPPT VREF guess given the source output current.
         # print(cycle, end="\t")
         vRef = self._MPPT.getReferenceVoltage(
-            self._vREF,
-            sourceCurrent,
-            envDef["irradiance"],
-            envDef["temperature"],
+            self._vREF, sourceCurrent, envDef["irradiance"], envDef["temperature"]
         )
 
         # Generate the pulsewidth of the DC-DC Converter and spit it back out.
@@ -226,17 +223,11 @@ class DataController:
         continueBool = True
         if not self._PVEnv.incrementCycle():
             continueBool = False
-        
+
         return (self.datastore, continueBool)
 
     def generateSourceCurve(
-        self,
-        numCells,
-        irradiance,
-        temperature,
-        voltageResolution,
-        modelType,
-        useLookup,
+        self, numCells, irradiance, temperature, voltageResolution, modelType, useLookup
     ):
         """
         Generates a source curve for the given parameters.

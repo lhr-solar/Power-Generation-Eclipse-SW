@@ -1,11 +1,12 @@
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
 from cell import Cell
 
-class TestCell(unittest.TestCase):
 
+class TestCell(unittest.TestCase):
     def init(self):
         self.cell = Cell()
 
@@ -77,16 +78,24 @@ class TestCell(unittest.TestCase):
 
         env = (1000, 25)
         self.assertTrue(self.cell.setup(setup_type="Impulse", impulse=env), "Bad setup")
-        self.assertEqual(self.cell.get_env_conditions(), (1000, 25, 0), "Impulse Env does not match up")
+        self.assertEqual(
+            self.cell.get_env_conditions(),
+            (1000, 25, 0),
+            "Impulse Env does not match up",
+        )
 
         regime = [[0, 1000, 25], [1, 700, 50]]
         self.assertTrue(self.cell.setup(setup_type="Array", regime=regime), "Bad setup")
-        self.assertEqual(self.cell.get_env_conditions(), (1000, 25, 0), "Array Env does not match up")
-        
+        self.assertEqual(
+            self.cell.get_env_conditions(), (1000, 25, 0), "Array Env does not match up"
+        )
+
         # update env variable
         self.cell.increment_cycle()
         self.cell.iterate(0)
-        self.assertEqual(self.cell.get_env_conditions(), (700, 50, 0), "Array Env does not match up")
+        self.assertEqual(
+            self.cell.get_env_conditions(), (700, 50, 0), "Array Env does not match up"
+        )
 
     def test_get_model_type(self):
         self.init()
@@ -109,5 +118,6 @@ class TestCell(unittest.TestCase):
         self.cell.increment_cycle()
         self.assertEqual(self.cell.cycle, 1, "Cycle does not match 1")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

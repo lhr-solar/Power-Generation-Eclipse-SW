@@ -12,7 +12,9 @@ Description: Implementation of the GlobalMPPTAlgorithm class.
 
 
 # Custom Imports.
-from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import LocalMPPTAlgorithm
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.LocalMPPTAlgorithm import (
+    LocalMPPTAlgorithm,
+)
 from ArraySimulation.MPPT.LocalMPPTAlgorithms.PandO import PandO
 from ArraySimulation.MPPT.LocalMPPTAlgorithms.IC import IC
 from ArraySimulation.MPPT.LocalMPPTAlgorithms.FC import FC
@@ -124,10 +126,10 @@ class GlobalMPPTAlgorithm:
         steady state behavior by the next MPPT cycle. This should always be
         considered in the algorithms.
         """
-        if(arrVoltage == 0):
+        if arrVoltage == 0:
             self.vOld = arrVoltage
             self.iOld = arrCurrent
-            self.pOld = arrCurrent*arrVoltage
+            self.pOld = arrCurrent * arrVoltage
             return arrVoltage + 0.02
         vRef = self._model.getReferenceVoltage(
             arrVoltage, arrCurrent, irradiance, temperature
@@ -196,15 +198,15 @@ class GlobalMPPTAlgorithm:
         return (0.0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
 
     def checkEnvironmentalChanges(self, irradiance):
-        if(len(self.runningHistory) < 10):
+        if len(self.runningHistory) < 10:
             self.runningHistory.append(irradiance)
             return False
         else:
-            average = sum(self.runningHistory)/len(self.runningHistory)
-            newAverage = average - (self.runningHistory[0]/10) + (irradiance/10)
-            percentChange = abs(irradiance - average)/average
+            average = sum(self.runningHistory) / len(self.runningHistory)
+            newAverage = average - (self.runningHistory[0] / 10) + (irradiance / 10)
+            percentChange = abs(irradiance - average) / average
             print(average, newAverage, percentChange)
-            if(percentChange > 0.1):
+            if percentChange > 0.1:
                 return True
             else:
                 self.runningHistory.remove(self.runningHistory[0])

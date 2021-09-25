@@ -98,9 +98,7 @@ def main():
         mode_profile = True
 
     # use file
-    string_use_file = input(
-        "Use cached model or from scratch: ['file']|'scratch':"
-    )
+    string_use_file = input("Use cached model or from scratch: ['file']|'scratch':")
     if string_use_file == "scratch":
         use_file = False
 
@@ -123,18 +121,12 @@ def main():
             + " cycles."
         )
     # simulation starting reference voltage
-    string_v_ref = input(
-        "Starting mppt output voltage ['" + str(v_ref) + "']: "
-    )
+    string_v_ref = input("Starting mppt output voltage ['" + str(v_ref) + "']: ")
     try:
         tmp_v_ref = float(string_v_ref)
         v_ref = tmp_v_ref
     except ValueError:
-        print(
-            "Invalid integer. Defaulting to a cycle 0 v_ref of "
-            + str(v_ref)
-            + " V."
-        )
+        print("Invalid integer. Defaulting to a cycle 0 v_ref of " + str(v_ref) + " V.")
     # simulation stride
     string_stride = input(
         "Default stride (for fixed stride function) ['" + str(stride) + "']: "
@@ -196,9 +188,7 @@ def main():
         v_mppt = 0
         i_mppt = 0
 
-        string_irrad = input(
-            "Starting irradiance ['" + str(irradiance) + "']: "
-        )
+        string_irrad = input("Starting irradiance ['" + str(irradiance) + "']: ")
         try:
             tmp_irrad = float(string_irrad)
             irradiance = tmp_irrad
@@ -209,9 +199,7 @@ def main():
                 + " W/m^2."
             )
 
-        string_temp = input(
-            "Starting temperature ['" + str(temperature) + "']: "
-        )
+        string_temp = input("Starting temperature ['" + str(temperature) + "']: ")
         try:
             tmp_temp = float(string_temp)
             temperature = tmp_temp
@@ -227,9 +215,7 @@ def main():
             tmp_load = float(string_load)
             load = tmp_load
         except ValueError:
-            print(
-                "Invalid integer. Defaulting to a load of " + str(load) + " W."
-            )
+            print("Invalid integer. Defaulting to a load of " + str(load) + " W.")
 
         input("Ready to start. Press enter to run the simulation.")
 

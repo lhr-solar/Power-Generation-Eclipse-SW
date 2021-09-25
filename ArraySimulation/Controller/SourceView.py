@@ -20,10 +20,7 @@ It shows the following IV-PV Curve graphs:
 # Library Imports.
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import (
-    QGridLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QGridLayout, QWidget
 import csv
 import numpy as np
 import sys
@@ -138,11 +135,7 @@ class SourceView(View):
             ["Single Shot", "Irradiance and Temperature Independent Curves"],
             self._showMode,
         )
-        self._console.addLabel(
-            "StatusLbl",
-            (1, 0),
-            (1, 2),
-        )
+        self._console.addLabel("StatusLbl", (1, 0), (1, 2))
         self._console.addButton(
             "CmpExpData",
             "Compare Experimental Data",
@@ -171,28 +164,12 @@ class SourceView(View):
             "LookupSelection", (0, 4), (1, 1), ["UseLookup", "NoLookup"]
         )
         self._console.addTextbox(
-            "NumCellsTxtbx",
-            (0, 5),
-            (1, 1),
-            "Number of cells in the module.",
+            "NumCellsTxtbx", (0, 5), (1, 1), "Number of cells in the module."
         )
+        self._console.addTextbox("IrradTxtbx", (0, 6), (1, 1), "Irradiance (W/M^2)")
+        self._console.addTextbox("TempTxtbx", (0, 7), (1, 1), "Temperature (C)")
         self._console.addTextbox(
-            "IrradTxtbx",
-            (0, 6),
-            (1, 1),
-            "Irradiance (W/M^2)",
-        )
-        self._console.addTextbox(
-            "TempTxtbx",
-            (0, 7),
-            (1, 1),
-            "Temperature (C)",
-        )
-        self._console.addTextbox(
-            "VoltResTxtbx",
-            (0, 8),
-            (1, 1),
-            "Voltage Resolution (V)",
+            "VoltResTxtbx", (0, 8), (1, 1), "Voltage Resolution (V)"
         )
 
         # Irradiance and Temperature Independent Curve specific widgets.
@@ -202,22 +179,13 @@ class SourceView(View):
         # - Voltage resolution text box
         # - Status label.
         self._console.addTextbox(
-            "IrradResTxtbx",
-            (0, 2),
-            (1, 1),
-            "Irradiance Resolution (W/M^2)",
+            "IrradResTxtbx", (0, 2), (1, 1), "Irradiance Resolution (W/M^2)"
         )
         self._console.addTextbox(
-            "TempResTxtbx",
-            (0, 3),
-            (1, 1),
-            "Temperature Resolution (C)",
+            "TempResTxtbx", (0, 3), (1, 1), "Temperature Resolution (C)"
         )
         self._console.addTextbox(
-            "VoltResTxtbx2",
-            (0, 4),
-            (1, 1),
-            "Voltage Resolution (V)",
+            "VoltResTxtbx2", (0, 4), (1, 1), "Voltage Resolution (V)"
         )
 
         # Add the graphs to the UI.
@@ -226,35 +194,19 @@ class SourceView(View):
         )
 
         self._layout.layout.addWidget(
-            self._datastore["Ideal"]["TempIndependent"].getLayout(),
-            1,
-            0,
-            1,
-            1,
+            self._datastore["Ideal"]["TempIndependent"].getLayout(), 1, 0, 1, 1
         )
 
         self._layout.layout.addWidget(
-            self._datastore["Ideal"]["IrradIndependent"].getLayout(),
-            1,
-            1,
-            1,
-            1,
+            self._datastore["Ideal"]["IrradIndependent"].getLayout(), 1, 1, 1, 1
         )
 
         self._layout.layout.addWidget(
-            self._datastore["Nonideal"]["TempIndependent"].getLayout(),
-            2,
-            0,
-            1,
-            1,
+            self._datastore["Nonideal"]["TempIndependent"].getLayout(), 2, 0, 1, 1
         )
 
         self._layout.layout.addWidget(
-            self._datastore["Nonideal"]["IrradIndependent"].getLayout(),
-            2,
-            1,
-            1,
-            1,
+            self._datastore["Nonideal"]["IrradIndependent"].getLayout(), 2, 1, 1, 1
         )
 
         self._showSingleShotUI()

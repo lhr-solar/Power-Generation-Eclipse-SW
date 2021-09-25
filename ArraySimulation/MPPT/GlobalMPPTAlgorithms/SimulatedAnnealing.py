@@ -19,6 +19,7 @@ from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
 from ArraySimulation.PVEnvironment.PVEnvironment import PVEnvironment
 from ArraySimulation.PVSource.PVSource import PVSource
 
+
 class SimulatedAnnealing(GlobalMPPTAlgorithm):
     """
     The Simulated Annealing class is a derived concrete class of GlobalAlgorithm
@@ -27,56 +28,66 @@ class SimulatedAnnealing(GlobalMPPTAlgorithm):
     at the sampled point is greater than the power of the current operating point, or based
     on a calculated probability. It then identifies the global maxima using a LocalMPPTAlgorithm.
     """
-    ALPHA = 0.8 #geometric cooling constant. What you multiply the temperature by to decrease the temperature.
-    MIN_TEMP = 0.3 # the temperature at which you stop searching
-    INIT_TEMP = 25 #initial value of the temperature
+
+    ALPHA = (
+        0.8
+    )  # geometric cooling constant. What you multiply the temperature by to decrease the temperature.
+    MIN_TEMP = 0.3  # the temperature at which you stop searching
+    INIT_TEMP = 25  # initial value of the temperature
     k = 15
 
-    def __init__(
-        self,
-        numCells=1,
-        MPPTLocalAlgoType="Default",
-        strideType="Fixed",
-    ):
-        super(SimulatedAnnealing,self).__init__(numCells,"Simulated Annealing", MPPTLocalAlgoType, strideType)
-        #The 'temperature' tells us how likely we are to accept a change even if the power decreases
-        
+    def __init__(self, numCells=1, MPPTLocalAlgoType="Default", strideType="Fixed"):
+        super(SimulatedAnnealing, self).__init__(
+            numCells, "Simulated Annealing", MPPTLocalAlgoType, strideType
+        )
+        # The 'temperature' tells us how likely we are to accept a change even if the power decreases
+
         self.temp = SimulatedAnnealing.INIT_TEMP
         self.cycle = 0
         self._PVEnv = PVEnvironment()
         self._PVSource = PVSource()
-        self._PVEnv.setupModel(source = "TwoCellsWithDiode.json", maxCycles = 200) #cource models needed to look forward
-        self._PVSource.setupModel(modelType = "Ideal")
-        self.startLocal = True #boolean variable used to kickstart the local algorithm.
+        self._PVEnv.setupModel(
+            source="TwoCellsWithDiode.json", maxCycles=200
+        )  # cource models needed to look forward
+        self._PVSource.setupModel(modelType="Ideal")
+        self.startLocal = (
+            True
+        )  # boolean variable used to kickstart the local algorithm.
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vRef = arrVoltage
         if self.temp > SimulatedAnnealing.MIN_TEMP:
             if self.cycle == 0:
-                vRef = round(random.uniform(0,GlobalMPPTAlgorithm.MAX_VOLTAGE),2) #first random sample and operating point
+                vRef = round(
+                    random.uniform(0, GlobalMPPTAlgorithm.MAX_VOLTAGE), 2
+                )  # first random sample and operating point
                 self.cycle += 1
             else:
                 arrPower = arrVoltage * arrCurrent
-                sample = round(random.uniform(0,GlobalMPPTAlgorithm.MAX_VOLTAGE),2)
+                sample = round(random.uniform(0, GlobalMPPTAlgorithm.MAX_VOLTAGE), 2)
                 modules = self._PVEnv.getSourceDefinition(sample)
                 sourceCurrent = self._PVSource.getSourceCurrent(modules)
-                power = sample * sourceCurrent #find a sample voltage and current pair and calculate the hypothetical power at that point
-                if(power > arrPower):
-                    vRef = sample #if it is greater, make it the new operating point
+                power = (
+                    sample * sourceCurrent
+                )  # find a sample voltage and current pair and calculate the hypothetical power at that point
+                if power > arrPower:
+                    vRef = sample  # if it is greater, make it the new operating point
                 else:
-                    #if not greater, choose to go to this operating point if a calculated probability is met.
-                    p_r = math.exp(SimulatedAnnealing.k*(power - arrPower)/self.temp) 
+                    # if not greater, choose to go to this operating point if a calculated probability is met.
+                    p_r = math.exp(
+                        SimulatedAnnealing.k * (power - arrPower) / self.temp
+                    )
                     diceRoll = random.random()
-                    if(diceRoll < p_r):
+                    if diceRoll < p_r:
                         vRef = sample
-                if self.cycle % 4 == 0: #temperature is decreased every 4 cycles
+                if self.cycle % 4 == 0:  # temperature is decreased every 4 cycles
                     self.temp = self.temp * SimulatedAnnealing.ALPHA
                 self.cycle += 1
         else:
-            if(self.startLocal): #kick start local algorithm
+            if self.startLocal:  # kick start local algorithm
                 vRef = arrVoltage + 0.02
                 self.startLocal = False
-                self.vOld =arrVoltage
+                self.vOld = arrVoltage
                 self.pOld = arrCurrent * arrVoltage
                 self._model._strideModel.vOld = arrVoltage
                 self._model._strideModel.pOld = self.pOld
@@ -88,15 +99,24 @@ class SimulatedAnnealing(GlobalMPPTAlgorithm):
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
-                if(len(self.runningHistory) == 10): #running average sample to check if we have had a drastic change in the power output
+                if (
+                    len(self.runningHistory) == 10
+                ):  # running average sample to check if we have had a drastic change in the power output
                     # previousAverage = sum(self.runningHistory)/len(self.runningHistory)
-                    self.runningHistory.remove(self.runningHistory[0]) #pop the oldest value out and add the new value in
+                    self.runningHistory.remove(
+                        self.runningHistory[0]
+                    )  # pop the oldest value out and add the new value in
                     self.runningHistory.append(arrCurrent * arrVoltage)
-                    if(len(self.pastHistories)==10):
+                    if len(self.pastHistories) == 10:
                         pastAverage = self.pastHistories[0]
                         self.pastHistories.remove(self.pastHistories[0])
-                        self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory)) #all past averages
-                        if((self.pastHistories[len(self.pastHistories)-1] - pastAverage)/pastAverage <= -0.3): #if drastic change in power output, then reinitialize the simulated annealing
+                        self.pastHistories.append(
+                            sum(self.runningHistory) / len(self.runningHistory)
+                        )  # all past averages
+                        if (
+                            self.pastHistories[len(self.pastHistories) - 1]
+                            - pastAverage
+                        ) / pastAverage <= -0.3:  # if drastic change in power output, then reinitialize the simulated annealing
                             vRef = 0
                             self.cycle = 0
                             self.temp = SimulatedAnnealing.INIT_TEMP
@@ -105,7 +125,9 @@ class SimulatedAnnealing(GlobalMPPTAlgorithm):
                             self.pastHistories.clear()
                             return vRef
                     else:
-                        self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
+                        self.pastHistories.append(
+                            sum(self.runningHistory) / len(self.runningHistory)
+                        )
                 # averageNow = sum(self.runningHistory)/len(self.runningHistory)
                 # if((averageNow - previousAverage)/previousAverage <= -0.1):
                 #     self.sweeping = True
@@ -115,7 +137,7 @@ class SimulatedAnnealing(GlobalMPPTAlgorithm):
                 #     return vRef
 
                 else:
-                    self.runningHistory.append(arrCurrent*arrVoltage)
+                    self.runningHistory.append(arrCurrent * arrVoltage)
 
         return vRef
         # print(self.cycle)
@@ -158,12 +180,7 @@ class SimulatedAnnealing(GlobalMPPTAlgorithm):
         #         rightBound = min(self.vOld + (searchRange/2), GlobalMPPTAlgorithm.MAX_VOLTAGE)
         #         vRef = round(random.uniform(leftBound, rightBound),2)
         # return vRef
-            
+
     def reset(self):
-        super(SimulatedAnnealing,self).reset()
+        super(SimulatedAnnealing, self).reset()
         self.temp = 25
-
-    
-
-        
-

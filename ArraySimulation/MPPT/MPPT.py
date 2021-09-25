@@ -16,7 +16,9 @@ from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
     GlobalMPPTAlgorithm,
 )
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.VoltageSweep import VoltageSweep
-from ArraySimulation.MPPT.GlobalMPPTAlgorithms.SimulatedAnnealing import SimulatedAnnealing
+from ArraySimulation.MPPT.GlobalMPPTAlgorithms.SimulatedAnnealing import (
+    SimulatedAnnealing,
+)
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.ImprovedSA import ImprovedSA
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.ParticleSwarm import ParticleSwarm
 
@@ -62,11 +64,11 @@ class MPPT:
         if MPPTGlobalAlgoType == "Voltage Sweep":
             self._model = VoltageSweep(numCells, MPPTLocalAlgoType, strideType)
         elif MPPTGlobalAlgoType == "Simulated Annealing":
-            self._model = SimulatedAnnealing(numCells,MPPTLocalAlgoType,strideType)
+            self._model = SimulatedAnnealing(numCells, MPPTLocalAlgoType, strideType)
         elif MPPTGlobalAlgoType == "Improved Simulated Annealing":
-            self._model = ImprovedSA(numCells,MPPTLocalAlgoType,strideType)
+            self._model = ImprovedSA(numCells, MPPTLocalAlgoType, strideType)
         elif MPPTGlobalAlgoType == "Particle Swarm Optimization":
-            self._model = ParticleSwarm(numCells,MPPTLocalAlgoType, strideType)
+            self._model = ParticleSwarm(numCells, MPPTLocalAlgoType, strideType)
         elif MPPTGlobalAlgoType == "Default":
             self._model = GlobalMPPTAlgorithm(
                 numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType

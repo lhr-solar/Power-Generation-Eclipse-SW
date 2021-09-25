@@ -8,9 +8,10 @@ Last Modified: 6/27/20
 Description: MPPT passthrough algorithm. Essentially lets the stride function determine where to go.
 """
 from .mppt import MPPT
-class PT(MPPT):
 
-    def setup(self, v_ref=0, stride=.1, sample_rate=1, stride_mode=None):
+
+class PT(MPPT):
+    def setup(self, v_ref=0, stride=0.1, sample_rate=1, stride_mode=None):
         """
         setup
         Updates MPPT parameters
@@ -106,10 +107,10 @@ class PT(MPPT):
             """
             [left, right] = self.bounds
             cycle = self.cycle
-            q = .33
+            q = 0.33
 
             # Ternary - we need points every iteration: left third and right third
-            if cycle == 0: # set left third
+            if cycle == 0:  # set left third
                 self.l2_pow = v_in * i_in
                 # restrict the bounds           - this works in the base case since l1 and l2 is initialized to bounds
                 if self.l1_pow > self.l2_pow:
@@ -117,13 +118,13 @@ class PT(MPPT):
                 else:
                     self.bounds[0] = self.l1
                 # calculate l1 to test
-                self.l1 = (right-left)*q + left                
+                self.l1 = (right - left) * q + left
                 self.stride = self.l1
                 self.cycle += 1
-            elif cycle == 1: # set right third
+            elif cycle == 1:  # set right third
                 self.l1_pow = v_in * i_in
                 # calculate l2 to test
-                self.l2 = right - (right-left)*q
+                self.l2 = right - (right - left) * q
                 self.stride = self.l2
                 self.cycle = 0
             else:
@@ -131,33 +132,33 @@ class PT(MPPT):
 
             return self.stride
         elif self.stride_mode == "Bisection":
-            k = .01
+            k = 0.01
             [left, right] = self.bounds
             cycle = self.cycle
 
             if cycle == 0:
-                self.stride = (left + right)/2
+                self.stride = (left + right) / 2
                 self.cycle = 1
             else:
                 self.l1_pow = v_in * i_in
 
                 dP_dV = 0
-                if v_in - self.v_old != 0: # prevent divide by 0 issues
-                    dP_dV = (v_in*i_in - self.p_old)/(v_in - self.v_old)
+                if v_in - self.v_old != 0:  # prevent divide by 0 issues
+                    dP_dV = (v_in * i_in - self.p_old) / (v_in - self.v_old)
 
                 if abs(dP_dV) <= k:
                     self.v_old = v_in
                     self.stride = self.v_old
                 elif dP_dV > 0:
                     self.bounds[0] = v_in
-                    self.stride = (self.bounds[0] + right)/2
+                    self.stride = (self.bounds[0] + right) / 2
                     self.v_old = self.stride
-                    self.p_old = v_in*i_in
+                    self.p_old = v_in * i_in
                 else:
                     self.bounds[1] = v_in
-                    self.stride = (left + self.bounds[1])/2
+                    self.stride = (left + self.bounds[1]) / 2
                     self.v_old = self.stride
-                    self.p_old = v_in*i_in
+                    self.p_old = v_in * i_in
 
             return self.stride
         elif self.stride_mode == "Newton":
@@ -173,17 +174,17 @@ class PT(MPPT):
             Our initial guess is v_ref.
             """
             # p_mpp = 3.62 # pmpp, according to sunniva
-            k = .995 # error approximation to get p_mpp always below P(vmpp)
-            p_mpp = (4.32 + -.0293*t_in + 6.4E-05*(t_in**2)) * k
+            k = 0.995  # error approximation to get p_mpp always below P(vmpp)
+            p_mpp = (4.32 + -0.0293 * t_in + 6.4e-05 * (t_in ** 2)) * k
 
             # need two points to determine slope, check if I'm on the first step
             if self.cycle_one:
                 self.cycle_one = False
-                self.f_old = -v_in*i_in + p_mpp
+                self.f_old = -v_in * i_in + p_mpp
                 # v_old is set outside this in the parent
                 self.dF_old = 0
             else:
-                f = -v_in*i_in + p_mpp
+                f = -v_in * i_in + p_mpp
                 # print("[MPPT] f:", f)
 
                 diff_v = v_in - self.v_old
@@ -191,28 +192,28 @@ class PT(MPPT):
                 diff_f = f - self.f_old
                 # print("[MPPT] diff_f:", diff_f)
 
-                if diff_v == 0: # we've found the mpp
+                if diff_v == 0:  # we've found the mpp
                     self.stride = v_in + 0
                     dF = 0
                 else:
-                    dF = diff_f/diff_v
+                    dF = diff_f / diff_v
                     # print("[MPPT] dF:", dF)
-                    if dF == 0: # slope is 0, MPP is in the middle
-                        self.stride = v_in + diff_v/2
+                    if dF == 0:  # slope is 0, MPP is in the middle
+                        self.stride = v_in + diff_v / 2
                     else:
-                        self.stride = v_in - f/dF
+                        self.stride = v_in - f / dF
                         # print("[MPPT] v_ref:", self.stride)
 
                 self.f_old = f
-                self.dF_old= dF 
-            if(self.stride > .8 or self.stride < 0):
+                self.dF_old = dF
+            if self.stride > 0.8 or self.stride < 0:
                 self.stride = 0
                 print("Warning, Newton output has exceeded range", self.stride)
             return self.stride
-        elif self.stride_mode == "BFGS": #LBFGS
+        elif self.stride_mode == "BFGS":  # LBFGS
             # TODO: implement this
             return self.stride
-        else: # self.stride_mode == "Golden":
+        else:  # self.stride_mode == "Golden":
             """
             Golden Section Search
             https://en.wikipedia.org/wiki/Golden-section_search
@@ -227,20 +228,20 @@ class PT(MPPT):
 
             if cycle == 0:
                 # find l1
-                self.l1 = r-(r-l)*self.phi
+                self.l1 = r - (r - l) * self.phi
                 self.stride = self.l1
                 self.cycle += 1
             elif cycle == 1:
                 # find l2
-                self.l1_pow = i_in*v_in
-                self.l2 = (r-l)*self.phi+l
+                self.l1_pow = i_in * v_in
+                self.l2 = (r - l) * self.phi + l
                 self.stride = self.l2
                 self.cycle += 1
             else:
-                if cycle == 2: # updated l2 in previous round
-                    self.l2_pow = i_in*v_in
-                elif cycle == 3: # updated l1 in previous round
-                    self.l1_pow = i_in*v_in
+                if cycle == 2:  # updated l2 in previous round
+                    self.l2_pow = i_in * v_in
+                elif cycle == 3:  # updated l1 in previous round
+                    self.l1_pow = i_in * v_in
                 else:
                     print("[ERROR] I shouldn't be here.")
 
@@ -253,7 +254,7 @@ class PT(MPPT):
                     self.l2_pow = self.l1_pow
                     # find next l1
                     [l, r] = self.bounds
-                    self.l1 = r-(r-l)*self.phi
+                    self.l1 = r - (r - l) * self.phi
                     self.stride = self.l1
                     self.cycle = 3
                 else:
@@ -264,7 +265,7 @@ class PT(MPPT):
                     self.l1_pow = self.l2_pow
                     # find next x1
                     [l, r] = self.bounds
-                    self.l2 = (r-l)*self.phi+l
+                    self.l2 = (r - l) * self.phi + l
                     self.stride = self.l2
                     self.cycle = 2
 

@@ -244,9 +244,7 @@ class Simulation:
                 cur_set_irrad[TEMP].append(temp)
                 cur_set_irrad[IRRAD].append(irrad)
 
-    def init_display(
-        self, num_cells=1, cycle_start=0, cycle_end=0, time_step=1
-    ):
+    def init_display(self, num_cells=1, cycle_start=0, cycle_end=0, time_step=1):
         """
         init_display TODO: manage num_cells to extend bounds
         sets up the display window. Call once (globally) before display.
@@ -267,11 +265,7 @@ class Simulation:
 
         # widget 1 - source characteristics
         self.plt = self.layout.addPlot(
-            title="Source Characteristics Over Time",
-            row=0,
-            col=0,
-            rowspan=1,
-            colspan=1,
+            title="Source Characteristics Over Time", row=0, col=0, rowspan=1, colspan=1
         )
         self.plt.addLegend()
         self.voltage1 = self.plt.plot(
@@ -347,11 +341,7 @@ class Simulation:
 
         # widget 3 - mppt characteristics
         self.plt3 = self.layout.addPlot(
-            title="MPPT Characteristics Over Time",
-            row=1,
-            col=0,
-            rowspan=1,
-            colspan=1,
+            title="MPPT Characteristics Over Time", row=1, col=0, rowspan=1, colspan=1
         )
         self.plt3.addLegend()
         self.voltage2 = self.plt3.plot(
@@ -377,11 +367,7 @@ class Simulation:
 
         # widget 4 - Power Comparison
         self.plt4 = self.layout.addPlot(
-            title="Power Comparison Over Time",
-            row=1,
-            col=1,
-            rowspan=1,
-            colspan=1,
+            title="Power Comparison Over Time", row=1, col=1, rowspan=1, colspan=1
         )
         self.plt4.addLegend()
         self.power3 = self.plt4.plot(
@@ -760,9 +746,7 @@ class Simulation:
             for item in array:
                 item2 = {
                     "pos": [float(item[0]), float(item[1])],
-                    "brush": pg.mkBrush(
-                        int(item[2]), int(item[3]), int(item[4])
-                    ),
+                    "brush": pg.mkBrush(int(item[2]), int(item[3]), int(item[4])),
                 }
                 array_formatted.append(item2)
             scatterPoints = pg.ScatterPlotItem(
@@ -773,5 +757,7 @@ class Simulation:
 
     def save_model(self):
         with open("results.csv", "ab") as f:
-            a = np.transpose(np.asarray([self.cycles, self.disp_pDiffA])) # or disp_pDiff or power2
+            a = np.transpose(
+                np.asarray([self.cycles, self.disp_pDiffA])
+            )  # or disp_pDiff or power2
             np.savetxt(f, a, delimiter=",", fmt="%.4f")
