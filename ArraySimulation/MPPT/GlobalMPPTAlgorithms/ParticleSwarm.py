@@ -20,31 +20,143 @@ from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
 )
 
 class Particle():
+    """
+    Class that represents an agent in the Particle Swarm Optimization. Each agent travels to a voltage value and calculates the power at the voltage and reports it to the swarm.
+    The agent then takes a step in some direction of the PV curve depending on:
+        - Its last movement (inertia)
+        - Its current best voltage value for power
+        - The swarm's global best voltage value for power.
+    """
     def __init__(self, xPos, vel):
+        """
+        Constructor for a Particle in the Particle Swarm Optimization algorithm.
+
+        Parameters
+        ----------
+        xPos : float
+            its initial x position.
+        vel : float
+            its initial velcoity.
+        
+        Returns
+        -------
+        None.
+        """
         self.personalBest = 0.0
         self.personalBestVolt = 0.0
         self.xPos = xPos
         self.vel = vel
     
     def changeXPos(self,vel):
+        """
+        Given a velocity vector, change the current voltage position of the agent
+
+        Parameters
+        ----------
+        vel : float
+            The velocity vector of the agent
+
+        Returns
+        -------
+        None.
+        """
         self.xPos += vel
     
     def changeVel(self, newVel):
+        """
+        Set the velocity vector of the agent to its new value
+
+        Parameters
+        ----------
+        newVel : float
+            The new velocity vector of the agent.
+
+        Returns
+        -------
+        None.
+        """
+
         self.vel = newVel
     
     def getPBest(self):
+        """
+        Return the power value of the best position on the curve the agent has found
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        personalBest : float
+            The best power value that the agent has found.
+        """
+
         return self.personalBest
 
     def getVoltBest(self):
+        """
+        Returns the voltage value of the best position on the curve the agent has found
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        personalBestVolt : float
+            The voltage value of the best position on the curve the agent has found.
+        """
+
         return self.personalBestVolt
 
     def getXPos(self):
+        """
+        Returns the current voltage value the agent is at.
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        xPos : float
+            The current voltage value of the agent.
+        """
+
         return self.xPos
     
     def getVel(self):
+        """
+        Return the current velocity of the agent
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        vel : float
+            The current velocity vector of the agent.
+        """
+        
         return self.vel
 
     def changePBest(self, newBest, newBestVolt):
+        """
+        Updates the personal best values of the agent
+
+        Parameters
+        ----------
+        newBest : float
+            The power value of the new best point on the curve the agent found.
+        newBestVolt : float
+            The voltage value of the new best point on the curve the agent found.
+
+        Returns
+        -------
+        None.
+        """
         self.personalBest = newBest
         self.personalBestVolt = newBestVolt
     def __str__(self):
@@ -59,7 +171,7 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
     NUM_AGENTS = 4
     C1 = 0.02
     C2 = 0.5
-    W = 0.4
+    W = 0.35
 
     def __init__(self, 
         numCells=1, 
@@ -297,12 +409,13 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
         vRef : float
             array voltage to output
         """
+        
         if(self.totalCycle <= 45):
             vRef =  self.agentUpdate(arrVoltage,arrVoltage, irradiance, temperature)
-            print(f"Cycle {self.totalCycle}")
-            for i in range(len(self.agents)):
-                print("Particle" + str(i))
-                print(self.agents[i])
+            # print(f"Cycle {self.totalCycle}")
+            # for i in range(len(self.agents)):
+            #     print("Particle" + str(i))
+            #     print(self.agents[i])
         else:
             if(self.startLocal):
                 vRef = self.gBestVolt
@@ -319,7 +432,25 @@ class ParticleSwarm(GlobalMPPTAlgorithm):
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
+                needsChange = self.checkEnvironmentalChanges(irradiance)
+                print(self.runningHistory)
+                if(needsChange):
+                    print("hello")
+                    self.gBest = 0.0
+                    self.gBestVolt = 0.0
+                    self.agents.clear()
+                    self.runningHistory.clear()
+                    self.goForward = True
+                    self._setup = True
+                    self.startLocal = True
+                    self.kick = True
+                    self.totalCycle = 0
+                    interval = GlobalMPPTAlgorithm.MAX_VOLTAGE/5
+                    for i in range(ParticleSwarm.NUM_AGENTS):
+                        self.agents.append(Particle((random.random()*interval)+(interval*i), 0.0))
+                    self.cycle = -1
             self.totalCycle += 1
+            # print(self.totalCycle)
             return vRef
         return vRef
     def reset(self):

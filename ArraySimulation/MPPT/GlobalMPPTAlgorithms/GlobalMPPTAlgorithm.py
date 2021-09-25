@@ -194,3 +194,19 @@ class GlobalMPPTAlgorithm:
         The left and right bounds for the global maximum of the P-V curve.
         """
         return (0.0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
+
+    def checkEnvironmentalChanges(self, irradiance):
+        if(len(self.runningHistory) < 10):
+            self.runningHistory.append(irradiance)
+            return False
+        else:
+            average = sum(self.runningHistory)/len(self.runningHistory)
+            newAverage = average - (self.runningHistory[0]/10) + (irradiance/10)
+            percentChange = abs(irradiance - average)/average
+            print(average, newAverage, percentChange)
+            if(percentChange > 0.1):
+                return True
+            else:
+                self.runningHistory.remove(self.runningHistory[0])
+                self.runningHistory.append(irradiance)
+                return False

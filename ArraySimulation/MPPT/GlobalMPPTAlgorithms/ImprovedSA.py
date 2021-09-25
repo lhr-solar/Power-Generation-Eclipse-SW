@@ -114,64 +114,38 @@ class ImprovedSA(GlobalMPPTAlgorithm):
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
-                if(len(self.runningHistory) == 10): #running average sample to check if we have had a drastic change in the power output
-                    # previousAverage = sum(self.runningHistory)/len(self.runningHistory)
-                    self.runningHistory.remove(self.runningHistory[0]) #pop the oldest value out and add the new value in
-                    self.runningHistory.append(arrCurrent * arrVoltage)
-                    if(len(self.pastHistories)==10):
-                        pastAverage = self.pastHistories[0]
-                        self.pastHistories.remove(self.pastHistories[0])
-                        self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory)) #all past averages
-                        if((self.pastHistories[len(self.pastHistories)-1] - pastAverage)/pastAverage <= -0.3): #if drastic change in power output, then reinitialize the simulated annealing
-                            vRef = 0
-                            self.cycle = 0
-                            self.temp = ImprovedSA.INIT_TEMP
-                            self.startLocal = True
-                            self.kick = True
-                            self.runningHistory.clear()
-                            self.pastHistories.clear()
-                            return vRef
-                    else:
-                        self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
-                # averageNow = sum(self.runningHistory)/len(self.runningHistory)
-                # if((averageNow - previousAverage)/previousAverage <= -0.1):
-                #     self.sweeping = True
-                #     vRef = 0
-                #     self.setup = True
-                #     self.runningHistory.clear()
-                #     return vRef
-
-                else:
-                    self.runningHistory.append(arrCurrent*arrVoltage)
-            # else:
-            #     arrPower = arrVoltage * arrCurrent
-            #     print("Vold: "+ str(self.vOld) + " arrVoltage: " +str(arrVoltage))
-            #     print("Array Power: " + str(arrPower) + " Old Power: "+ str(self.pOld))
-            #     if arrPower > self.pOld:
-            #         self.vOld = arrVoltage
-            #         self.iOld = arrCurrent
-            #         self.pOld = arrVoltage * arrCurrent
-            #         self.irrOld = irradiance
-            #         self.tOld = temperature
-            #     else:
-            #         p_r = math.exp(SimulatedAnnealing.k*(arrPower - self.pOld)/self.temp)
-            #         print("Vold: "+ str(self.vOld) + " arrVoltage: " +str(arrVoltage))
-            #         print("Array Power: " + str(arrPower) + " Old Power: "+ str(self.pOld) + " P_r: "+str(p_r))
-            #         diceRoll = random.random()
-            #         if(diceRoll < p_r):
-            #             self.vOld = arrVoltage
-            #             self.iOld = arrCurrent
-            #             self.pOld = arrVoltage * arrCurrent
-            #             self.irrOld = irradiance
-            #             self.tOld = temperature
-            #     if self.cycle == 4:
-            #         self.temp = self.temp * SimulatedAnnealing.ALPHA
-            #         self.cycle = 0
-            #     self.cycle+=1
-            #     searchRange = GlobalMPPTAlgorithm.MAX_VOLTAGE * (self.temp/SimulatedAnnealing.INIT_TEMP)
-            #     leftBound = max(self.vOld - (searchRange/2),0)
-            #     rightBound = min(self.vOld + (searchRange/2), GlobalMPPTAlgorithm.MAX_VOLTAGE)
-            #     vRef = round(random.uniform(leftBound, rightBound),2)
+                needsChange = self.checkEnvironmentalChanges(irradiance)
+                print(self.runningHistory)
+                if(needsChange):
+                    vRef = 0
+                    self.cycle = 0
+                    self.temp = ImprovedSA.INIT_TEMP
+                    self.startLocal = True
+                    self.kick = True
+                    self.runningHistory.clear()
+                    return vRef
+                # if(len(self.runningHistory) == 10): #running average sample to check if we have had a drastic change in the power output
+                #     # previousAverage = sum(self.runningHistory)/len(self.runningHistory)
+                #     self.runningHistory.remove(self.runningHistory[0]) #pop the oldest value out and add the new value in
+                #     self.runningHistory.append(arrCurrent * arrVoltage)
+                #     if(len(self.pastHistories)==10):
+                #         pastAverage = self.pastHistories[0]
+                #         self.pastHistories.remove(self.pastHistories[0])
+                #         self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory)) #all past averages
+                #         if((self.pastHistories[len(self.pastHistories)-1] - pastAverage)/pastAverage <= -0.3): #if drastic change in power output, then reinitialize the simulated annealing
+                #             vRef = 0
+                #             self.cycle = 0
+                #             self.temp = ImprovedSA.INIT_TEMP
+                #             self.startLocal = True
+                #             self.kick = True
+                #             self.runningHistory.clear()
+                #             self.pastHistories.clear()
+                #             return vRef
+                #     else:
+                #         self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
+                # else:
+                #     self.runningHistory.append(arrCurrent*arrVoltage)
+        
         return vRef
                 
 
