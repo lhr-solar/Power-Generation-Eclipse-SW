@@ -100,4 +100,5 @@ class BisectionStride(Stride):
 
         self.vOld = arrVoltage
         self.pOld = pIn
+    
         return max(abs(stride), self._minStride)

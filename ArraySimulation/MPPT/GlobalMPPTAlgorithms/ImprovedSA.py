@@ -146,27 +146,6 @@ class ImprovedSA(GlobalMPPTAlgorithm):
                     self.kick = True
                     self.runningHistory.clear()
                     return vRef
-                # if(len(self.runningHistory) == 10): #running average sample to check if we have had a drastic change in the power output
-                #     # previousAverage = sum(self.runningHistory)/len(self.runningHistory)
-                #     self.runningHistory.remove(self.runningHistory[0]) #pop the oldest value out and add the new value in
-                #     self.runningHistory.append(arrCurrent * arrVoltage)
-                #     if(len(self.pastHistories)==10):
-                #         pastAverage = self.pastHistories[0]
-                #         self.pastHistories.remove(self.pastHistories[0])
-                #         self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory)) #all past averages
-                #         if((self.pastHistories[len(self.pastHistories)-1] - pastAverage)/pastAverage <= -0.3): #if drastic change in power output, then reinitialize the simulated annealing
-                #             vRef = 0
-                #             self.cycle = 0
-                #             self.temp = ImprovedSA.INIT_TEMP
-                #             self.startLocal = True
-                #             self.kick = True
-                #             self.runningHistory.clear()
-                #             self.pastHistories.clear()
-                #             return vRef
-                #     else:
-                #         self.pastHistories.append(sum(self.runningHistory)/len(self.runningHistory))
-                # else:
-                #     self.runningHistory.append(arrCurrent*arrVoltage)
 
         return vRef
 
