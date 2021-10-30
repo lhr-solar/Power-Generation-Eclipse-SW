@@ -21,13 +21,32 @@ from ArraySimulation.MPPT.GlobalMPPTAlgorithms.GlobalMPPTAlgorithm import (
 
 
 class TrapeziumMethod(GlobalMPPTAlgorithm):
+    """
+    Class to implement the Trapezium Method Algorithm for Maximum Power Point Tracking
+    (https://ieeexplore.ieee.org/document/9314467)
+    """
     
     DV = .05
     def __init__(self, numCells=1, MPPTLocalAlgoType="Default", strideType="Variable"):
         super(TrapeziumMethod, self).__init__(
             numCells, "Trapezium Method", MPPTLocalAlgoType, strideType
         )  
+        """
+        Constructor for a Trapezoid in the Trapezium Method algorithm
 
+        Parameters
+        ----------
+        numCells : int
+            number of cells
+        MPPTLocalAlgoType : str
+            the local algorithm to use
+        strideType : str
+            Stride to use for perturb and observe
+
+        Returns
+        -------
+        None.
+        """
         self.pref = 0
         self.aref = 0
         self.vref = 0
@@ -37,6 +56,26 @@ class TrapeziumMethod(GlobalMPPTAlgorithm):
         self.kick = True
         self.areas=[]
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
+        """
+        Method that updates output voltage of the array.
+        
+        Parameters
+        ----------
+        arrVoltage : float
+            Array voltage of the current cycle
+        arrCurrent : float
+            Array current of the current cycle
+        irradiance : float
+            Irradiance of the current cycle
+        temperature : float
+            Temperature of the current cycle
+
+        Returns
+        -------
+        vref : float
+            array voltage to output
+        """
+
         vref = arrVoltage
         arrpower = arrVoltage * arrCurrent
         if (self.findingtrapezoids == True):
@@ -81,9 +120,34 @@ class TrapeziumMethod(GlobalMPPTAlgorithm):
                 self.iOld = arrCurrent
             else:
                 vref = self._model.getReferenceVoltage(arrVoltage,arrCurrent,irradiance,temperature)
+                needsChange = self.checkEnvironmentalChanges(irradiance)
+                print(self.runningHistory)
+                if needsChange:
+                    vref = 0
+                    self.pref = 0
+                    self.aref = 0
+                    self.vref = 0
+                    self.aold = 0
+                    self.findingtrapezoids = True
+                    self.startLocal = True  
+                    self.kick = True
+                    self.runningHistory.clear()
+                    return vref
             return vref
             
 def reset(self):
+     """
+        Method to reset the pipeline
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        None.
+        """
+
     super(TrapeziumMethod, self).reset()
     self.pref = 0
     self.aref = 0
