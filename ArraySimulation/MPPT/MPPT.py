@@ -21,6 +21,7 @@ from ArraySimulation.MPPT.GlobalMPPTAlgorithms.SimulatedAnnealing import (
 )
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.ImprovedSA import ImprovedSA
 from ArraySimulation.MPPT.GlobalMPPTAlgorithms.ParticleSwarm import ParticleSwarm
+from ArraySimulation.MPPT.GlobalMPPTAlgorithms.TrapeziumMethod import TrapeziumMethod
 
 
 class MPPT:
@@ -73,6 +74,8 @@ class MPPT:
             self._model = GlobalMPPTAlgorithm(
                 numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType
             )
+        elif MPPTGlobalAlgoType == "Trapezium Method":
+            self._model = TrapeziumMethod(numCells, MPPTLocalAlgoType, strideType)
         else:
             self._model = GlobalMPPTAlgorithm(
                 numCells, MPPTGlobalAlgoType, MPPTLocalAlgoType, strideType

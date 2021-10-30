@@ -58,6 +58,7 @@ class MPPTView(View):
         "Simulated Annealing",
         "Improved Simulated Annealing",
         "Particle Swarm Optimization",
+        "Trapezium Method",
         "None",
     ]
 

@@ -25,7 +25,7 @@ class TrapeziumMethod(GlobalMPPTAlgorithm):
     DV = .05
     def __init__(self, numCells=1, MPPTLocalAlgoType="Default", strideType="Variable"):
         super(TrapeziumMethod, self).__init__(
-            numCells, "Trapezium Method ", MPPTLocalAlgoType, strideType
+            numCells, "Trapezium Method", MPPTLocalAlgoType, strideType
         )  
 
         self.pref = 0
@@ -35,37 +35,42 @@ class TrapeziumMethod(GlobalMPPTAlgorithm):
         self.findingtrapezoids = True
         self.startLocal = True
         self.kick = True
+        self.areas=[]
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
         vref = arrVoltage
         arrpower = arrVoltage * arrCurrent
         if (self.findingtrapezoids == True):
-            currentarea = (DV * 0.5)*(arrPower +  self.pOld) 
+            # print("Hello")
+            currentarea = (TrapeziumMethod.DV * 0.5)*(arrpower +  self.pOld) 
+            self.areas.append({currentarea:[self.vOld, arrVoltage]})
             DA = currentarea - self.aold
-            DP = arrPower - self.pOld
-            if (DA >= 0):
+            DP = arrpower - self.pOld
+            if (DA > 0):
                 self.aref = currentarea
                 self.pref = self.pOld
                 self.vref = self.vOld
-                if (currentarea >= self.aref and arrPower >= self.pref):
-                    self.pref = arrPower
+                if (currentarea >= self.aref and arrpower >= self.pref):
+                    self.pref = arrpower
                     self.vref = arrVoltage
             else:
-                if (currentarea >= self.aref and arrPower >= self.pref):
-                    self.pref = arrPower
+                if (currentarea >= self.aref and arrpower >= self.pref):
+                    self.pref = arrpower
                     self.vref = arrVoltage
             vref = vref + TrapeziumMethod.DV
             self.vOld = arrVoltage
-            self.pOld = arrPower
+            self.pOld = arrpower
             self.aold = currentarea
             if(vref > GlobalMPPTAlgorithm.MAX_VOLTAGE):
-                findingtrapezoids = False
+                self.findingtrapezoids = False
+                print(self.aref, currentarea)
                 return self.vref
             return vref
         else:
             if self.startLocal:
-                vref = self.vOld
+                print(self.areas)
+                vref = self.vref
                 self.startLocal = False  # start converging to global maximum
-                self._model.setup(self.vOld, 0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
+                self._model.setup(self.vref, 0, GlobalMPPTAlgorithm.MAX_VOLTAGE)
             elif self.kick:  # start local mppt algorithm.
                 vref = arrVoltage + 0.02
                 self.kick = False
@@ -78,12 +83,12 @@ class TrapeziumMethod(GlobalMPPTAlgorithm):
                 vref = self._model.getReferenceVoltage(arrVoltage,arrCurrent,irradiance,temperature)
             return vref
             
-     def reset(self):
-        super(TrapeziumMethod, self).reset()
-        self.pref = 0
-        self.aref = 0
-        self.vref = 0
-        self.aold = 0
-        self.findingtrapezoids = True
-        self.startLocal = True
-        self.kick = True
+def reset(self):
+    super(TrapeziumMethod, self).reset()
+    self.pref = 0
+    self.aref = 0
+    self.vref = 0
+    self.aold = 0
+    self.findingtrapezoids = True
+    self.startLocal = True  
+    self.kick = True
