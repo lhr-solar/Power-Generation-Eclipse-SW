@@ -136,19 +136,19 @@ class TrapeziumMethod(GlobalMPPTAlgorithm):
             return vref
             
 def reset(self):
-     """
-        Method to reset the pipeline
+    """
+    Method to reset the pipeline
 
-        Parameters
-        ----------
-        None.
+    Parameters
+    ----------
+    None.
 
-        Returns
-        -------
-        None.
-        """
-
-    super(TrapeziumMethod, self).reset()
+    Returns
+    -------
+    None.
+    """
+    super(TrapeziumMethod,self).reset()
+    # super(TrapeziumMethod, self).reset()
     self.pref = 0
     self.aref = 0
     self.vref = 0

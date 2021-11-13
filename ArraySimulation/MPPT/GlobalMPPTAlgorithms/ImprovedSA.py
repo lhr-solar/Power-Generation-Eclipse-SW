@@ -42,6 +42,22 @@ class ImprovedSA(GlobalMPPTAlgorithm):
         super(ImprovedSA, self).__init__(
             numCells, "Improved SA", MPPTLocalAlgoType, strideType
         )
+        """
+        Contructor of the Simulated Annealing
+
+        Parameters
+        ----------
+        numCells : int
+            number of cells
+        MPPTLocalAlgoType : str
+            the local algorithm to use
+        strideType : str
+            Stride to use for perturb and observe
+
+        Returns
+        -------
+        None
+        """
         self.temp = ImprovedSA.INIT_TEMP
         # self.step = ImprovedSA.INIT_STEP
         # self.no_accept = 0
@@ -59,6 +75,25 @@ class ImprovedSA(GlobalMPPTAlgorithm):
         self.kick = True  # kickstart the local algorithm if true
 
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
+        """
+        Method that updates output voltage of the array.
+
+        Parameters
+        ----------
+        arrVoltage : float
+            Array voltage of the current cycle
+        arrCurrent : float
+            Array current of the current cycle
+        irradiance : float
+            Irradiance of the current cycle
+        temperature : float
+            Temperature of the current cycle
+
+        Returns
+        -------
+        vRef : float
+            array voltage to output
+        """
         vRef = arrVoltage
         if self.temp > 0.2:
             if self.cycle == 0:
@@ -150,6 +185,17 @@ class ImprovedSA(GlobalMPPTAlgorithm):
         return vRef
 
     def reset(self):
+        """
+        Method to reset the pipeline
+
+        Parameters
+        ----------
+        None.
+
+        Returns
+        -------
+        None.
+        """
         super(ImprovedSA, self).reset()
         self.temp = ImprovedSA.INIT_TEMP
         self.step = ImprovedSA.INIT_STEP
