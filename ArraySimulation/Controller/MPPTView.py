@@ -27,12 +27,7 @@ It shows the following IV-PV Curve graphs:
 # Library Imports.
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import (
-    QGridLayout,
-    QLabel,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWidget
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
@@ -58,7 +53,14 @@ class MPPTView(View):
     MODELS = ["Ideal", "Nonideal"]
 
     # List of Global MPPT algorithms that can be used.
-    MPPT_GLOBAL_MODELS = ["Voltage Sweep"]
+    MPPT_GLOBAL_MODELS = [
+        "Voltage Sweep",
+        "Simulated Annealing",
+        "Improved Simulated Annealing",
+        "Particle Swarm Optimization",
+        "Trapezium Method",
+        "None",
+    ]
 
     # List of Local MPPT algorithms that can be used.
     MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
@@ -239,17 +241,10 @@ class MPPTView(View):
         )
 
         self._console.addTextbox(
-            "MaxCycleTextbx",
-            (0, 1),
-            (1, 1),
-            "Maximum cycle to execute to.",
+            "MaxCycleTextbx", (0, 1), (1, 1), "Maximum cycle to execute to."
         )
 
-        self._console.addLabel(
-            "StatusLbl",
-            (1, 0),
-            (1, 2)
-        )
+        self._console.addLabel("StatusLbl", (1, 0), (1, 2))
 
         self._console.addComboBox("ModelSelection", (0, 2), (1, 1), MPPTView.MODELS)
         self._console.addComboBox(
@@ -311,7 +306,6 @@ class MPPTView(View):
         MPPTStrideAlgo = self._console.getReference(
             "AlgorithmStrideSelection"
         ).currentText()
-
         maxCycle = self._console.getReference("MaxCycleTextbx").text()
         maxCycleRes = self._validate("MaxCycle", maxCycle)
 
@@ -335,7 +329,10 @@ class MPPTView(View):
                 "actualPower": 0,  # Current Cycle Actual Power
                 "theoreticalPower": 0,  # Current Cycle Theoretical Power
                 "cycleData": [0, 0],  # [Num cycles below threshold, Total cycles]
-                "energyData": [0, 0],  # [Total Energy Generated, Total Theoretical Energy]
+                "energyData": [
+                    0,
+                    0,
+                ],  # [Total Energy Generated, Total Theoretical Energy]
             }
 
             self.pipelineData = {
@@ -371,9 +368,9 @@ class MPPTView(View):
             cycleResults["mpptOutput"][idx], 2
         )  # TODO: I don't think we should be doing rounding here. Do it in GlobalMPPT and PVSource instead.
         IVList = cycleResults["sourceOutput"][idx]["IV"]
-
+        # print("VREF: " + str(VREF))
+        # print(IVList)
         MPPTCurrOut = [curr for (volt, curr) in IVList if round(volt, 2) == VREF]
-
         # Percent Yield
         powerStore["actualPower"] = VREF * MPPTCurrOut[0]
         powerStore["theoreticalPower"] = (
@@ -516,7 +513,7 @@ class MPPTView(View):
         self._datastore["VRefPosition"].addPoints(
             "MPPTVREF",
             [VREF, VREF, vMax, vMax],
-            [MPPTCurrOut[0], VREF * MPPTCurrOut[0], iMax, vMax * iMax]
+            [MPPTCurrOut[0], VREF * MPPTCurrOut[0], iMax, vMax * iMax],
         )
 
     def _plotPowerComparison(self, MPPTCurrOut):
@@ -547,6 +544,7 @@ class MPPTView(View):
             cycleResults["cycle"][idx],
             cycleResults["mpptOutput"][idx] * MPPTCurrOut[0],
         )
+        # print(str(cycleResults["cycle"][idx]) + ", "  + str(cycleResults["mpptOutput"][idx] * MPPTCurrOut[0]) + ", "+ str(cycleResults["sourceOutput"][idx]["edge"][2][0]*cycleResults["sourceOutput"][idx]["edge"][2][1]))
 
     def _plotEfficiencyMetrics(self, percentYield, percentThreshold, trackingEff):
         """
@@ -568,11 +566,7 @@ class MPPTView(View):
         idx = self.pipelineData["executionIdx"]
 
         # Plot Efficiencies.
-        self._datastore["Efficiency"].addPoint(
-            "percentYield",
-            idx,
-            percentYield,
-        )
+        self._datastore["Efficiency"].addPoint("percentYield", idx, percentYield)
         self._datastore["Efficiency"].addPoint("cyclesThreshold", idx, percentThreshold)
         self._datastore["Efficiency"].addPoint("trackingEff", idx, trackingEff)
 
@@ -604,7 +598,7 @@ class MPPTView(View):
         elif _type == "MaxCycle":
             try:
                 valCandidate = int(value)
-                if (0 < valCandidate):
+                if 0 < valCandidate:
                     val = valCandidate
                 else:
                     errors.append(
@@ -618,9 +612,7 @@ class MPPTView(View):
                     )
             except ValueError:
                 errors.append(
-                    "The max cycle value is not of type int: "
-                    + str(val)
-                    + "."
+                    "The max cycle value is not of type int: " + str(val) + "."
                 )
         else:
             errors.append("The input type is not defined: " + _type + ".")

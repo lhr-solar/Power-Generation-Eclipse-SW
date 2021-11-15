@@ -49,40 +49,64 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         # Sets the bounds for the first cycle of the LocalMPPTAlgorithm
         self.setup = True
 
-        self.stride = 0.01
+        self.stride = 0.02
         self.vOld = 0.0
         self.iOld = 0.0
         self.tOld = 0.0
         self.irrOld = 0.0
         self.pOld = 0.0
-    #TODO: round the values at a lower level like PVCell or MPPTAlgorithm instead of rounding the hell out of everything here
+        self.maxPower = 0.0
+
+    # TODO: round the values at a lower level like PVCell or MPPTAlgorithm instead of rounding the hell out of everything here
     def getReferenceVoltage(self, arrVoltage, arrCurrent, irradiance, temperature):
-        vRef = round(arrVoltage,2)
-        if round(arrVoltage,2) < GlobalMPPTAlgorithm.MAX_VOLTAGE and self.sweeping:
-            vRef = round(self._sweep(round(arrVoltage,2), arrCurrent, irradiance, temperature),2)
+        # print(irradiance)
+        vRef = round(arrVoltage, 2)
+        if round(arrVoltage, 2) < GlobalMPPTAlgorithm.MAX_VOLTAGE and self.sweeping:
+            vRef = round(
+                self._sweep(round(arrVoltage, 2), arrCurrent, irradiance, temperature),
+                2,
+            )
         else:
             (lBound, rBound) = self._getBounds()
+            # print("Left Bound: "+ str(lBound) + " Right Bound: "+ str(rBound))
             if self.setup:
                 self.sweeping = False
                 maxPower = max(self.power_peaks)
                 maxVoltage = self.voltage_peaks[self.power_peaks.index(maxPower)]
-                #TODO: Look at this later
+                print(self.voltage_peaks)
+                print(self.power_peaks)
+                print(self.voltage_troughs)
+                # TODO: Look at this later
                 self._model.setup(maxVoltage, lBound, rBound)
                 self.setup = False
-
+            needsChange = self.checkEnvironmentalChanges(irradiance)
+            if needsChange:
+                print("Hello")
+                self.sweeping = True
+                vRef = 0
+                self.setup = True
+                self.runningHistory.clear()
+                self.power_peaks.clear()
+                self.voltage_peaks.clear()
+                self.voltage_troughs = [0]
+                self.increasing = True
+                return vRef
             if arrVoltage >= GlobalMPPTAlgorithm.MAX_VOLTAGE:
                 vRef = lBound
             elif arrVoltage == lBound:
-                #TODO: Optimize this out
+                # TODO: Optimize this out
                 vRef = lBound + 0.02
-            else:
+            elif vRef != 0:
                 vRef = self._model.getReferenceVoltage(
                     arrVoltage, arrCurrent, irradiance, temperature
                 )
+                # print("Vref: "+str(vRef))
                 if vRef < lBound:
                     vRef = lBound
                 if vRef > rBound:
                     vRef = rBound
+        # if(self.sweeping == False):
+        #     print(sum(self.runningHistory)/len(self.runningHistory))
         return vRef
 
     def _sweep(self, arrVoltage, arrCurrent, irradiance, temperature):
@@ -136,28 +160,33 @@ class VoltageSweep(GlobalMPPTAlgorithm):
         The left and right bounds for the global maximum of the P-V curve.
         """
         maxPower = max(self.power_peaks)
+        self.maxPower = maxPower
         index = self.power_peaks.index(maxPower)
         maxVoltage = self.voltage_peaks[index]
-        (leftBound, rightBound) = (
-            0,
-            0
-        )
-        if(index == 0):
-            leftBound = round(self.voltage_peaks[index]/2,2)
+        (leftBound, rightBound) = (0, 0)
+        if index == 0:
+            leftBound = round(self.voltage_peaks[index] / 2, 2)
         else:
-            leftBound = max(self.voltage_troughs[index], (self.voltage_peaks[index] + self.voltage_peaks[index-1])/2)
-        if(index == len(self.power_peaks)-1):
+            leftBound = max(
+                self.voltage_troughs[index],
+                (self.voltage_peaks[index] + self.voltage_peaks[index - 1]) / 2,
+            )
+        if index == len(self.power_peaks) - 1:
             rightBound = GlobalMPPTAlgorithm.MAX_VOLTAGE
         else:
-            rightBound = min(self.voltage_troughs[index + 1] - 0.02, (self.voltage_peaks[index] + self.voltage_peaks[index+1])/2)
-        #TODO: 0.1 is a placeholder for now. Will probably have to be some factor of the max voltage
+            rightBound = min(
+                self.voltage_troughs[index + 1] - 0.02,
+                (self.voltage_peaks[index] + self.voltage_peaks[index + 1]) / 2,
+            )
+        # TODO: 0.1 is a placeholder for now. Will probably have to be some factor of the max voltage
         return (leftBound, rightBound)
 
     def reset(self):
         super(VoltageSweep, self).reset()
         self.stride = 0.01
-        self.voltage_peaks = [0]
+        self.voltage_peaks = []
         self.power_peaks = [0]
         self.sweeping = True
         self.increasing = True
         self.setup = True
+        self.maxPower = 0.0

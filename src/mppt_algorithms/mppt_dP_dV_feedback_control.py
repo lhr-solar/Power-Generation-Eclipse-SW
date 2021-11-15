@@ -8,6 +8,8 @@ Last Modified: 5/28/20
 Description: dP/dV Feedback Control Algorithm.
 """
 from .mppt import MPPT
+
+
 class FC(MPPT):
 
     # overload iterate method
@@ -35,18 +37,22 @@ class FC(MPPT):
                 - Section B, Implement of the control algorithm
         """
         if (cycle % self.sample_rate) == 0:
-            error = .05
+            error = 0.05
             p_in = v_in * i_in
             dP = p_in - self.p_old
             dV = v_in - self.v_old
 
             dV_ref = self.calc_perturb_amt(self.v_ref, v_in, i_in, t_in)
-            if dV == 0: # we reached the mppt in the last iteration, but we need to keep moving in case mppt changes
-                self.v_ref += .005
-            elif abs(dP/dV) < error: # we reached the mppt in this iteration, don't move
+            if (
+                dV == 0
+            ):  # we reached the mppt in the last iteration, but we need to keep moving in case mppt changes
+                self.v_ref += 0.005
+            elif (
+                abs(dP / dV) < error
+            ):  # we reached the mppt in this iteration, don't move
                 pass
             else:
-                if dP/dV > 0:
+                if dP / dV > 0:
                     self.v_ref += dV_ref
                 else:
                     self.v_ref -= dV_ref

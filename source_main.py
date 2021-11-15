@@ -30,9 +30,7 @@ def main():
     step_size_t = 0.5
 
     # voltage step size
-    string_step_size_v = input(
-        "Voltage Step Size ['" + str(step_size_v) + "']: "
-    )
+    string_step_size_v = input("Voltage Step Size ['" + str(step_size_v) + "']: ")
     try:
         tmp_step_size_v = float(string_step_size_v)
         step_size_v = tmp_step_size_v
@@ -40,9 +38,7 @@ def main():
         print("Invalid float. Defaulting to", step_size_v, "step size.")
 
     # irradiance step size
-    string_step_size_i = input(
-        "Irradiance Step Size ['" + str(step_size_i) + "']: "
-    )
+    string_step_size_i = input("Irradiance Step Size ['" + str(step_size_i) + "']: ")
     try:
         tmp_step_size_i = float(string_step_size_i)
         step_size_i = tmp_step_size_i
@@ -50,9 +46,7 @@ def main():
         print("Invalid float. Defaulting to", step_size_i, "step size.")
 
     # temperature step size
-    string_step_size_t = input(
-        "Temperature Step Size ['" + str(step_size_t) + "']: "
-    )
+    string_step_size_t = input("Temperature Step Size ['" + str(step_size_t) + "']: ")
     try:
         tmp_step_size_t = float(string_step_size_t)
         step_size_t = tmp_step_size_t
@@ -73,7 +67,7 @@ def main():
 
     string_overlay = "./src/source_models/Cell_Measurements/model.csv"
     if disp_sim:
-        string_is_overlay = input(# TODO: this doesn't default NO properly
+        string_is_overlay = input(  # TODO: this doesn't default NO properly
             "Load irradiance data? File format should be 'V,C,R,G,B', ... - [NO]|YES: "
         )
         if string_is_overlay == "NO":
@@ -112,13 +106,9 @@ def main():
         while temperature <= MAX_TEMPERATURE:
             modules = source.get_modules()
             for module in modules:
-                module[CELL].setup(
-                    "Impulse", impulse=(irradiance, temperature)
-                )
+                module[CELL].setup("Impulse", impulse=(irradiance, temperature))
             # source gets the IV curve for current conditions
-            [characteristics, [v_mpp, i_mpp, p_mpp]] = source.get_source_IV(
-                step_size_v
-            )
+            [characteristics, [v_mpp, i_mpp, p_mpp]] = source.get_source_IV(step_size_v)
 
             bin_num = 0
             for characteristic in characteristics:

@@ -8,6 +8,8 @@ Last Modified: 5/28/20
 Description: Fuzzy Logic Algorithm.
 """
 from .mppt import MPPT
+
+
 class FL(MPPT):
     # TODO: define a linguistic rule table
     # NOTE: rules in the table are based on power convert and user
@@ -34,7 +36,7 @@ class FL(MPPT):
         """
         if (cycle % self.sample_rate) is 0:
             p_in = v_in * i_in
-            err = (p_in - self.p_old)/(v_in - self.v_old)
+            err = (p_in - self.p_old) / (v_in - self.v_old)
             dE = err - self.err_old
 
             # TODO: determine state from rule table

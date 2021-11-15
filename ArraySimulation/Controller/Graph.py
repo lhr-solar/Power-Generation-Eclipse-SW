@@ -144,8 +144,7 @@ class Graph(View):
             )
 
             self._graph[series].setData(
-                x=self._series[series]["data"]["x"],
-                y=self._series[series]["data"]["y"],
+                x=self._series[series]["data"]["x"], y=self._series[series]["data"]["y"]
             )
 
     def addPoints(self, series, datapointsX, datapointsY):
@@ -174,8 +173,7 @@ class Graph(View):
             self._series[series]["data"]["y"] += modifiedDatapointsY
 
             self._graph[series].setData(
-                x=self._series[series]["data"]["x"],
-                y=self._series[series]["data"]["y"],
+                x=self._series[series]["data"]["x"], y=self._series[series]["data"]["y"]
             )
 
     def addSeries(self, series, seriesDict):
@@ -265,8 +263,7 @@ class Graph(View):
             self._series[series]["data"]["y"][idx] = datapointY
 
             self._graph[series].setData(
-                x=self._series[series]["data"]["x"],
-                y=self._series[series]["data"]["y"],
+                x=self._series[series]["data"]["x"], y=self._series[series]["data"]["y"]
             )
 
     def clearSeries(self, series):
@@ -283,8 +280,7 @@ class Graph(View):
             self._series[series]["data"]["y"].clear()
 
             self._graph[series].setData(
-                x=self._series[series]["data"]["x"],
-                y=self._series[series]["data"]["y"],
+                x=self._series[series]["data"]["x"], y=self._series[series]["data"]["y"]
             )
 
     def clearAllSeries(self):
@@ -296,8 +292,7 @@ class Graph(View):
             self._series[series]["data"]["y"].clear()
 
             self._graph[series].setData(
-                x=self._series[series]["data"]["x"],
-                y=self._series[series]["data"]["y"],
+                x=self._series[series]["data"]["x"], y=self._series[series]["data"]["y"]
             )
 
     def updateUI(self):

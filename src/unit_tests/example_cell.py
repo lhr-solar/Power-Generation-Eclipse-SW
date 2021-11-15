@@ -18,11 +18,13 @@ showcase its functionality. It runs a simulation for a single cell.
         efficiencies between algorithms.
 """
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from cell import Cell
 from simulation import Simulation
 from mppt_algorithms.mppt_perturb_and_observe import PandO
+
 
 def main():
     env_regime = [
@@ -57,7 +59,7 @@ def main():
         [185, 1000, 50],
         [190, 1000, 80],
         [195, 1000, 110],
-        [200, 1000, 140]
+        [200, 1000, 140],
     ]
 
     # Nonideal model of a single cell impulse regime
@@ -77,14 +79,14 @@ def main():
     cycle = 0
     max_cycle = 50
     while cycle < max_cycle:
-        if cycle%20 == 0:
+        if cycle % 20 == 0:
             print("\nCycle: " + str(cycle))
-        
+
         # get source power point
         (v_mpp, i_mpp, p_mpp) = cell.get_cell_gmpp()
         # get new values with the existing source after applying reference voltage
         (v_out, i_out, irrad, temp, load) = cell.iterate(v_ref)
-        
+
         # update Simulation
         simulation.add_datapoint(cycle, irrad, temp, load, v_mpp, i_mpp, v_out, i_out)
         # print("[cycle, vsrc, isrc, psrc, vmppt, imppt, pmppt, temp, irrad, load]")
@@ -100,7 +102,8 @@ def main():
     simulation.display(0, max_cycle, sample_rate)
     input("Halted at the end of the cycle " + str(max_cycle))
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     if sys.version_info[0] < 3:
         raise Exception("This program only supports Python 3.")
     main()

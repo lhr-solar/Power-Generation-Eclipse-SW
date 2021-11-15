@@ -32,16 +32,17 @@ from numpy import log as ln
 from src.cell import Cell
 import json
 
-SINGLE  = 1
-DOUBLE  = 2
-QUAD    = 4
-OCT     = 8
+SINGLE = 1
+DOUBLE = 2
+QUAD = 4
+OCT = 8
 
 MOD_NUM = 0
-MOD_TYPE= 1
-CELL    = 2
+MOD_TYPE = 1
+CELL = 2
 
 SOURCE_MODEL_PATH = "./src/source_models/"
+
 
 class Source:
     MAX_CURRENT = 100
@@ -104,7 +105,9 @@ class Source:
 
         elif setup_type == "Array":
             if not regime:
-                print("[CELL] WARN: Array setup type was selected, but regime is an empty list.")
+                print(
+                    "[CELL] WARN: Array setup type was selected, but regime is an empty list."
+                )
                 return False
 
             # create a single cell
@@ -114,7 +117,9 @@ class Source:
 
         elif setup_type == "Impulse":
             if not impulse:
-                print("[CELL] WARN: Impulse setup type was selected, but impulse is an empty tuple.")
+                print(
+                    "[CELL] WARN: Impulse setup type was selected, but impulse is an empty tuple."
+                )
                 return False
 
             # create a single cell
@@ -127,39 +132,48 @@ class Source:
                 data = json.load(f)
 
                 # get number of modules
-                num_modules = int(data['num_modules'])
+                num_modules = int(data["num_modules"])
 
                 # for each module, add a source object
                 for module_index in range(0, num_modules):
-                    module = data['pv_model'][module_index]
+                    module = data["pv_model"][module_index]
 
                     # get module type
                     module_type = 1
-                    if module['module_type'] == '1x1':
+                    if module["module_type"] == "1x1":
                         module_type = SINGLE
-                    elif module['module_type'] == '1x2':
+                    elif module["module_type"] == "1x2":
                         module_type = DOUBLE
-                    elif module['module_type'] == '2x2' or module['module_type'] == '1x4':
+                    elif (
+                        module["module_type"] == "2x2" or module["module_type"] == "1x4"
+                    ):
                         module_type = QUAD
-                    elif module['module_type'] == '2x4':
+                    elif module["module_type"] == "2x4":
                         module_type = OCT
                     else:
                         module_type = SINGLE
 
                     cell = Cell(self.model_type, self.use_file)
                     self.modules.append((module_index, module_type, cell))
-                    if module['env_type'] == "Array":
+                    if module["env_type"] == "Array":
                         # early exit if one of the modules fail to build.
-                        if not cell.setup(module['env_type'], regime=module['env_regime']):
+                        if not cell.setup(
+                            module["env_type"], regime=module["env_regime"]
+                        ):
                             return False
-                    elif module['env_type'] == "Impulse":
+                    elif module["env_type"] == "Impulse":
                         # TODO: using eval is bad security practice, possibly replace
-                        if not cell.setup(module['env_type'], impulse=eval(module['env_regime'])):
+                        if not cell.setup(
+                            module["env_type"], impulse=eval(module["env_regime"])
+                        ):
                             return False
                     else:
-                        print("[SOURCE] WARN: Invalid module type in file for module", module['module_num'])
+                        print(
+                            "[SOURCE] WARN: Invalid module type in file for module",
+                            module["module_num"],
+                        )
                         return False
-            
+
         else:
             print("[CELL] WARN: Invalid setup type -", setup_type)
             return False
@@ -203,10 +217,9 @@ class Source:
             if i_out_tot > i_out:
                 i_out_tot = i_out
 
-
         return (v_out_tot, i_out_tot, irrad, temp, load)
 
-    def get_source_IV(self, step_size=.01):
+    def get_source_IV(self, step_size=0.01):
         """
         get_source_IV 
         Returns an array of voltage and current values to display current
@@ -220,7 +233,7 @@ class Source:
                 - gmpp: global maximum power point characteristics, (vmpp, impp, pmpp)
         """
         # for each module, get their IV curve, and search through the IV curve and grab the total voltage and min current for each cell voltage.
-        # build up individual 
+        # build up individual
         module_IVs = []
         for module in self.modules:
             output = module[CELL].get_cell_IV(step_size)[0]
@@ -229,7 +242,7 @@ class Source:
                 output = [[entry[0] * module[MOD_TYPE], entry[1]] for entry in output]
             # TODO: deal with bypass diodes here as well
             module_IVs.append(output)
-        
+
         characteristics = []
         for voltage_entry in range(0, len(module_IVs[0])):
             # get the total voltage and min current for the cell v_ref
@@ -239,7 +252,7 @@ class Source:
                 v_out_tot += iv[voltage_entry][0]
                 if i_out_tot > iv[voltage_entry][1]:
                     i_out_tot = iv[voltage_entry][1]
-            
+
             characteristics.append([v_out_tot, i_out_tot])
 
         # seek through the characteristics to find the max power and extract that
@@ -326,7 +339,7 @@ class Source:
         Args:
             - cycle (int): current cycle for the PV modules.
         """
-        for module in self.modules: 
+        for module in self.modules:
             module[CELL].set_current_cycle(cycle)
 
     def increment_cycle(self):
@@ -337,7 +350,7 @@ class Source:
         Returns:
             current cycle.
         """
-        for module in self.modules: 
+        for module in self.modules:
             module[CELL].increment_cycle()
 
         self.cycle += 1

@@ -40,7 +40,8 @@ import time
 
 CELL_MODEL_HEADER = "cell_1"
 
-class SourceFile():
+
+class SourceFile:
     header = []
     data = []
     file = ""
@@ -83,9 +84,9 @@ class SourceFile():
 
             # regularize input
             # NOTE: round because int() truncates, breaks things when val is like 0.9999998
-            temp_idx = int(round(params[2]*2))      # 0.5 * 2 = 1
-            irrad_idx = int(round(params[1]/50))    # 50. / 50 = 1
-            v_ref_idx = int(round(params[0]*100))   # .01 * 100 = 1
+            temp_idx = int(round(params[2] * 2))  # 0.5 * 2 = 1
+            irrad_idx = int(round(params[1] / 50))  # 50. / 50 = 1
+            v_ref_idx = int(round(params[0] * 100))  # .01 * 100 = 1
 
             # same way you'd index a flattened 3d RGB array
             # 1 to ignore the header
@@ -99,7 +100,9 @@ class SourceFile():
             for param_idx in range(len(params)):
                 # check to see if we meet all of them, otherwise fail
                 if round(float(data[param_idx]), 2) != round(params[param_idx], 2):
-                    print("[RETRIEVE_SOURCE] [WARN] Matching params not found: ", params)
+                    print(
+                        "[RETRIEVE_SOURCE] [WARN] Matching params not found: ", params
+                    )
                     return 0
             return data[3]
 
@@ -115,7 +118,7 @@ class SourceFile():
         else:
             header = []
 
-        with open(self.file, "w", newline='\n') as csv_file:
+        with open(self.file, "w", newline="\n") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(header)
             for line in self.data:
@@ -125,7 +128,7 @@ class SourceFile():
         """
         Initializes data with contents of the file.
         """
-        with open(self.file, "r", newline='\n') as csv_file:
-            reader = csv.reader(csv_file)            
+        with open(self.file, "r", newline="\n") as csv_file:
+            reader = csv.reader(csv_file)
             for row in reader:
                 self.data.append(row)

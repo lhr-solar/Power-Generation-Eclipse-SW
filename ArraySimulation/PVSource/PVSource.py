@@ -190,7 +190,9 @@ class PVSource:
                     self.getModuleCurrent(
                         {
                             "numCells": module["numCells"] + curCellNum,
-                            "voltage": module["voltage"], # TODO: getModuleCurrent can't deal with >1 cell
+                            "voltage": module[
+                                "voltage"
+                            ],  # TODO: getModuleCurrent can't deal with >1 cell
                             "irradiance": module["irradiance"],
                             "temperature": module["temperature"],
                         }

@@ -32,22 +32,24 @@ from math import exp, pow, e
 from numpy import log as ln
 
 from src.source_file import SourceFile
+
+
 class Cell:
-    MAX_VOLTAGE = .8
+    MAX_VOLTAGE = 0.8
     setup_type = ""
 
-    irradiance  = 0
+    irradiance = 0
     temperature = 0
-    load        = 0
-    idx         = 0
-    cycle       = 0
+    load = 0
+    idx = 0
+    cycle = 0
 
-    arr_cycle   = []
-    arr_irrad   = []
-    arr_temp    = []
-    arr_load    = []
+    arr_cycle = []
+    arr_irrad = []
+    arr_temp = []
+    arr_load = []
 
-    model_type  = "Default"
+    model_type = "Default"
 
     use_file = False
     source_file = None
@@ -70,7 +72,7 @@ class Cell:
             self.model_type = "Ideal"
         else:
             self.model_type = "Nonideal"
-        
+
         if use_file:
             self.source_file = SourceFile()
             self.source_file.read_file()
@@ -98,15 +100,15 @@ class Cell:
         # TODO: no support for load at the moment.
         """
         # refresh values
-        self.arr_cycle  = []
-        self.arr_irrad  = []
-        self.arr_temp   = []
-        self.arr_load   = []
-        irradiance      = 0
-        temperature     = 0
-        load            = 0
-        self.idx        = 0
-        self.cycle      = 0
+        self.arr_cycle = []
+        self.arr_irrad = []
+        self.arr_temp = []
+        self.arr_load = []
+        irradiance = 0
+        temperature = 0
+        load = 0
+        self.idx = 0
+        self.cycle = 0
 
         if setup_type == "":
             print("[CELL] WARN: Empty setup type -", setup_type)
@@ -114,7 +116,9 @@ class Cell:
 
         elif setup_type == "Array":
             if not regime:
-                print("[CELL] WARN: Array setup type was selected, but regime is an empty list.")
+                print(
+                    "[CELL] WARN: Array setup type was selected, but regime is an empty list."
+                )
                 return False
 
             for event in regime:
@@ -122,14 +126,16 @@ class Cell:
                 self.arr_irrad.append(event[1])
                 self.arr_temp.append(event[2])
                 self.arr_load.append(0)
-            
+
             self.setup_type = "Array"
             self.cycle = 0
             return True
 
         elif setup_type == "Impulse":
             if not impulse:
-                print("[CELL] WARN: Impulse setup type was selected, but impulse is an empty tuple.")
+                print(
+                    "[CELL] WARN: Impulse setup type was selected, but impulse is an empty tuple."
+                )
                 return False
 
             self.irradiance = impulse[0]
@@ -178,31 +184,49 @@ class Cell:
                 self.temperature = self.arr_temp[idx]
                 self.load = self.arr_load[idx]
             except ValueError:
-                print("[CELL] NOTE: Cycle ", self.cycle, " does not exist in data. Interpolating data.")
+                print(
+                    "[CELL] NOTE: Cycle ",
+                    self.cycle,
+                    " does not exist in data. Interpolating data.",
+                )
                 # if idx doesn't exist, grab two closest points
                 idx_new = self.idx + 1
                 idx_curr = self.idx
                 try:
                     # interpolate slope
-                    dCycle = (self.arr_cycle[idx_new] - self.arr_cycle[idx_curr])
+                    dCycle = self.arr_cycle[idx_new] - self.arr_cycle[idx_curr]
                     # round if we can
-                    sIrr   = (self.arr_irrad[idx_new] - self.arr_irrad[idx_curr])/dCycle
-                    sTemp  = (self.arr_temp[idx_new] - self.arr_temp[idx_curr])/dCycle
-                    sLoad  = (self.arr_load[idx_new] - self.arr_load[idx_curr])/dCycle
+                    sIrr = (self.arr_irrad[idx_new] - self.arr_irrad[idx_curr]) / dCycle
+                    sTemp = (self.arr_temp[idx_new] - self.arr_temp[idx_curr]) / dCycle
+                    sLoad = (self.arr_load[idx_new] - self.arr_load[idx_curr]) / dCycle
 
-                    for i in range(0, dCycle - 1): # append entries to relevant arrays
+                    for i in range(0, dCycle - 1):  # append entries to relevant arrays
                         insert_idx = idx_curr + i + 1
-                        self.arr_cycle.insert(insert_idx,   self.arr_cycle[insert_idx - 1] + 1)
-                        self.arr_irrad.insert(insert_idx,   self.arr_irrad[insert_idx - 1] + sIrr)
-                        self.arr_temp.insert(insert_idx,    self.arr_temp[insert_idx - 1] + sTemp)
-                        self.arr_load.insert(insert_idx,    self.arr_load[insert_idx - 1] + sLoad)
+                        self.arr_cycle.insert(
+                            insert_idx, self.arr_cycle[insert_idx - 1] + 1
+                        )
+                        self.arr_irrad.insert(
+                            insert_idx, self.arr_irrad[insert_idx - 1] + sIrr
+                        )
+                        self.arr_temp.insert(
+                            insert_idx, self.arr_temp[insert_idx - 1] + sTemp
+                        )
+                        self.arr_load.insert(
+                            insert_idx, self.arr_load[insert_idx - 1] + sLoad
+                        )
                 except IndexError:
-                    print("[CELL] NOTE: Cycle ", self.cycle, " does not exist in data. Reached end of regime data. Don't interpolate.")
+                    print(
+                        "[CELL] NOTE: Cycle ",
+                        self.cycle,
+                        " does not exist in data. Reached end of regime data. Don't interpolate.",
+                    )
                     insert_idx = idx_curr + 1
-                    self.arr_cycle.insert(insert_idx,   self.arr_cycle[insert_idx - 1] + 1)
-                    self.arr_irrad.insert(insert_idx,   self.arr_irrad[insert_idx - 1])
-                    self.arr_temp.insert(insert_idx,    self.arr_temp[insert_idx - 1])
-                    self.arr_load.insert(insert_idx,    self.arr_load[insert_idx - 1])
+                    self.arr_cycle.insert(
+                        insert_idx, self.arr_cycle[insert_idx - 1] + 1
+                    )
+                    self.arr_irrad.insert(insert_idx, self.arr_irrad[insert_idx - 1])
+                    self.arr_temp.insert(insert_idx, self.arr_temp[insert_idx - 1])
+                    self.arr_load.insert(insert_idx, self.arr_load[insert_idx - 1])
                 finally:
                     # now get the result after we've interpolated it
                     return self.iterate(v_in)
@@ -290,46 +314,62 @@ class Cell:
                                 ~ 1.602 * 10^-19 C
         """
         if self.use_file and self.model_type == "Nonideal":
-            return(float(self.source_file.retrieve_source([round(v_in, 2), irr_in, t_in])))
+            return float(
+                self.source_file.retrieve_source([round(v_in, 2), irr_in, t_in])
+            )
         else:
-            threshold = .005
+            threshold = 0.005
 
-            k       = 1.381E-23
-            q       = 1.602E-19
-            t_ref   = 25+273.15
+            k = 1.381e-23
+            q = 1.602e-19
+            t_ref = 25 + 273.15
             irr_ref = 1000
-            v_oc_ref= .721
-            i_sc_ref= 6.15
-            r_s     = .032
-            r_sh    = 36.1
+            v_oc_ref = 0.721
+            i_sc_ref = 6.15
+            r_s = 0.032
+            r_sh = 36.1
 
             # overflow error if irr_in is 0
             if irr_in == 0:
-                irr_in = .001
+                irr_in = 0.001
 
             if self.model_type == "Default" or self.model_type == "Nonideal":
                 # convert t_in from C to K
                 t_c = t_in + 273.15
 
                 # nonideal single diode model
-                i_sc = irr_in / irr_ref * i_sc_ref * (1 + 6E-4 * (t_c - t_ref))
-                v_oc = v_oc_ref - 2.2E-3 * (t_c - t_ref) + k * t_c / q * ln(irr_in / irr_ref)
+                i_sc = irr_in / irr_ref * i_sc_ref * (1 + 6e-4 * (t_c - t_ref))
+                v_oc = (
+                    v_oc_ref
+                    - 2.2e-3 * (t_c - t_ref)
+                    + k * t_c / q * ln(irr_in / irr_ref)
+                )
                 i_pv = i_sc
-                i_0  = exp(ln(i_sc) - q * v_oc / (k * t_c))
+                i_0 = exp(ln(i_sc) - q * v_oc / (k * t_c))
 
                 # iteratively solve implicit parameter
                 i = 0
                 left = i
 
-                right = i_pv - i_0 * (exp(q * (v_in + i * r_s) / (k * t_c)) - 1) - (v_in + i * r_s) / r_sh
+                right = (
+                    i_pv
+                    - i_0 * (exp(q * (v_in + i * r_s) / (k * t_c)) - 1)
+                    - (v_in + i * r_s) / r_sh
+                )
                 difference = (left - right) * (left - right)
                 decreasing = True
 
                 while decreasing:
-                    i = i + .001
+                    i = i + 0.001
                     left = i
-                    right = i_pv - i_0 * (exp(q * (v_in + i * r_s) / (k * t_c)) - 1) - (v_in + i * r_s) / r_sh
-                    if (difference - (left - right) * (left - right)) <= 0.0: # positive
+                    right = (
+                        i_pv
+                        - i_0 * (exp(q * (v_in + i * r_s) / (k * t_c)) - 1)
+                        - (v_in + i * r_s) / r_sh
+                    )
+                    if (
+                        difference - (left - right) * (left - right)
+                    ) <= 0.0:  # positive
                         decreasing = False
                     difference = (left - right) * (left - right)
 
@@ -341,10 +381,14 @@ class Cell:
 
             if self.model_type == "Ideal":
                 # ideal single diode model
-                t_c = t_in + 273.15 # convert into kelvin
+                t_c = t_in + 273.15  # convert into kelvin
 
-                i_sc = irr_in / irr_ref * i_sc_ref * (1 + 6E-4 * (t_c - t_ref))
-                v_oc = v_oc_ref - 2.2E-3 * (t_c - t_ref) + k * t_c / q * ln(irr_in / irr_ref)
+                i_sc = irr_in / irr_ref * i_sc_ref * (1 + 6e-4 * (t_c - t_ref))
+                v_oc = (
+                    v_oc_ref
+                    - 2.2e-3 * (t_c - t_ref)
+                    + k * t_c / q * ln(irr_in / irr_ref)
+                )
                 i_pv = i_sc
                 i_0 = exp(ln(i_sc) - q * v_oc / (k * t_c))
                 i_d = i_0 * (exp(q * v_in / (k * t_c) - 1))
@@ -357,57 +401,90 @@ class Cell:
                 return model
 
             if self.model_type == "Benghanem":
-                k = 0.92 # manufacturing efficiency loss (8% according to test data)
+                k = 0.92  # manufacturing efficiency loss (8% according to test data)
 
                 # open circuit voltage and short circuit current dependence on temperature
-                v_oc = .721 - (2.2*.001)*(t_in-25)
-                i_sc = 6.15 + (.06*.001)*(t_in-25)*6.15
+                v_oc = 0.721 - (2.2 * 0.001) * (t_in - 25)
+                i_sc = 6.15 + (0.06 * 0.001) * (t_in - 25) * 6.15
 
-                C_3 = 0.817 # maximal voltage - determined by tuning parameters in desmos until maxppt is reached
+                C_3 = (
+                    0.817
+                )  # maximal voltage - determined by tuning parameters in desmos until maxppt is reached
                 C_4 = -100  # maximal current
 
-                C_2 = ((C_3/v_oc) - 1) / ln(1 - C_4/i_sc)
-                C_1 = (1 - C_4/i_sc)*exp( -C_3/(C_2*v_oc) )
+                C_2 = ((C_3 / v_oc) - 1) / ln(1 - C_4 / i_sc)
+                C_1 = (1 - C_4 / i_sc) * exp(-C_3 / (C_2 * v_oc))
                 # default explicit model
-                model = i_sc*( 1 - C_1*( exp( v_in/(C_2*v_oc) ) - 1 ) )
-                print("[SOURCE] Model: [I=", model, "|@V=", v_in, "IRR=", irr_in, "TEMP=", t_in, "LOAD=", ld_in, "]")
+                model = i_sc * (1 - C_1 * (exp(v_in / (C_2 * v_oc)) - 1))
+                print(
+                    "[SOURCE] Model: [I=",
+                    model,
+                    "|@V=",
+                    v_in,
+                    "IRR=",
+                    irr_in,
+                    "TEMP=",
+                    t_in,
+                    "LOAD=",
+                    ld_in,
+                    "]",
+                )
 
                 # losses in efficiency as a result of manufacturing (lamination, etc)
                 model2 = model * k
-                
+
                 return model
-            
+
             if self.model_type == "Ibrahim":
                 return 0
 
             if self.model_type == "Zahedi":
                 # TODO: Severe issues, not yet usable. Continue to debug.
-                k = 0.92 # manufacturing efficiency loss (8% according to test data)
+                k = 0.92  # manufacturing efficiency loss (8% according to test data)
 
                 G = irr_in
                 T_a = 36
                 # ignore T_c equation and insert our own cell temp into it
-                T_c = t_in # T_a + (48 - 20) / 80 * 100 
-                I_sc= 6.15 * (1 + 0 * (T_c - 25)) * G / 1000
+                T_c = t_in  # T_a + (48 - 20) / 80 * 100
+                I_sc = 6.15 * (1 + 0 * (T_c - 25)) * G / 1000
                 print("[SOURCE] Short Circuit current I_sc:", I_sc)
 
                 I_l = I_sc
-                K_v = -.00023
+                K_v = -0.00023
                 a = 1.187
-                V_t = 1.381E-23 * (T_c + 273.15) / 1.602E-19
+                V_t = 1.381e-23 * (T_c + 273.15) / 1.602e-19
                 print("[SOURCE] Thermal voltage V_t:", V_t)
-                I_d = I_sc / (exp(.721 * (1 + K_v * (T_c - 25)) / (a * V_t)) - 1) * (e ** (v_in / (a * V_t)) - 1)
-                print("[SOURCE] denom:", (exp(.721 * (1 + K_v * (T_c - 25)) / (a * V_t)) - 1))
+                I_d = (
+                    I_sc
+                    / (exp(0.721 * (1 + K_v * (T_c - 25)) / (a * V_t)) - 1)
+                    * (e ** (v_in / (a * V_t)) - 1)
+                )
+                print(
+                    "[SOURCE] denom:",
+                    (exp(0.721 * (1 + K_v * (T_c - 25)) / (a * V_t)) - 1),
+                )
                 print("[SOURCE] multiplier:", (e ** (v_in / (a * V_t)) - 1))
                 print("[SOURCE] Diode Saturation current:", I_d)
                 model = I_l - I_d
-                print("[SOURCE] Model: [I=", model, "|@V=", v_in, "IRR=", irr_in, "TEMP=", t_in, "LOAD=", ld_in, "]")
+                print(
+                    "[SOURCE] Model: [I=",
+                    model,
+                    "|@V=",
+                    v_in,
+                    "IRR=",
+                    irr_in,
+                    "TEMP=",
+                    t_in,
+                    "LOAD=",
+                    ld_in,
+                    "]",
+                )
 
                 # losses in efficiency as a result of manufacturing (lamination, etc)
-                model2 = model * k 
+                model2 = model * k
                 return model
 
-    def get_cell_IV(self, step_size=.01):
+    def get_cell_IV(self, step_size=0.01):
         """
         get_cell_IV 
         Returns an array of PV characteristics of the cell at the current environmental conditions.
@@ -434,9 +511,10 @@ class Cell:
                 i_mpp = current
 
             v_in += step_size
-            if round(v_in, 4) > self.MAX_VOLTAGE: # round to prevent E-5 float being larger than self.MAX_VOLTAGE
+            if (
+                round(v_in, 4) > self.MAX_VOLTAGE
+            ):  # round to prevent E-5 float being larger than self.MAX_VOLTAGE
                 break
-
 
         return [output, [v_mpp, i_mpp, p_mpp]]
 

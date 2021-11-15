@@ -112,7 +112,7 @@ class DataController:
         self._PVEnv = PVEnvironment()
         self._PVSource = PVSource()
         self._MPPT = MPPT()
-        self._DCDCConverter = DCDCConverter()
+        self._DCDCConverter = DCDCConverter(timestepRatio=1)
 
         # Data storage.
         self.datastore = {
@@ -129,7 +129,13 @@ class DataController:
 
     # Simulation pipeline management.
     def resetPipeline(
-        self, modelType, environment, maxCycles, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
+        self,
+        modelType,
+        environment,
+        maxCycles,
+        MPPTGlobalAlgo,
+        MPPTLocalAlgo,
+        MPPTStrideAlgo,
     ):
         """
         Resets components within the pipeline to the default state.
@@ -187,16 +193,14 @@ class DataController:
 
         # Retrieve the source characteristics given the source definition.
         sourceCurrent = self._PVSource.getSourceCurrent(modulesDef)
+        # print("SOURCE CURRENT: " + str(sourceCurrent))
         sourceIV = self._PVSource.getIV(modulesDef, numCells)
         sourceEdgeChar = self._PVSource.getEdgeCharacteristics(modulesDef, numCells)
 
         # Retrieve the MPPT VREF guess given the source output current.
-        print(cycle, end='\t')
+        # print(cycle, end="\t")
         vRef = self._MPPT.getReferenceVoltage(
-            self._vREF,
-            sourceCurrent,
-            envDef["irradiance"],
-            envDef["temperature"],
+            self._vREF, sourceCurrent, envDef["irradiance"], envDef["temperature"]
         )
 
         # Generate the pulsewidth of the DC-DC Converter and spit it back out.
@@ -209,7 +213,7 @@ class DataController:
         self.datastore["sourceOutput"].append(
             {"current": sourceCurrent, "IV": sourceIV, "edge": sourceEdgeChar}
         )
-        self.datastore["mpptOutput"].append(vRef)
+        self.datastore["mpptOutput"].append(self._DCDCConverter.getVoltageOut())
         self.datastore["dcdcOutput"].append(pulseWidth)
 
         # Assign the VREF to apply across the source in the next simulation cycle.
@@ -223,13 +227,7 @@ class DataController:
         return (self.datastore, continueBool)
 
     def generateSourceCurve(
-        self,
-        numCells,
-        irradiance,
-        temperature,
-        voltageResolution,
-        modelType,
-        useLookup,
+        self, numCells, irradiance, temperature, voltageResolution, modelType, useLookup
     ):
         """
         Generates a source curve for the given parameters.

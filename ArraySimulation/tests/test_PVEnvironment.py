@@ -44,7 +44,7 @@ class TestPVEnvironment:
                     "voltage": 0.0,
                     "irradiance": 1000,
                     "temperature": 25,
-                },
+                }
             }
 
             # Assert that cycling doesn't change our output.
@@ -67,7 +67,7 @@ class TestPVEnvironment:
                     "voltage": 0.0,
                     "irradiance": 1000,
                     "temperature": 25,
-                },
+                }
             }
 
             # Assert that setting the cycle doesn't change our output.
@@ -89,7 +89,7 @@ class TestPVEnvironment:
                     "voltage": 0.0,
                     "irradiance": 1000,
                     "temperature": 25,
-                },
+                }
             }
 
             # Assert that we can get a list of modules from the PVEnvironment.
@@ -127,7 +127,7 @@ class TestPVEnvironment:
                     "voltage": 0.0,
                     "irradiance": 1000,
                     "temperature": 45.5,
-                },
+                }
             }
 
             # Assert that we can get the agglomerated environment details of the
@@ -157,7 +157,7 @@ class TestPVEnvironment:
                     "voltage": 0.0,
                     "irradiance": 1000,
                     "temperature": 45.5,
-                },
+                }
             }
 
             # Assert that setting the cycle reflects the entry in the lookup.
@@ -179,7 +179,7 @@ class TestPVEnvironment:
                     "voltage": 0.0,
                     "irradiance": 1000,
                     "temperature": 28.0,
-                },
+                }
             }
 
             # Assert that we can get the agglomerated environment details of the
