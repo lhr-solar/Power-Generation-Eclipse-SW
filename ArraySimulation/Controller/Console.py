@@ -1,14 +1,14 @@
 """
 Console.py
 
-Author: Matthew Yu, Array Lead (2020).
+Author: Matthew Yu (2021).
 Contact: matthewjkyu@gmail.com
-Created: 11/18/20
-Last Modified: 11/24/20
+Created: 04/29/21
+Last Modified: 04/29/21
 
-Description: The Console class is a concrete base class that provides a common 
-API for derived classes to use. It allows for the generation of textboxes and
-buttons in a wrapped widget that can connect to program functions.
+Description: Implements the Console class used for creating input widgets in the
+Views. Based off of the Console class used for PVSim
+(https://github.com/lhr-solar/Array-Simulation). 
 """
 # Library Imports.
 from PyQt5.QtGui import QColor, QPalette
