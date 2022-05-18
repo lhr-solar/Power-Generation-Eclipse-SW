@@ -301,9 +301,10 @@ class SourceView(View):
                     + str(irradianceRes[1])
                     + " G",
                     "color": (
-                        temperatureRes[1] * 255 / SourceView.TEMPERATURE_RANGE[1],
-                        255 - irradianceRes[1] * 255 / SourceView.IRRADIANCE_RANGE[1],
-                        numCellsRes[1] * 255 / SourceView.ACCEPTABLE_NUM_CELLS[-1],
+                        255, 255, 255
+                        # temperatureRes[1] * 255 / SourceView.TEMPERATURE_RANGE[1],
+                        # 255 - irradianceRes[1] * 255 / SourceView.IRRADIANCE_RANGE[1],
+                        # numCellsRes[1] * 255 / SourceView.ACCEPTABLE_NUM_CELLS[-1],
                     ),
                 },
             )
@@ -328,10 +329,11 @@ class SourceView(View):
                     + str(irradianceRes[1])
                     + " G",
                     "color": (
-                        temperatureRes[1] * 255 / SourceView.TEMPERATURE_RANGE[1],
-                        255 - irradianceRes[1] * 255 / SourceView.IRRADIANCE_RANGE[1],
-                        255
-                        - numCellsRes[1] * 255 / SourceView.ACCEPTABLE_NUM_CELLS[-1],
+                        255, 0, 0
+                        # temperatureRes[1] * 255 / SourceView.TEMPERATURE_RANGE[1],
+                        # 255 - irradianceRes[1] * 255 / SourceView.IRRADIANCE_RANGE[1],
+                        # 255
+                        # - numCellsRes[1] * 255 / SourceView.ACCEPTABLE_NUM_CELLS[-1],
                     ),
                 },
             )

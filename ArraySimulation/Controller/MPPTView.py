@@ -63,7 +63,7 @@ class MPPTView(View):
     ]
 
     # List of Local MPPT algorithms that can be used.
-    MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection"]
+    MPPT_LOCAL_MODELS = ["PandO", "IC", "FC", "Ternary", "Golden", "Bisection", "Fuzzy Logic"]
 
     # List of MPPT stride algorithms that can be used.
     MPPT_STRIDE_MODELS = ["Fixed", "Adaptive", "Bisection", "Optimal"]

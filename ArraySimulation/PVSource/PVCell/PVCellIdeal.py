@@ -32,7 +32,7 @@ class PVCellIdeal(PVCell):
         # Ideal single diode model.
         cellTemperature = temperature + 273.15  # Convert cell temperature into kelvin.
 
-        # Suppres divide by 0s from voltage and irradiance.
+        # Suppress divide by 0s from voltage and irradiance.
         if voltage == 0.0:
             voltage = 0.001
         if irradiance == 0.0:

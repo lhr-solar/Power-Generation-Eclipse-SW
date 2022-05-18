@@ -21,6 +21,7 @@ from ArraySimulation.MPPT.LocalMPPTAlgorithms.FC import FC
 from ArraySimulation.MPPT.LocalMPPTAlgorithms.Ternary import Ternary
 from ArraySimulation.MPPT.LocalMPPTAlgorithms.Golden import Golden
 from ArraySimulation.MPPT.LocalMPPTAlgorithms.Bisection import Bisection
+from ArraySimulation.MPPT.LocalMPPTAlgorithms.FuzzyLogic import FuzzyLogic
 
 
 class GlobalMPPTAlgorithm:
@@ -81,6 +82,8 @@ class GlobalMPPTAlgorithm:
             self._model = PandO(numCells, strideType)
         elif MPPTLocalAlgoType == "Ternary":
             self._model = Ternary(numCells, strideType)
+        elif MPPTLocalAlgoType == "Fuzzy Logic":
+            self._model = FuzzyLogic(numCells, strideType)
         elif MPPTLocalAlgoType == "Default":
             self._model = LocalMPPTAlgorithm(numCells, MPPTLocalAlgoType, strideType)
         else:
