@@ -1,4 +1,0 @@
-pytest
-pyqt5
-pyqtgraph
-jsbeautifier

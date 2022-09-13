@@ -1,3 +1,1 @@
-numpy
-matplotlib
-pyqtgraph
+screeninfo==0.8.1
