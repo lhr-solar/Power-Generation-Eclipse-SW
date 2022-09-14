@@ -1,14 +1,13 @@
 """_summary_
-@file       ui_controller.py
+@file       controller.py
 @author     Matthew Yu (matthewjkyu@gmail.com)
-@brief      UI Controller for managing the Sim Designer Controller. 
-@version    0.3.0
+@brief      Sim Designer Controller. 
+@version    3.0.0
 @date       2022-09-11
 """
 
-from PyQt6.QtWidgets import (
-    QLabel
-)
+from PyQt6.QtWidgets import QLabel
+
 
 class SimDesignerController:
     def __init__(self):
@@ -17,7 +16,7 @@ class SimDesignerController:
     def get_tab(self):
         return [self.window, "Sim Designer"]
 
-    class SimDesignerControllerWindow():
+    class SimDesignerControllerWindow:
         def __init__(self):
             super().__init__()
             # Setup window
