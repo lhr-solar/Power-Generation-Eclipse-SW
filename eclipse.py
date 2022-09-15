@@ -3,8 +3,8 @@
 @author     Matthew Yu (matthewjkyu@gmail.com)
 @brief      Entry point for the Eclipse photovoltaic characterization and
             simulation application.
-@version    0.3.0
-@date       2022-09-11
+@version    3.0.0
+@date       2022-09-14
 """
 
 import sys
@@ -40,7 +40,7 @@ class Eclipse:
         # Setup the main window.
         self.app = QApplication(sys.argv)
         self.window = self.EclipseWindow()
-        self.window.setFixedSize(QSize(720, 480))
+        self.window.setFixedSize(QSize(1080, 720))
         self.window.show()
 
         # Generate instances of each module.
@@ -52,7 +52,7 @@ class Eclipse:
         ]
 
         # Get tabs for each instance.
-        tabs = [instance.get_tab() for instance in self.instances]
+        tabs = [instance.get_ui() for instance in self.instances]
 
         # Set window tabs.
         self.window.add_tab_subwindows(tabs)

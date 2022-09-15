@@ -3,20 +3,30 @@
 @author     Matthew Yu (matthewjkyu@gmail.com)
 @brief      Sim Designer Controller. 
 @version    3.0.0
-@date       2022-09-11
+@date       2022-09-14
 """
 
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QWidget
 
 
 class SimDesignerController:
     def __init__(self):
-        self.window = QLabel("Sim Designer.")
+        self.data = self.Data(self)
+        self.ui = self.UI(self)
 
-    def get_tab(self):
-        return [self.window, "Sim Designer"]
+        # Update the UI with relevant setup data.
 
-    class SimDesignerControllerWindow:
-        def __init__(self):
+    def get_data(self):
+        return [self.data, "Sim Designer"]
+
+    def get_ui(self):
+        return [self.ui, "Sim Designer"]
+
+    class Data:
+        def __init__(self, parent):
+            self.parent = parent
+
+    class UI(QWidget):
+        def __init__(self, parent):
             super().__init__()
-            # Setup window
+            self.parent = parent

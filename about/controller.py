@@ -3,17 +3,22 @@
 @author     Matthew Yu (matthewjkyu@gmail.com)
 @brief      About Controller. 
 @version    3.0.0
-@date       2022-09-11
+@date       2022-09-14
 """
 
 from textwrap import dedent
-from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout, QTextEdit
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit
+
 
 class AboutController:
-
     def __init__(self):
-        self.window = self.AboutControllerWindow()
-        self.window.set_text(dedent("""
+        self.data = self.Data(self)
+        self.ui = self.UI(self)
+
+        # Update the UI with relevant setup data.
+        self.ui.set_text(
+            dedent(
+                """
         # Eclipse
 
         Eclipse is a multifunctional application whose purpose is primarily to
@@ -79,18 +84,28 @@ class AboutController:
         - black (MIT)
         - PyQt6 (GPL v3)
         - screeninfo (MIT)
-        """))
+        """
+            )
+        )
 
-    def get_tab(self):
-        return [self.window, "About"]
+    def get_data(self):
+        return [self.data, "About"]
 
-    class AboutControllerWindow(QWidget):
-        def __init__(self):
+    def get_ui(self):
+        return [self.ui, "About"]
+
+    class Data:
+        def __init__(self, parent):
+            self.parent = parent
+
+    class UI(QWidget):
+        def __init__(self, parent):
             super().__init__()
+            self.parent = parent
 
             self.text_edit = QTextEdit()
             layout = QVBoxLayout()
-            layout.addWidget(self.text_edit)   
+            layout.addWidget(self.text_edit)
 
             self.setLayout(layout)
 
