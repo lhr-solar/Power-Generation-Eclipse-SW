@@ -39,8 +39,29 @@ class Eclipse:
 
         # Setup the main window.
         self.app = QApplication(sys.argv)
+
+        self.app.setStyleSheet(
+            """
+            QTabWidget {
+                background: lightgray;
+            }
+            QFrame {
+                border: 1px solid black;
+            }
+            QLabel, QComboBox {
+                border: None;
+            }
+            QComboBox {
+                background: white;
+            }
+            QWidget {
+                border: 1px solid black;
+            }
+        """
+        )
+
         self.window = self.EclipseWindow()
-        self.window.setFixedSize(QSize(1080, 720))
+        self.window.setFixedSize(1520, 720)
         self.window.show()
 
         # Generate instances of each module.

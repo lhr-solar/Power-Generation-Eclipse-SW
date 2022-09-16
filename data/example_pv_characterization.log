@@ -1,0 +1,21 @@
+__file: example_pv_characterization.log
+__brief: Example PV Characterization File.
+__author: Matthew Yu
+__last_modified: 2022_09_15
+__pv_type: CELL
+__pv_id: RPXXX
+
+Voltage (V),Current (A)
+0.00,6.15
+0.10,6.00
+0.50,5.68
+0.84,5.30
+1.49,4.88
+2.12,4.23
+2.99,3.66
+3.56,3.20
+4.14,1.65
+5.00,1.13
+5.13,1.00
+6.59,0.32
+7.21,0.00
