@@ -108,5 +108,3 @@ if __name__ == "__main__":
     monitors = get_monitors()
     eclipse = Eclipse(monitors[0].width, monitors[0].height)
     eclipse.run()
-
-    print("Hello world!")

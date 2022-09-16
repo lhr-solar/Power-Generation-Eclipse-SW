@@ -28,13 +28,23 @@ from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
 import pyqtgraph as pg
 from datetime import datetime
 
+from pv_capture.pv_characterization import PVCharacterization
+
 
 class PVCaptureController:
+    """_summary_
+    The PV Capture Controller:
+    - Is a graphical user interface
+    - Interacts with the PV Curve Tracer PCB to run experiments
+    - Loads historical PV test data and models
+    - Characterizes PVs and generates I-V, P-V curves
+    - Ranks and bins PVs against other cells or a theoretical model.
+    """
+
     def __init__(self):
+        self.pv_char = PVCharacterization()
         self.data = self.Data(self)
         self.ui = self.UI(self)
-
-        # Update the UI with relevant setup data.
 
     def get_data(self):
         return [self.data, "PV Capture"]
@@ -43,6 +53,13 @@ class PVCaptureController:
         return [self.ui, "PV Capture"]
 
     def print(self, level, text):
+        """_summary_
+        Formats and sends logging data to the GUI.
+
+        Args:
+            level (str): The output level of the text to be displayed.
+            text (str): The text to be displayed.
+        """
         date = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         output = f"[{level}][{date}] {text}"
         self.ui.print_console(output)
@@ -50,40 +67,55 @@ class PVCaptureController:
     class Data:
         def __init__(self, parent):
             self.parent = parent
-            self.test_data_instance = {"file": None, "pv_type": None, "pv_id": None}
+            self.test_data_instance = {"file_path": None, "loader": None, "data": None}
             self.curve_tracer_instance = {
+                "loader": self.parent.pv_char.get_version_loader(self.parent.pv_char.get_version()),
                 "com_port": None,
                 "baud_rate": None,
                 "pv_type": None,
                 "pv_id": None,
+                "data": None
+            }
+            self.model_instance = {
+                "pv_model" : None
             }
 
         def go(self):
-            # Pressing the GO button.
-            success = False
-            data = {
-                "error_str": "UNPOPULATED",
-                "series_voltage": [],
-                "series_current": [],
-                "series_power": [],
-                "v_oc": None,
-                "i_sc": None,
-                "v_mpp": None,
-                "i_mpp": None,
-                "p_mpp": None,
-                "ff_pct": None,
-            }
+            """_summary_
+            Loads in characterization data for the PV.
 
+            Returns:
+                [False, str]: An error and an error string
+                [True, dict]: A success and data corresponding to the characterized PV in the form:
+                    {
+                        "irradiance": float,
+                        "temperature": float,
+                        "voltage":  [float],
+                        "current":  [float],
+                        "power":    [float],
+                        "v_oc":     float,
+                        "i_sc":     float,
+                        "v_mpp":    float,
+                        "i_mpp":    float,
+                        "p_mpp":    float,
+                        "ff":       float,
+                        "eff":      float
+                    }
+            """
+            # Pressing the GO button.
             if (
-                self.test_data_instance["file"] is not None
-                and self.test_data_instance["pv_type"] is not None
-                and self.test_data_instance["pv_id"] is not None
+                self.test_data_instance["file_path"] is not None
+                and self.test_data_instance["loader"] is not None
+                and self.test_data_instance["data"] is not None
             ):
-                self.parent.print("LOG", "Loading from file...")
-                # Load I-V, P-V Curve data
+                self.parent.print("LOG", "Characterizing data...")
+
                 # Calculate characteristics
-                # Return stuff
-                pass
+                data = self.parent.pv_char.characterize_data(
+                    self.test_data_instance["data"]
+                )
+                return [True, data]
+
             elif (
                 self.curve_tracer_instance["com_port"] is not None
                 and self.curve_tracer_instance["baud_rate"] is not None
@@ -98,12 +130,18 @@ class PVCaptureController:
                 # Calculate characteristics
                 # Save into file
                 # Return stuff
-                pass
-
-            return [success, data]
+                return [False, "UNIMPLEMENTED"]
+            else:
+                return [False, "Nothing can be run."]
 
         def reset(self):
-            self.test_data_instance = {"file": None, "pv_type": None, "pv_id": None}
+            """_summary_
+            Resets characterization data for the PV.
+
+            Returns:
+                dict: An empty data dict corresponding to a nonexistent PV in the same format as go.
+            """
+            self.test_data_instance = {"file_path": None, "loader": None, "data": None}
             self.curve_tracer_instance = {
                 "com_port": None,
                 "baud_rate": None,
@@ -111,22 +149,28 @@ class PVCaptureController:
                 "pv_id": None,
             }
 
-            data = {
-                "error_str": "UNPOPULATED",
-                "series_voltage": [],
-                "series_current": [],
-                "series_power": [],
+            return {
+                "irradiance": 0.00,
+                "temperature": 0.00,
+                "voltage": [],
+                "current": [],
+                "power": [],
                 "v_oc": 0.00,
                 "i_sc": 0.00,
                 "v_mpp": 0.00,
                 "i_mpp": 0.00,
                 "p_mpp": 0.00,
-                "ff_pct": 0.00,
+                "ff": 0.00,
+                "eff": 0.00
             }
-            return data
 
-        # Pull Data From Curve Tracer
         def get_available_com_ports(self):
+            """_summary_
+            Returns a list of currently connected COM ports.
+
+            Returns:
+                [str]: Port Names.
+            """
             port_options = ["-"]
             ports = QSerialPortInfo().availablePorts()
             if len(ports) != 0:
@@ -134,59 +178,162 @@ class PVCaptureController:
             return port_options
 
         def set_com_port(self, com_port):
+            """_summary_
+            Sets the current COM port of the device.
+
+            Args:
+                com_port (str): The com port to set.
+            """
             self.curve_tracer_instance["com_port"] = com_port
 
         def get_available_baud_rates(self):
+            """_summary_
+            Returns a list of baud rates for talking to the device.
+
+            Returns:
+                [str]: Baud rates.
+            """
             baud_options = ["-"]
             bauds = QSerialPortInfo().standardBaudRates()
             baud_options.extend([str(baud) for baud in bauds])
             return baud_options
 
         def set_baud_rate(self, baud_rate):
+            """_summary_
+            Sets the current baud rate of the device.
+
+            Args:
+                baud_rate (str): The baud rate to set.
+            """
             self.curve_tracer_instance["baud_rate"] = baud_rate
 
         def get_available_pv_types(self):
+            """_summary_
+            Returns a list of PV types that the device could measure.
+
+            Returns:
+                [str]: List of PV types
+            """
             return ["Cell", "Module", "Array"]
 
         def set_pv_type(self, pv_type):
+            """_summary_
+            Sets the current PV type that the device is measuring.
+
+            Args:
+                pv_type (str): The PV type to measure.
+            """
             self.curve_tracer_instance["pv_type"] = pv_type
 
         def set_pv_id(self, id):
+            """_summary_
+            Sets the ID representing the PV to be tested. This is used later for
+            generating a characterization file.
+
+            Args:
+                id (str): ID of the PV tested.
+
+            Returns:
+                bool: Whether the ID is valid. It could fail based on the following reasons:
+                - The file already exists.
+                - The name has spaces in it.
+            """
+            self.curve_tracer_instance["pv_id"] = id
             # Check if a file under this name already exists.
-            return False
+            return True
 
-        # Load Test Data From File
-        def set_test_data_file(self, file_path):
-            self.test_data_instance["file"] = open(file_path, 'r')
-            version_line = self.test_data_instance["file"].read()
-            print(version_line)
-            # TODO: Validate format.
-            return "Test Data File Opened."
+        def load_pv_char_file(self, file_path):
+            """_summary_
+            Load a historical PV characterization file. Select the
+            correct loader associated with the file version and load in the file contents.
 
-        # Compare Against Model
+            Args:
+                file_path (str): File to load.
+            """
+            self.parent.print("LOG", f"Loading PV characterization file at {file_path}...")
+            [result, loader_or_err] = self.parent.pv_char.get_version_loader(file_path)
+
+            if result is False:
+                self.parent.print("ERROR", loader_or_err)
+            else:
+                self.test_data_instance["file_path"] = file_path
+                self.test_data_instance["loader"] = loader_or_err
+                self.parent.print(
+                    "LOG", "Found valid loader version, extracting file..."
+                )
+                self.test_data_instance["data"] = loader_or_err.load_file(file_path)
+                self.parent.print("LOG", "Loaded in data.")
+
+        def save_pv_char_file(self):
+            """_summary_
+            Save a PV characterization into a file.
+            """
+            self.curve_tracer_instance["loader"].store_file(
+                f"./data/{self.curve_tracer_instance['pv_id']}.log",
+                self.curve_tracer_instance["data"]
+            )
+
         def get_available_pv_models(self):
-            return ["Nonideal Model", "Ideal Model"]
+            """_summary_
+            Returns a list of PV models that can be compared against the PV
+            characterization data.
+
+            Returns:
+                [str]: List of PV models.
+            """
+            return ["Nonideal PV Cell Model", "Ideal PV Cell Model"]
 
         def set_pv_model(self, pv_model):
-            pass
+            """_summary_
+            Sets the current PV model to be compared against the PV
+            characterization data.
 
-        def publish_pv_models(self, pv_model_selector):
-            pass
-            # print(self.parent.ui)#update_pv_model_selector(pv_model_selector, self.get_available_pv_models())
+            Args:
+                pv_model (str): Model name.
+            """
+            self.model_instance["pv_model"] = pv_model
 
-        def normalize_data(self, series_voltage, series_current):
+        def normalize_data(self, data):
+            """_summary_
+            Normalize the PV data to 25 C and 1000 W/m^2.
+
+            Args:
+                data Data to normalize.
+
+            Returns:
+                dict: data corresponding to the characterized PV in the form:
+                    {
+                        "irradiance": float,
+                        "temperature": float,
+                        "voltage":  [float],
+                        "current":  [float],
+                        "power":    [float],
+                        "v_oc":     float,
+                        "i_sc":     float,
+                        "v_mpp":    float,
+                        "i_mpp":    float,
+                        "p_mpp":    float,
+                        "ff":       float,
+                        "eff":      float
+                    }
+            """
+
+            return self.parent.pv_char.normalize_data(data)
+
             # Normalize to 25C and 1000 W/m^2 (G)
             data = {
-                "error_str": "UNPOPULATED",
-                "series_voltage": [],
-                "series_current": [],
-                "series_power": [],
-                "v_oc": None,
-                "i_sc": None,
-                "v_mpp": None,
-                "i_mpp": None,
-                "p_mpp": None,
-                "ff_pct": None,
+                "irradiance": 0.00,
+                "temperature": 0.00,
+                "voltage": [],
+                "current": [],
+                "power": [],
+                "v_oc": 0.00,
+                "i_sc": 0.00,
+                "v_mpp": 0.00,
+                "i_mpp": 0.00,
+                "p_mpp": 0.00,
+                "ff": 0.00,
+                "eff": 0.00
             }
             return data
 
@@ -212,6 +359,10 @@ class PVCaptureController:
             #    - I-V curve set (ordered array for each PV in the test set,
             #      against the test_data).
             return None
+
+        def publish_pv_models(self, pv_model_selector):
+            pass
+            # print(self.parent.ui)#update_pv_model_selector(pv_model_selector, self.get_available_pv_models())
 
     class UI(QWidget):
         def __init__(self, parent):
@@ -497,6 +648,11 @@ class PVCaptureController:
             parent_widget = QWidget()
             layout = QVBoxLayout()
             iv_curve = pg.PlotWidget()
+            iv_curve.setTitle("I-V Characteristics")
+            iv_curve.setLabel("left", "Current (A)")
+            iv_curve.setLabel("bottom", "Voltage (V)")
+            iv_curve.setLabel("right", "Power (W)")
+            iv_curve.showGrid(x=True, y=True)
             layout.addWidget(iv_curve)
             parent_widget.setLayout(layout)
             return [parent_widget, [iv_curve]]
@@ -532,9 +688,7 @@ class PVCaptureController:
         # Button specific functions
         def get_test_data_file_from_dialog(self):
             file_path = QFileDialog.getOpenFileName(self, "Open File:", "./", "")
-            self.parent.print("LOG", "Loading test file " + file_path[0])
-            result = self.parent.data.set_test_data_file(file_path)
-            self.parent.print("LOG", result)
+            self.parent.data.load_pv_char_file(file_path[0])
 
         def normalize_data(self):
             pass
@@ -546,12 +700,24 @@ class PVCaptureController:
             # Run data generation function
             self.parent.print("LOG", "Starting Eclipse PV Capture execution...")
             [success, data] = self.parent.data.go()
-            if not success:
-                self.parent.print("WARN", data["error_str"])
-                return
+            if success:
+                self.parent.print("LOG", "Plotting data on main canvas...")
+                self.plot_graph_iv_curve(data)
+                self.parent.print("LOG", "Updating labels...")
+                self.update_char_data_fields(data)
+                self.parent.print("LOG", "Done!")
 
-            # Display data and update monitors if sufficient
-            print(success, data)
+        def update_char_data_fields(self, data):
+            self.populate_field(self.v_oc, f"V_OC = {data['v_oc']:.2f} V")
+            self.populate_field(self.i_sc, f"I_SC = {data['i_sc']:.2f} A")
+            self.populate_field(self.v_mpp, f"V_MPP = {data['v_mpp']:.2f} V")
+            self.populate_field(self.i_mpp, f"I_MPP = {data['i_mpp']:.2f} A")
+            self.populate_field(self.p_mpp, f"P_MPP = {data['p_mpp']:.2f} W")
+            self.populate_field(self.ff, f"FF = {data['ff']*100:.2f} %")
+
+        def plot_graph_iv_curve(self, data):
+            self.iv_curve.plot(data["voltage"], data["current"])
+            self.iv_curve.plot(data["voltage"], data["power"])
 
         def reset_data(self):
             pass
