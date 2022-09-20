@@ -19,10 +19,10 @@ from PyQt6.QtWidgets import (
     QGridLayout,
 )
 
-from pv_capture.controller import PVCaptureController
-from sim_designer.controller import SimDesignerController
-from power_gen_sim.controller import PowerGenSimController
-from about.controller import AboutController
+from src.pv_capture.controller import PVCaptureController
+from src.sim_designer.controller import SimDesignerController
+from src.power_gen_sim.controller import PowerGenSimController
+from src.about.controller import AboutController
 
 
 class Eclipse:

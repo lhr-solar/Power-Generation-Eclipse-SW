@@ -28,7 +28,8 @@ from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
 import pyqtgraph as pg
 from datetime import datetime
 
-from pv_capture.pv_characterization import PVCharacterization
+from src.pv_capture.pv_characterization import PVCharacterization
+from src.modeling.pv_model import PVModel
 
 
 class PVCaptureController:
@@ -42,6 +43,7 @@ class PVCaptureController:
     """
 
     def __init__(self):
+        self.pv_model = PVModel()
         self.pv_char = PVCharacterization()
         self.data = self.Data(self)
         self.ui = self.UI(self)
@@ -69,16 +71,16 @@ class PVCaptureController:
             self.parent = parent
             self.test_data_instance = {"file_path": None, "loader": None, "data": None}
             self.curve_tracer_instance = {
-                "loader": self.parent.pv_char.get_version_loader(self.parent.pv_char.get_version()),
+                "loader": self.parent.pv_char.get_version_loader(
+                    self.parent.pv_char.get_version()
+                ),
                 "com_port": None,
                 "baud_rate": None,
                 "pv_type": None,
                 "pv_id": None,
-                "data": None
+                "data": None,
             }
-            self.model_instance = {
-                "pv_model" : None
-            }
+            self.model_instance = {"pv_model": None, "data": None}
 
         def go(self):
             """_summary_
@@ -161,7 +163,7 @@ class PVCaptureController:
                 "i_mpp": 0.00,
                 "p_mpp": 0.00,
                 "ff": 0.00,
-                "eff": 0.00
+                "eff": 0.00,
             }
 
         def get_available_com_ports(self):
@@ -250,8 +252,12 @@ class PVCaptureController:
             Args:
                 file_path (str): File to load.
             """
-            self.parent.print("LOG", f"Loading PV characterization file at {file_path}...")
-            [result, loader_or_err] = self.parent.pv_char.get_version_loader(file_path)
+            self.parent.print(
+                "LOG", f"Loading PV characterization file at {file_path}..."
+            )
+            [result, loader_or_err] = self.parent.pv_char.get_version_loader_from_path(
+                file_path
+            )
 
             if result is False:
                 self.parent.print("ERROR", loader_or_err)
@@ -270,28 +276,8 @@ class PVCaptureController:
             """
             self.curve_tracer_instance["loader"].store_file(
                 f"./data/{self.curve_tracer_instance['pv_id']}.log",
-                self.curve_tracer_instance["data"]
+                self.curve_tracer_instance["data"],
             )
-
-        def get_available_pv_models(self):
-            """_summary_
-            Returns a list of PV models that can be compared against the PV
-            characterization data.
-
-            Returns:
-                [str]: List of PV models.
-            """
-            return ["Nonideal PV Cell Model", "Ideal PV Cell Model"]
-
-        def set_pv_model(self, pv_model):
-            """_summary_
-            Sets the current PV model to be compared against the PV
-            characterization data.
-
-            Args:
-                pv_model (str): Model name.
-            """
-            self.model_instance["pv_model"] = pv_model
 
         def normalize_data(self, data):
             """_summary_
@@ -317,30 +303,36 @@ class PVCaptureController:
                         "eff":      float
                     }
             """
-
             return self.parent.pv_char.normalize_data(data)
 
-            # Normalize to 25C and 1000 W/m^2 (G)
-            data = {
-                "irradiance": 0.00,
-                "temperature": 0.00,
-                "voltage": [],
-                "current": [],
-                "power": [],
-                "v_oc": 0.00,
-                "i_sc": 0.00,
-                "v_mpp": 0.00,
-                "i_mpp": 0.00,
-                "p_mpp": 0.00,
-                "ff": 0.00,
-                "eff": 0.00
-            }
-            return data
+        def get_available_pv_models(self):
+            """_summary_
+            Returns a list of PV models that can be compared against the PV
+            characterization data.
 
-        def superimpose_model(self):
-            # Return the data series to plot onto the graph.
-            data = {"series_voltage": [], "series_current": [], "series_power": []}
-            return data
+            Returns:
+                [str]: List of PV models.
+            """
+            return self.parent.pv_model.list_models()
+
+        def load_pv_model(self, model_name):
+            """_summary_
+            Sets the current PV model to be compared against the PV
+            characterization data.
+
+            Args:
+                pv_model (str): Model name.
+            """
+            self.parent.print("LOG", f"Loading PV Model {model_name}...")
+            [result, model_or_err] = self.parent.pv_model.get_model(model_name)
+
+            if result is False:
+                self.parent.print("ERROR", model_or_err)
+            else:
+                self.model_instance["pv_model"] = model_or_err
+                self.model_instance["data"] = model_or_err.generate_model()
+                self.parent.print("LOG", "Loaded in data.")
+            return self.model_instance["data"]
 
         # Analyze Data Against Others
         def set_test_data_file_range(self, range):
@@ -375,15 +367,15 @@ class PVCaptureController:
             [
                 widget_new_pv,
                 [
-                    com_port_selector,
-                    baud_rate_selector,
-                    pv_type_selector,
-                    self.id_input,
+                    self.com_port_selector,
+                    self.baud_rate_selector,
+                    self.pv_type_selector,
+                    self.pv_id_input,
                 ],
             ] = self.add_sublayout_pull_data()
             main_layout.addWidget(widget_new_pv, 0, 0, 16, 34)
 
-            [widget_load_pv] = self.add_sublayout_load_data()
+            [widget_load_pv, self.file_selector] = self.add_sublayout_load_data()
             main_layout.addWidget(widget_load_pv, 0, 34, 16, 16)
 
             [
@@ -392,7 +384,10 @@ class PVCaptureController:
             ] = self.add_sublayout_char_data()
             main_layout.addWidget(widget_char_pv, 16, 0, 16, 50)
 
-            [widget_compare_pv, [pv_model_selector]] = self.add_sublayout_compare_pv()
+            [
+                widget_compare_pv,
+                [self.pv_model_selector],
+            ] = self.add_sublayout_compare_pv()
             main_layout.addWidget(widget_compare_pv, 32, 0, 10, 50)
 
             [
@@ -411,19 +406,18 @@ class PVCaptureController:
             main_layout.addWidget(widget_display, 0, 50, 64, 70)
 
             self.load_selector(
-                com_port_selector, self.parent.data.get_available_com_ports()
+                self.com_port_selector, self.parent.data.get_available_com_ports()
             )
             self.load_selector(
-                baud_rate_selector, self.parent.data.get_available_baud_rates()
+                self.baud_rate_selector, self.parent.data.get_available_baud_rates()
             )
             self.load_selector(
-                pv_type_selector, self.parent.data.get_available_pv_types()
+                self.pv_type_selector, self.parent.data.get_available_pv_types()
             )
             self.load_selector(
-                pv_model_selector, self.parent.data.get_available_pv_models()
+                self.pv_model_selector, self.parent.data.get_available_pv_models()
             )
 
-        # Layout setup functions
         def add_sublayout_pull_data(self):
             display = QFrame()
             layout_display = QGridLayout()
@@ -482,7 +476,7 @@ class PVCaptureController:
 
             display.setLayout(layout_display)
 
-            return [display]
+            return [display, file_selector]
 
         def add_sublayout_char_data(self):
             display = QFrame()
@@ -670,7 +664,6 @@ class PVCaptureController:
             parent_widget.setLayout(layout)
             return [parent_widget, [ff_dist, pmpp_dist, iv_curve]]
 
-        # Generic functions
         def load_selector(self, selector_widget, items):
             selector_widget.clear()
             for item in items:
@@ -685,20 +678,30 @@ class PVCaptureController:
         def print_console(self, text):
             self.console.append(text)
 
-        # Button specific functions
         def get_test_data_file_from_dialog(self):
             file_path = QFileDialog.getOpenFileName(self, "Open File:", "./", "")
-            self.parent.data.load_pv_char_file(file_path[0])
-
-        def normalize_data(self):
-            pass
-
-        def superimpose_model(self):
-            pass
+            self.file_path = file_path
+            # TODO: Update button with new text
+            # self.file_selector.setText(file_path)
 
         def generate_data(self):
             # Run data generation function
             self.parent.print("LOG", "Starting Eclipse PV Capture execution...")
+
+            # Load data from sublayout_pull_data
+            device_selection = {
+                "com_port": self.com_port_selector.currentText(),
+                "baud_rate": self.baud_rate_selector.currentText(),
+                "pv_type": self.pv_type_selector.currentText(),
+                "pv_id": self.id_input.text()
+            }
+
+            file_selection = {
+                "file_path": self.file_path
+
+            }
+            print(device_selection)
+
             [success, data] = self.parent.data.go()
             if success:
                 self.parent.print("LOG", "Plotting data on main canvas...")
@@ -706,6 +709,23 @@ class PVCaptureController:
                 self.parent.print("LOG", "Updating labels...")
                 self.update_char_data_fields(data)
                 self.parent.print("LOG", "Done!")
+            else:
+                self.parent.print("LOG", data)
+
+        def normalize_data(self):
+            # TODO: Get data from parent
+            self.parent.print("LOG", "Normalizing data...")
+            data = self.parent.data.normalize_data(data)
+            self.parent.print("LOG", "Updating display...")
+            self.clear_graph_iv_curve()
+            self.plot_graph_iv_curve(data)
+            self.parent.print("LOG", "Done!")
+
+        def superimpose_model(self):
+            data = self.parent.data.load_pv_model(self.pv_model_selector.currentText())
+            self.parent.print("LOG", "Plotting data on main canvas...")
+            self.plot_graph_iv_curve(data)
+            self.parent.print("LOG", "Done!")
 
         def update_char_data_fields(self, data):
             self.populate_field(self.v_oc, f"V_OC = {data['v_oc']:.2f} V")
@@ -716,8 +736,19 @@ class PVCaptureController:
             self.populate_field(self.ff, f"FF = {data['ff']*100:.2f} %")
 
         def plot_graph_iv_curve(self, data):
-            self.iv_curve.plot(data["voltage"], data["current"])
-            self.iv_curve.plot(data["voltage"], data["power"])
+            pen_iv = pg.mkPen(color=(0, 0, 255), width=3)
+            pen_pv = pg.mkPen(color=(255, 0, 0), width=3)
+            self.iv_curve.plot(data["voltage"], data["current"], pen=pen_iv, symbol="t")
+            self.iv_curve.plot(data["voltage"], data["power"], pen=pen_pv, symbol="t1")
+
+        def clear_graph_iv_curve(self):
+            self.iv_curve.clear()
 
         def reset_data(self):
-            pass
+            self.parent.print("LOG", "Resetting the display...")
+            data = self.parent.data.reset()
+            self.parent.print("LOG", "Clearing data on main canvas...")
+            self.clear_graph_iv_curve()
+            self.parent.print("LOG", "Updating labels...")
+            self.update_char_data_fields(data)
+            self.parent.print("LOG", "Done!")

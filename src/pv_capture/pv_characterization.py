@@ -19,6 +19,13 @@ class PVCharacterization:
             self.set_version_loader(instance.get_version(), instance)
 
     def set_version_loader(self, version, loader_instance):
+        """_summary_
+        Adds to the class dict the loader for a specific version.
+
+        Args:
+            version (str): Version associated with the loader.
+            loader_instance (Class): Class loader.
+        """
         self.loaders[version] = loader_instance
 
     def get_version(self):
@@ -30,7 +37,29 @@ class PVCharacterization:
         """
         return self.versions[-1]
 
-    def get_version_loader(self, file_path):
+    def get_version_loader(self, version):
+        """_summary_
+        Gets the loader associated with the version.
+
+        Args:
+            version (str): Version of the loader.
+
+        Returns:
+            Class: Loader associated with the version.
+        """
+        return self.loaders[version]
+
+    def get_version_loader_from_path(self, file_path):
+        """_summary_
+        Gets the loader associated with the file by parsing the file.
+
+        Args:
+            file_path (str): Path to file
+
+        Returns:
+            [False, str]: Failure and error string.
+            [True, Class]: Success and loader.
+        """
         file_candidate = open(file_path, "r")
 
         lines = file_candidate.readlines()
@@ -47,16 +76,38 @@ class PVCharacterization:
 
         return [True, self.loaders[version]]
 
-    def get_version_loader(self, version):
-        return self.loaders[version]
-
     def load_file(self, file_path):
+        """_summary_
+        Loader method for loading the file contents into a PV characterization
+        dict.
+
+        Args:
+            file_path (str): File path to load from file.
+
+        Returns:
+            data: Metadata of the PV characterization file.
+        """
         return None
 
     def store_file(self, data):
-        return None
+        """_summary_
+        Loader method for storing a PV characterization dict into a file.
+
+        Args:
+            data (str): Data to save. Version is implicit
+        """
+        pass
 
     def characterize_data(self, data):
+        """_summary_
+        Characterize the data into an expanded PV characterization dict.
+
+        Args:
+            data (dict): Dict of various aspects of the PV.
+
+        Returns:
+            dict: Expanded dict.
+        """
         data["power"] = []
         data["v_oc"] = 0.0
         data["i_sc"] = 0.0
@@ -150,7 +201,6 @@ class pv_char_version_0_0_0(PVCharacterization):
         file.write(f"\n")
         file.write(f"irradiance (G) {data['irradiance']}\n")
         file.write(f"temperature (C) {data['temperature']}\n")
-        file.write(f"\n")
         file.write((f"Voltage (V),Current (A)\n"))
         for entry in zip(data["voltage"], data["current"]):
             file.write(f"{entry}\n")
