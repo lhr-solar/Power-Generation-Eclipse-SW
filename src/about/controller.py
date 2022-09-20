@@ -54,8 +54,9 @@ class AboutController:
         ## Credits
 
         The main author of this revision is Matthew Yu (matthewjkyu@gmail.com).
-        The assistant author is Roy Moore.
-
+        The greater assistant author is Roy Mor.
+        The lesser assistant author is Jared McArthur.
+        
         Also credits to the following members of LHR Solar who have contributed
         previously to MPPT algorithm components:
         - Afnan Mir
