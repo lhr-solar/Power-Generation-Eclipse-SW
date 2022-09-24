@@ -6,7 +6,6 @@
 @date       2022-09-14
 """
 
-from tkinter import HORIZONTAL
 from PyQt6.QtWidgets import ( #copying all widget imports from pv_cap temporarily, remove unecessary later
     QWidget,
     QLabel,
