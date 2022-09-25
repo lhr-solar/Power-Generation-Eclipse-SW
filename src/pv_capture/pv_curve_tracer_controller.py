@@ -8,9 +8,10 @@
 
 from curses import baudrate
 import serial
+import serial.tools.list_ports
 import argparse
 from datetime import datetime
-
+import os
 
 class PVCurveTracerController:
     def __init__(self) -> None:
@@ -19,6 +20,35 @@ class PVCurveTracerController:
 
     def list_ports(self):
         return serial.tools.list_ports.comports()
+
+    def list_baud_rates(self):
+        return [4800, 9600, 19200, 38400, 57600, 115200]
+
+    def list_parity(self):
+        return ["PARITY_NONE", "PARITY_EVEN", "PARITY_ODD", "PARITY_MARK", "PARITY_SPACE"]
+
+    def list_encoding_schemes(self):
+        # TODO: load from folder any files containing encoding schemes
+        return ["NONE"]
+
+    def load_com_config(self, file_path):
+        # TODO: load from config file comm scheme.
+        config = {
+            "com_port": "COM10",
+            "baud_rate": 9600,
+            "parity_bit": "PARITY_EVEN",
+            "enc_scheme": "NONE"
+        }
+        return config
+
+    cwd_set = False
+    def list_capture_files(self):
+        if not PVCurveTracerController.cwd_set:
+            PVCurveTracerController.cwd_set = True
+            cwd = os.getcwd()
+            new_cwd = cwd + '/data/captures'
+            os.chdir(new_cwd)
+        return os.listdir()
 
     def connect_to_curve_tracer(self, com_port, baud_rate, parity):
         self.serial_instance = serial.Serial(

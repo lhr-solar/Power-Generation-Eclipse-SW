@@ -25,12 +25,13 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
+from PyQt6.QtGui import QIntValidator, QDoubleValidator
 import pyqtgraph as pg
 from datetime import datetime
 
 from src.pv_capture.pv_characterization import PVCharacterization
+from src.pv_capture.pv_curve_tracer_controller import PVCurveTracerController
 from src.modeling.pv_model import PVModel
-
 
 class PVCaptureController:
     """_summary_
@@ -45,6 +46,7 @@ class PVCaptureController:
     def __init__(self):
         self.pv_model = PVModel()
         self.pv_char = PVCharacterization()
+        self.curve_tracer = PVCurveTracerController()
         self.data = self.Data(self)
         self.ui = self.UI(self)
 
@@ -65,6 +67,7 @@ class PVCaptureController:
         date = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
         output = f"[{level}][{date}] {text}"
         print(output)
+        self.ui.print_console(output)
 
     class Data:
         def __init__(self, parent):
@@ -114,22 +117,25 @@ class PVCaptureController:
             self.setLayout(main_layout)
 
             self.add_sublayout_pv_config()
-            main_layout.addWidget(self.pv_config_ui["display"], 0, 0, 3, 3)
+            main_layout.addWidget(self.pv_config_ui["display"], 0, 0, 3, 4)
 
-            comm_config_display = self.add_sublayout_comm_config()
-            main_layout.addWidget(comm_config_display, 3, 0, 3, 3)
+            self.add_sublayout_comm_config()
+            main_layout.addWidget(self.comm_config_ui["display"], 3, 0, 3, 3)
 
-            id_display = self.add_sublayout_id()
-            main_layout.addWidget(id_display, 6, 0, 1, 1)
+            self.add_sublayout_id()
+            main_layout.addWidget(self.id_ui["display"], 3, 3, 1, 1)
 
-            go_display = self.add_sublayout_go()
-            main_layout.addWidget(go_display, 7, 0, 1, 1)
+            self.add_sublayout_controls()
+            main_layout.addWidget(self.control_ui["display"], 4, 3, 2, 1)
 
-            char_board_display = self.add_sublayout_char_board()
-            main_layout.addWidget(char_board_display, 0, 3, 4, 4)
+            self.add_sublayout_console()
+            main_layout.addWidget(self.console_ui["display"], 6, 0, 2, 4)
 
-            iv_display = self.add_sublayout_iv()
-            main_layout.addWidget(iv_display, 4, 3, 4, 4)
+            self.add_sublayout_char_board()
+            main_layout.addWidget(self.char_board_ui["display"], 0, 4, 3, 4)
+
+            self.add_sublayout_graph()
+            main_layout.addWidget(self.graph_ui["display"], 3, 4, 5, 4)
 
         def add_sublayout_pv_config(self):
             display = QFrame()
@@ -138,6 +144,10 @@ class PVCaptureController:
 
             # Title Label
             title = QLabel("PV Config")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setSizePolicy(
+                QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+            )
             layout.addWidget(title, 0, 0, 1, 2)
 
             # Selectors
@@ -157,29 +167,32 @@ class PVCaptureController:
             # Sample Range Selector
             label_sample_range = QLabel("Sample Range")
             selector_sample_range = QLineEdit()
-            selector_sample_range.setPlaceholderText("Format: '[x, y]' in range [0, 1]")
+            selector_sample_range.setPlaceholderText("Float '[x, y]' ∈ [0, 1]")
             selector_sample_range.editingFinished.connect(self.update_pv_config)
             layout_selectors.addRow(label_sample_range, selector_sample_range)
 
             # Step Size Selector
             label_step_size = QLabel("Step Size")
             selector_step_size = QLineEdit()
-            selector_step_size.setPlaceholderText("Format: 'x' in range [0.001, 0.1]")
+            selector_step_size.setPlaceholderText("Float 'x' ∈ [0.001, 0.100]")
             selector_step_size.editingFinished.connect(self.update_pv_config)
+            selector_step_size.setValidator(QDoubleValidator(0.001, 0.1, 3))
             layout_selectors.addRow(label_step_size, selector_step_size)
 
             # Num Iterations
             label_num_iters = QLabel("Num Iterations")
             selector_num_iters = QLineEdit()
-            selector_num_iters.setPlaceholderText("Format: 'x' > 0")
+            selector_num_iters.setPlaceholderText("Int 'x' ∈ [1, 100]")
             selector_num_iters.editingFinished.connect(self.update_pv_config)
+            selector_num_iters.setValidator(QIntValidator(1, 100))
             layout_selectors.addRow(label_num_iters, selector_num_iters)
 
             # Settling Time Per Step
             label_settling_time = QLabel("Settling Time (ms)")
             selector_settling_time = QLineEdit()
-            selector_settling_time.setPlaceholderText("Format: 'x' > 0")
+            selector_settling_time.setPlaceholderText("Int 'x' ∈ [1, 100]")
             selector_settling_time.editingFinished.connect(self.update_pv_config)
+            selector_settling_time.setValidator(QIntValidator(1, 100))
             layout_selectors.addRow(label_settling_time, selector_settling_time)
 
             # Labels
@@ -193,16 +206,19 @@ class PVCaptureController:
             # Num Steps
             label_num_steps = QLabel("Num Steps")
             val_num_steps = QLineEdit()
+            val_num_steps.setReadOnly(True)
             layout_labels.addRow(label_num_steps, val_num_steps)
 
             # Total Samples
             label_total_samples = QLabel("Total Samples")
             val_total_samples = QLineEdit()
+            val_total_samples.setReadOnly(True)
             layout_labels.addRow(label_total_samples, val_total_samples)
 
             # Expected Test Duration (s)
             label_test_duration = QLabel("Test Duration (ms)")
             val_test_duration = QLineEdit()
+            val_test_duration.setReadOnly(True)
             layout_labels.addRow(label_test_duration, val_test_duration)
 
             self.pv_config_ui = {
@@ -301,44 +317,220 @@ class PVCaptureController:
         def add_sublayout_comm_config(self):
             display = QFrame()
             layout = QGridLayout()
-
-            title = QLabel("COMM Config")
-            layout.addWidget(title, 0, 0, 1, 2)
             display.setLayout(layout)
-            return display
+
+            # Title Label
+            title = QLabel("COMM Config")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setSizePolicy(
+                QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+            )
+            layout.addWidget(title, 0, 0, 1, 1)
+
+            # Selectors
+            layout_selectors = QFormLayout()
+            layout.addLayout(layout_selectors, 1, 0, 1, 1)
+
+            # Config File Selector
+            label_config = QLabel("COMM Config")
+            selector_com_config = QPushButton("Select File")
+            selector_com_config.clicked.connect(self.select_com_config_file)
+            layout_selectors.addRow(label_config, selector_com_config)
+
+            # COM Port Selector
+            label_com_port = QLabel("COM Port")
+            selector_com_port = QComboBox()
+            selector_com_port.addItems(self.parent.curve_tracer.list_ports())
+            layout_selectors.addRow(label_com_port, selector_com_port)
+
+            # Baud Rate Selector
+            label_baud_rate = QLabel("Baud Rate")
+            selector_baud_rate = QComboBox()
+            selector_baud_rate.addItems([str(item) for item in self.parent.curve_tracer.list_baud_rates()])
+            layout_selectors.addRow(label_baud_rate, selector_baud_rate)
+
+            # Parity Bit Selector
+            label_parity_bit = QLabel("Parity Bit")
+            selector_parity_bit = QComboBox()
+            selector_parity_bit.addItems(self.parent.curve_tracer.list_parity())
+            layout_selectors.addRow(label_parity_bit, selector_parity_bit)
+
+            # Encoding Scheme Selector
+            label_encoding_scheme = QLabel("Encoding Scheme")
+            selector_encoding_scheme = QComboBox()
+            selector_encoding_scheme.addItems(self.parent.curve_tracer.list_encoding_schemes())
+            layout_selectors.addRow(label_encoding_scheme, selector_encoding_scheme)
+
+            self.comm_config_ui = {
+                "display": display,
+                "selectors": {
+                    "sel_config_file": selector_com_config,
+                    "sel_com_port": selector_com_port,
+                    "sel_baud_rate": selector_baud_rate,
+                    "sel_parity_bit": selector_parity_bit,
+                    "sel_enc_scheme": selector_encoding_scheme
+                }
+            }
+
+        def select_com_config_file(self):
+            file_path = QFileDialog.getOpenFileName(self, "Open File:", "./", "")
+            config = self.parent.curve_tracer.load_com_config(file_path)
+            self.comm_config_ui["selectors"]["sel_com_port"].setCurrentText(config["com_port"])
+            self.comm_config_ui["selectors"]["sel_baud_rate"].setCurrentText(str(config["baud_rate"]))
+            self.comm_config_ui["selectors"]["sel_parity_bit"].setCurrentText(config["parity_bit"])
+            self.comm_config_ui["selectors"]["sel_enc_scheme"].setCurrentText(config["enc_scheme"])
 
         def add_sublayout_id(self):
             display = QFrame()
             layout = QGridLayout()
-
-            title = QLabel("ID")
-            layout.addWidget(title, 0, 0, 1, 2)
             display.setLayout(layout)
-            return display
 
-        def add_sublayout_go(self):
+            # Title Label
+            title = QLabel("PV ID")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setSizePolicy(
+                QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+            )
+            layout.addWidget(title, 0, 0, 1, 1)
+
+            # Name of PV to capture.
+            selector_id = QLineEdit()
+            selector_id.setObjectName("pv_id")
+            selector_id.editingFinished.connect(self.check_pv_id)
+            selector_id.setSizePolicy(
+                QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+            )
+            selector_id.setPlaceholderText("ex. BV001")
+            layout.addWidget(selector_id, 1, 0, 1, 1)
+
+            self.id_ui = {
+                "display": display,
+                "selectors": selector_id
+            }
+
+        def check_pv_id(self):
+            # Check if file exists in ./data/captures
+            files = self.parent.curve_tracer.list_capture_files()
+            files = [file.split('.')[0] for file in files if file.endswith(".capture")]
+            if self.id_ui["selectors"].text() in files:
+                print("RED")
+                self.id_ui["selectors"].setStyleSheet("background-color: #FF0000;")
+            else:
+                print("GREEN")
+                self.id_ui["selectors"].setStyleSheet("background-color: #00FF00;")
+
+        def add_sublayout_controls(self):
             display = QFrame()
             layout = QGridLayout()
-
-            title = QLabel("GO")
-            layout.addWidget(title, 0, 0, 1, 2)
             display.setLayout(layout)
-            return display
+
+            # Title Label
+            title = QLabel("Controls")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setSizePolicy(
+                QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+            )
+            layout.addWidget(title, 0, 0, 1, 0)
+
+            # Start Button
+            selector_start = QPushButton("START")
+            selector_start.setStyleSheet("background-color: #00FF00;")
+            selector_start.clicked.connect(self.start_char)
+            layout.addWidget(selector_start, 1, 0, 1, 1)
+
+            # Stop Button
+            selector_stop = QPushButton("STOP")
+            selector_stop.setStyleSheet("background-color: #FF0000;")
+            selector_stop.clicked.connect(self.stop_char)
+            layout.addWidget(selector_stop, 2, 0, 1, 1)
+
+            # Save Button
+            selector_save = QPushButton("SAVE")
+            selector_save.clicked.connect(self.save_char)
+            layout.addWidget(selector_save, 3, 0, 1, 1)
+
+            self.control_ui = {
+                "display": display,
+                "selectors": {
+                    "sel_start": selector_start,
+                    "sel_stop": selector_stop,
+                    "sel_save": selector_save
+                }
+            }
+
+        def start_char(self):
+            self.parent.print("LOG", "Start characterization.")
+
+        def stop_char(self):
+            self.parent.print("LOG", "Stop characterization.")
+
+        def save_char(self):
+            if self.id_ui["selectors"].text() == "":
+                self.parent.print("WARN", "Specify a PV ID to save as.")
+            else:
+                file_path = '/data/captures/' + self.id_ui["selectors"].text() + '.capture'
+                self.parent.print("LOG", f"Saving characterization to {file_path}")
+
+        def add_sublayout_console(self):
+            display = QFrame()
+            layout = QGridLayout()
+            display.setLayout(layout)
+
+            # Title Label
+            title = QLabel("Console")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setSizePolicy(
+                QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+            )
+            layout.addWidget(title, 0, 0, 1, 0)
+
+            # Status Console
+            selector_console = QTextEdit()
+            selector_console.setReadOnly(True)
+            layout.addWidget(selector_console, 1, 0, 3, 0)
+
+            self.console_ui = {
+                "display": display,
+                "selectors": selector_console
+            }
+
+        def print_console(self, text):
+            self.console_ui["selectors"].append(text)
 
         def add_sublayout_char_board(self):
             display = QFrame()
             layout = QGridLayout()
-
-            title = QLabel("CHAR Board")
-            layout.addWidget(title, 0, 0, 1, 2)
             display.setLayout(layout)
-            return display
 
-        def add_sublayout_iv(self):
+            # Title Label
+            title = QLabel("PV Characteristics")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(title, 0, 0, 1, 2)
+
+            # Labels
+
+            self.char_board_ui = {
+                "display": display,
+                "selectors": {
+
+                }
+            }
+
+        def add_sublayout_graph(self):
             display = QFrame()
             layout = QGridLayout()
-
-            title = QLabel("IV Display")
-            layout.addWidget(title, 0, 0, 1, 2)
             display.setLayout(layout)
-            return display
+
+            # Graph
+            graph = pg.PlotWidget()
+            graph.setTitle("I-V, P-V Curve")
+            graph.setLabel("left", "Current (A)")
+            graph.setLabel("bottom", "Voltage (V)")
+            graph.setLabel("right", "Power (W)")
+            graph.showGrid(x=True, y=True)
+            layout.addWidget(graph, 0, 0, 1, 1)
+
+            self.graph_ui = {
+                "display": display,
+                "selectors": graph
+            }

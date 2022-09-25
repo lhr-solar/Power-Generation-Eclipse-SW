@@ -1,8 +1,8 @@
 __version: v0.0.0
-__file: example_pv_characterization.log
-__brief: Example PV Characterization File.
+__file: example.capture
+__brief: Example PV Characterization Capture Log.
 __author: Matthew Yu
-__last_modified: 2022_09_15
+__last_modified: 2022_09_25
 __pv_type: CELL
 __pv_id: RPXXX
 

@@ -57,11 +57,14 @@ class Eclipse:
             QWidget {
                 border: 1px solid black;
             }
+            QLineEdit[readOnly=\"true\"] {
+                background-color: #F0F0F0;
+            }
         """
         )
 
         self.window = self.EclipseWindow()
-        self.window.setFixedSize(1520, 720)
+        self.window.setFixedSize(1080, 720)
         self.window.show()
 
         # Generate instances of each module.
