@@ -9,14 +9,18 @@
 from curses import baudrate
 import serial
 import serial.tools.list_ports
+from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
 import argparse
 from datetime import datetime
 import os
 
+
 class PVCurveTracerController:
     def __init__(self) -> None:
         self.serial_instance = None
-        self.file_hook = None
+        self.cwd = os.getcwd()
+
+    # Communication configuration
 
     def list_ports(self):
         return serial.tools.list_ports.comports()
@@ -25,11 +29,26 @@ class PVCurveTracerController:
         return [4800, 9600, 19200, 38400, 57600, 115200]
 
     def list_parity(self):
-        return ["PARITY_NONE", "PARITY_EVEN", "PARITY_ODD", "PARITY_MARK", "PARITY_SPACE"]
+        return [
+            "PARITY_NONE",
+            "PARITY_EVEN",
+            "PARITY_ODD",
+            "PARITY_MARK",
+            "PARITY_SPACE",
+        ]
 
     def list_encoding_schemes(self):
         # TODO: load from folder any files containing encoding schemes
         return ["NONE"]
+
+    def list_com_config_files(self):
+        obj = os.scandir(path=self.cwd + "/data/com_confs")
+        com_conf_files = [
+            entry.name
+            for entry in obj
+            if entry.is_file() and entry.name.endswith(".com_conf")
+        ]
+        return com_conf_files
 
     def load_com_config(self, file_path):
         # TODO: load from config file comm scheme.
@@ -37,59 +56,115 @@ class PVCurveTracerController:
             "com_port": "COM10",
             "baud_rate": 9600,
             "parity_bit": "PARITY_EVEN",
-            "enc_scheme": "NONE"
+            "enc_scheme": "NONE",
         }
         return config
 
-    cwd_set = False
+    # PV Capture configuration
+
     def list_capture_files(self):
-        if not PVCurveTracerController.cwd_set:
-            PVCurveTracerController.cwd_set = True
-            cwd = os.getcwd()
-            new_cwd = cwd + '/data/captures'
-            os.chdir(new_cwd)
-        return os.listdir()
+        obj = os.scandir(path=self.cwd + "/data/captures")
+        capture_files = [
+            entry.name
+            for entry in obj
+            if entry.is_file() and entry.name.endswith(".capture")
+        ]
+        return capture_files
 
-    def connect_to_curve_tracer(self, com_port, baud_rate, parity):
-        self.serial_instance = serial.Serial(
-            port=com_port, baudrate=baud_rate, parity=parity
-        )
+    def load_capture_config(self, file_path):
+        # TODO: load from config file capture scheme.
+        pass
 
-    def hook_in_file(self, file_name):
-        if self.file_hook is not None:
-            self.file_hook.close()
-        self.file_hook = open(
-            f"{file_name}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log", "w+"
-        )
+    def list_capture_config_files(self):
+        obj = os.scandir(path=self.cwd + "/data/capture_confs")
+        capture_conf_files = [
+            entry.name
+            for entry in obj
+            if entry.is_file() and entry.name.endswith(".capture_conf")
+        ]
+        return capture_conf_files
 
-    def send_command(self, command_str):
-        if self.file_hook is not None:
-            self.file_hook.write(f"{command_str}\n")
-        self.serial_instance.write(f"{command_str}\n")
+    def load_capture_file(self, file_path):
+        # TODO: load from capture file the capture.
+        capture = {
+            "version": "v0.0.0",
+            "file_name": "example.capture",
+            "brief": "Example PV Characterization Capture Log.",
+            "author": "Matthew Yu",
+            "generation_time": "2022_09_25_00_00_00",
+            "pv_id": "TEST000",
+            "pv_type": "CELL",
+            "irradiance": 1000,
+            "temperature": 25,
+            "voltage": [
+                0.00,
+                0.10,
+                0.50,
+                0.84,
+                1.49,
+                2.12,
+                2.99,
+                3.56,
+                4.14,
+                5.00,
+                5.13,
+                6.59,
+                7.21,
+            ],
+            "current": [
+                6.15,
+                6.00,
+                5.68,
+                5.30,
+                4.88,
+                4.23,
+                3.66,
+                3.20,
+                1.65,
+                1.13,
+                1.00,
+                0.32,
+                0.00,
+            ],
+        }
+        return capture
 
-    def receive_data(self):
-        data = self.serial_instance.readline().decode("utf-8").strip()
-        if self.file_hook is not None:
-            self.file_hook.write(f"{data}\n")
-        return data
+    def save_capture_file(self, capture):
+        # TODO: save a dict of info into a capture file format.
+        pass
 
+    # Talk to Curve Tracer
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("port", type=str, help="port to read from")
-    args = parser.parse_args()
-    port = args.port
+    def capture(self, com_conf, capture_conf, ui_signal):
+        """
+        com_conf = {
+            "com_port": COM_PORT,
+            "baud_rate": BAUD_RATE,
+            "parity_bit": PARITY_BIT,
+            "enc_scheme": ENC_SCHEME
+        }
 
-    controller = PVCurveTracerController()
-    controller.connect_to_curve_tracer(
-        com_port=port, baud_rate=115200, parity=serial.PARITY_NONE
-    )
-    while True:
-        file_name = input("Specify cell ID then press ENTER:")
-        controller.hook_in_file(file_name)
-        line = controller.receive_data()
-        while line != "TERMINATE SCAN MODE":
-            line = controller.receive_data()
-            print(line)
-        print("Done reading file!")
-        input("Press [ENTER] to continue...")
+        capture_conf = {
+            "sample_range": [LOW_RANGE, HIGH_RANGE],
+            "step_size": STEP_SIZE,
+            "num_iters": NUM_ITERS,
+            "settling_time": SETTLING_TIME_MS,
+            "pv_type": PV_TYPE
+        }
+
+        """
+        # Open up a serial instance to the curve tracer using com_conf.
+        serial_instance = QSerialPort()
+        self.serial_instance = serial_instance
+        serial_instance.setPortName(com["com_port"])
+        serial_instance.setBaudRate(com["baud_rate"])
+        serial_instance.setParity(com["parity_bit"])
+        serial_instance.open(QSerialPort.ReadWrite)
+
+        # TODO: Transmit message to set encoding scheme.
+
+        # TODO: Transmit message to set capture configuration.
+
+        # TODO: Gather data while emitting updates to ui_signal.
+
+        # TODO: Return completed capture.

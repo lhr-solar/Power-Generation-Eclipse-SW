@@ -24,7 +24,6 @@ from PyQt6.QtWidgets import (
     QLineEdit,
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt6.QtGui import QIntValidator, QDoubleValidator
 import pyqtgraph as pg
 from datetime import datetime
@@ -32,6 +31,9 @@ from datetime import datetime
 from src.pv_capture.pv_characterization import PVCharacterization
 from src.pv_capture.pv_curve_tracer_controller import PVCurveTracerController
 from src.modeling.pv_model import PVModel
+import os
+import re
+
 
 class PVCaptureController:
     """_summary_
@@ -84,29 +86,35 @@ class PVCaptureController:
                 "data": None,
             }
             self.model_instance = {"pv_model": None, "data": None}
+            self.cwd = os.getcwd()
 
         def get_potential_pv_configs(self):
-            # TODO: Load from pv_config.conf file.
-            return {
-                "CELL": {
-                    "sample_range": [0.3, 0.45],
-                    "step_size": 0.001,
-                    "num_iters": 25,
-                    "settling_time": 2,
-                },
-                "MODULE": {
-                    "sample_range": [0.3, 0.45],
-                    "step_size": 0.0001,
-                    "num_iters": 25,
-                    "settling_time": 2,
-                },
-                "ARRAY": {
-                    "sample_range": [0.3, 0.45],
-                    "step_size": 0.0001,
-                    "num_iters": 25,
-                    "settling_time": 2,
-                },
-            }
+            configs = {}
+            valid_params = ["sample_range_low", "sample_range_high", "step_size", "num_iterations", "settling_time_ms"]
+
+            # Grab any pv_conf files in data/pv_confs
+            obj = os.scandir(path=self.cwd + "/data/pv_confs")
+            pv_conf_files = [
+                entry.name
+                for entry in obj
+                if entry.is_file() and entry.name.endswith(".pv_conf")
+            ]
+
+            # Check for __pv_type parameter to get the name
+            # Then pull out anything matching our valid params.
+            for file in pv_conf_files:
+                with open(self.cwd + "/data/pv_confs/" + file, "r") as f:
+                    pv_type = None
+                    lines = f.readlines()
+                    for line in lines:
+                        blobs = [blob.strip(':\n') for blob in line.split(" ")]
+                        if blobs[0] == "__pv_type":
+                            pv_type = blobs[1]
+                            configs[pv_type] = {}
+                        elif pv_type != None and len(blobs) == 2:
+                            if blobs[0] in valid_params:
+                                configs[pv_type][blobs[0]] = blobs[1]
+            return configs
 
     class UI(QWidget):
         def __init__(self, parent):
@@ -132,10 +140,10 @@ class PVCaptureController:
             main_layout.addWidget(self.console_ui["display"], 6, 0, 2, 4)
 
             self.add_sublayout_char_board()
-            main_layout.addWidget(self.char_board_ui["display"], 0, 4, 3, 4)
+            main_layout.addWidget(self.char_board_ui["display"], 0, 4, 2, 4)
 
             self.add_sublayout_graph()
-            main_layout.addWidget(self.graph_ui["display"], 3, 4, 5, 4)
+            main_layout.addWidget(self.graph_ui["display"], 2, 4, 6, 4)
 
         def add_sublayout_pv_config(self):
             display = QFrame()
@@ -252,16 +260,16 @@ class PVCaptureController:
             config_name = self.pv_config_ui["selectors"]["sel_pv_type"].currentText()
             configs = self.parent.data.get_potential_pv_configs()
             self.pv_config_ui["selectors"]["sel_sample_range"].setText(
-                f"[{configs[config_name]['sample_range'][0]}:{configs[config_name]['sample_range'][1]}]"
+                f"[{configs[config_name]['sample_range_low']}:{configs[config_name]['sample_range_high']}]"
             )
             self.pv_config_ui["selectors"]["sel_step_size"].setText(
                 f"{configs[config_name]['step_size']}"
             )
             self.pv_config_ui["selectors"]["sel_num_iters"].setText(
-                f"{configs[config_name]['num_iters']}"
+                f"{configs[config_name]['num_iterations']}"
             )
             self.pv_config_ui["selectors"]["sel_settle_time"].setText(
-                f"{configs[config_name]['settling_time']}"
+                f"{configs[config_name]['settling_time_ms']}"
             )
 
             # Force update of labels.
@@ -346,7 +354,9 @@ class PVCaptureController:
             # Baud Rate Selector
             label_baud_rate = QLabel("Baud Rate")
             selector_baud_rate = QComboBox()
-            selector_baud_rate.addItems([str(item) for item in self.parent.curve_tracer.list_baud_rates()])
+            selector_baud_rate.addItems(
+                [str(item) for item in self.parent.curve_tracer.list_baud_rates()]
+            )
             layout_selectors.addRow(label_baud_rate, selector_baud_rate)
 
             # Parity Bit Selector
@@ -358,7 +368,9 @@ class PVCaptureController:
             # Encoding Scheme Selector
             label_encoding_scheme = QLabel("Encoding Scheme")
             selector_encoding_scheme = QComboBox()
-            selector_encoding_scheme.addItems(self.parent.curve_tracer.list_encoding_schemes())
+            selector_encoding_scheme.addItems(
+                self.parent.curve_tracer.list_encoding_schemes()
+            )
             layout_selectors.addRow(label_encoding_scheme, selector_encoding_scheme)
 
             self.comm_config_ui = {
@@ -368,17 +380,25 @@ class PVCaptureController:
                     "sel_com_port": selector_com_port,
                     "sel_baud_rate": selector_baud_rate,
                     "sel_parity_bit": selector_parity_bit,
-                    "sel_enc_scheme": selector_encoding_scheme
-                }
+                    "sel_enc_scheme": selector_encoding_scheme,
+                },
             }
 
         def select_com_config_file(self):
             file_path = QFileDialog.getOpenFileName(self, "Open File:", "./", "")
             config = self.parent.curve_tracer.load_com_config(file_path)
-            self.comm_config_ui["selectors"]["sel_com_port"].setCurrentText(config["com_port"])
-            self.comm_config_ui["selectors"]["sel_baud_rate"].setCurrentText(str(config["baud_rate"]))
-            self.comm_config_ui["selectors"]["sel_parity_bit"].setCurrentText(config["parity_bit"])
-            self.comm_config_ui["selectors"]["sel_enc_scheme"].setCurrentText(config["enc_scheme"])
+            self.comm_config_ui["selectors"]["sel_com_port"].setCurrentText(
+                config["com_port"]
+            )
+            self.comm_config_ui["selectors"]["sel_baud_rate"].setCurrentText(
+                str(config["baud_rate"])
+            )
+            self.comm_config_ui["selectors"]["sel_parity_bit"].setCurrentText(
+                config["parity_bit"]
+            )
+            self.comm_config_ui["selectors"]["sel_enc_scheme"].setCurrentText(
+                config["enc_scheme"]
+            )
 
         def add_sublayout_id(self):
             display = QFrame()
@@ -403,20 +423,15 @@ class PVCaptureController:
             selector_id.setPlaceholderText("ex. BV001")
             layout.addWidget(selector_id, 1, 0, 1, 1)
 
-            self.id_ui = {
-                "display": display,
-                "selectors": selector_id
-            }
+            self.id_ui = {"display": display, "selectors": selector_id}
 
         def check_pv_id(self):
             # Check if file exists in ./data/captures
             files = self.parent.curve_tracer.list_capture_files()
-            files = [file.split('.')[0] for file in files if file.endswith(".capture")]
+            files = [file.split(".")[0] for file in files]
             if self.id_ui["selectors"].text() in files:
-                print("RED")
                 self.id_ui["selectors"].setStyleSheet("background-color: #FF0000;")
             else:
-                print("GREEN")
                 self.id_ui["selectors"].setStyleSheet("background-color: #00FF00;")
 
         def add_sublayout_controls(self):
@@ -454,8 +469,8 @@ class PVCaptureController:
                 "selectors": {
                     "sel_start": selector_start,
                     "sel_stop": selector_stop,
-                    "sel_save": selector_save
-                }
+                    "sel_save": selector_save,
+                },
             }
 
         def start_char(self):
@@ -468,7 +483,9 @@ class PVCaptureController:
             if self.id_ui["selectors"].text() == "":
                 self.parent.print("WARN", "Specify a PV ID to save as.")
             else:
-                file_path = '/data/captures/' + self.id_ui["selectors"].text() + '.capture'
+                file_path = (
+                    "/data/captures/" + self.id_ui["selectors"].text() + ".capture"
+                )
                 self.parent.print("LOG", f"Saving characterization to {file_path}")
 
         def add_sublayout_console(self):
@@ -489,10 +506,7 @@ class PVCaptureController:
             selector_console.setReadOnly(True)
             layout.addWidget(selector_console, 1, 0, 3, 0)
 
-            self.console_ui = {
-                "display": display,
-                "selectors": selector_console
-            }
+            self.console_ui = {"display": display, "selectors": selector_console}
 
         def print_console(self, text):
             self.console_ui["selectors"].append(text)
@@ -507,13 +521,60 @@ class PVCaptureController:
             title.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(title, 0, 0, 1, 2)
 
-            # Labels
+            # Labels left
+            layout_labels_left = QFormLayout()
+            layout.addLayout(layout_labels_left, 1, 0, 4, 1)
+
+            # Labels right
+            layout_labels_right = QFormLayout()
+            layout.addLayout(layout_labels_right, 1, 1, 4, 1)
+
+            # V_OC
+            label_v_oc = QLabel("V_OC (V)")
+            val_v_oc = QLineEdit()
+            val_v_oc.setReadOnly(True)
+            layout_labels_left.addRow(label_v_oc, val_v_oc)
+
+            # I_SC
+            label_i_sc = QLabel("I_SC (A)")
+            val_i_sc = QLineEdit()
+            val_i_sc.setReadOnly(True)
+            layout_labels_left.addRow(label_i_sc, val_i_sc)
+
+            # FF
+            label_ff = QLabel("FF (%)")
+            val_ff = QLineEdit()
+            val_ff.setReadOnly(True)
+            layout_labels_left.addRow(label_ff, val_ff)
+
+            # V_MPP
+            label_v_mpp = QLabel("V_MPP (V)")
+            val_v_mpp = QLineEdit()
+            val_v_mpp.setReadOnly(True)
+            layout_labels_right.addRow(label_v_mpp, val_v_mpp)
+
+            # I_MPP
+            label_i_mpp = QLabel("I_MPP (A)")
+            val_i_mpp = QLineEdit()
+            val_i_mpp.setReadOnly(True)
+            layout_labels_right.addRow(label_i_mpp, val_i_mpp)
+
+            # P_MPP
+            label_p_mpp = QLabel("P_MPP (W)")
+            val_p_mpp = QLineEdit()
+            val_p_mpp.setReadOnly(True)
+            layout_labels_right.addRow(label_p_mpp, val_p_mpp)
 
             self.char_board_ui = {
                 "display": display,
-                "selectors": {
-
-                }
+                "labels": {
+                    "lab_v_oc": val_v_oc,
+                    "lab_i_sc": val_i_sc,
+                    "lab_v_mpp": val_v_mpp,
+                    "lab_i_mpp": val_i_mpp,
+                    "lab_p_mpp": val_p_mpp,
+                    "lab_ff": val_ff,
+                },
             }
 
         def add_sublayout_graph(self):
@@ -530,7 +591,4 @@ class PVCaptureController:
             graph.showGrid(x=True, y=True)
             layout.addWidget(graph, 0, 0, 1, 1)
 
-            self.graph_ui = {
-                "display": display,
-                "selectors": graph
-            }
+            self.graph_ui = {"display": display, "selectors": graph}

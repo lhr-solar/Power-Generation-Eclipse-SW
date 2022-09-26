@@ -1,0 +1,12 @@
+__version: v0.0.0
+__file: MODULE.pv_conf 
+__brief: Module Configuration for the vX.X.X Curve Tracer.
+__author: Matthew Yu
+__generation_time: 2022_09_25_00_00_00
+__pv_type: MODULE
+
+sample_range_low 0.3
+sample_range_high 0.45
+step_size 0.001
+num_iterations 25
+settling_time_ms 2

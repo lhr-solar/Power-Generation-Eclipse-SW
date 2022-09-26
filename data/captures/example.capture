@@ -2,9 +2,9 @@ __version: v0.0.0
 __file: example.capture
 __brief: Example PV Characterization Capture Log.
 __author: Matthew Yu
-__last_modified: 2022_09_25
+__generation_time: 2022_09_25_00_00_00
+__pv_id: TEST000
 __pv_type: CELL
-__pv_id: RPXXX
 
 irradiance (G) 1000
 temperature (C) 25

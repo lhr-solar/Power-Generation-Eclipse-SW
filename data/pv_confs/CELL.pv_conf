@@ -1,0 +1,12 @@
+__version: v0.0.0
+__file: CELL.pv_conf 
+__brief: Cell Configuration for the vX.X.X Curve Tracer.
+__author: Matthew Yu
+__generation_time: 2022_09_25_00_00_00
+__pv_type: CELL
+
+sample_range_low 0.25
+sample_range_high 0.75
+step_size 0.001
+num_iterations 5
+settling_time_ms 2
