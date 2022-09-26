@@ -6,28 +6,29 @@
 @date       2022-09-14
 """
 
-from PyQt6.QtWidgets import (  # copying all widget imports from pv_cap temporarily, remove unecessary later
-    QWidget,
-    QLabel,
-    QGridLayout,
-    QPushButton,
-    QStackedLayout,
-    QVBoxLayout,
-    QTextEdit,
-    QHBoxLayout,
-    QComboBox,
-    QInputDialog,
-    QFileDialog,
-    QSizePolicy,
-    QFormLayout,
-    QFrame,
-    QLineEdit,
-    QSlider,
-)
+from datetime import datetime
+
+import pyqtgraph as pg
 from PyQt6.QtCore import Qt  # also copied from pv_cap
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
-import pyqtgraph as pg
-from datetime import datetime
+from PyQt6.QtWidgets import (  # copying all widget imports from pv_cap temporarily, remove unecessary later
+    QComboBox,
+    QFileDialog,
+    QFormLayout,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QSlider,
+    QStackedLayout,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class SimDesignerController:

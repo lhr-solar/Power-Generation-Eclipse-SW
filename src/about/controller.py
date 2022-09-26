@@ -7,7 +7,8 @@
 """
 
 from textwrap import dedent
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QTextEdit
+
+from PyQt6.QtWidgets import QTextEdit, QVBoxLayout, QWidget
 
 
 class AboutController:

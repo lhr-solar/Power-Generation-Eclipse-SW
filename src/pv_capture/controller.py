@@ -6,48 +6,37 @@
 @date       2022-09-14
 """
 
-from PyQt6.QtWidgets import (
-    QLabel,
-    QWidget,
-    QGridLayout,
-    QPushButton,
-    QStackedLayout,
-    QVBoxLayout,
-    QTextEdit,
-    QHBoxLayout,
-    QComboBox,
-    QInputDialog,
-    QFileDialog,
-    QSizePolicy,
-    QFormLayout,
-    QFrame,
-    QLineEdit,
-)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIntValidator, QDoubleValidator
-import pyqtgraph as pg
-from datetime import datetime
-
-from src.pv_capture.pv_characterization import PVCharacterization
-from src.pv_capture.pv_curve_tracer_controller import PVCurveTracerController
-from src.modeling.pv_model import PVModel
 import os
 import re
+from datetime import datetime
+
+import pyqtgraph as pg
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QDoubleValidator, QIntValidator
+from PyQt6.QtWidgets import (
+    QComboBox,
+    QFileDialog,
+    QFormLayout,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QStackedLayout,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+from src.modeling.pv_model import PVModel
+from src.pv_capture.pv_curve_tracer_controller import PVCurveTracerController
 
 
 class PVCaptureController:
-    """_summary_
-    The PV Capture Controller:
-    - Is a graphical user interface
-    - Interacts with the PV Curve Tracer PCB to run experiments
-    - Loads historical PV test data and models
-    - Characterizes PVs and generates I-V, P-V curves
-    - Ranks and bins PVs against other cells or a theoretical model.
-    """
-
     def __init__(self):
         self.pv_model = PVModel()
-        self.pv_char = PVCharacterization()
         self.curve_tracer = PVCurveTracerController()
         self.data = self.Data(self)
         self.ui = self.UI(self)
@@ -74,23 +63,17 @@ class PVCaptureController:
     class Data:
         def __init__(self, parent):
             self.parent = parent
-            self.test_data_instance = {"file_path": None, "loader": None, "data": None}
-            self.curve_tracer_instance = {
-                "loader": self.parent.pv_char.get_version_loader(
-                    self.parent.pv_char.get_version()
-                ),
-                "com_port": None,
-                "baud_rate": None,
-                "pv_type": None,
-                "pv_id": None,
-                "data": None,
-            }
-            self.model_instance = {"pv_model": None, "data": None}
             self.cwd = os.getcwd()
 
         def get_potential_pv_configs(self):
             configs = {}
-            valid_params = ["sample_range_low", "sample_range_high", "step_size", "num_iterations", "settling_time_ms"]
+            valid_params = [
+                "sample_range_low",
+                "sample_range_high",
+                "step_size",
+                "num_iterations",
+                "settling_time_ms",
+            ]
 
             # Grab any pv_conf files in data/pv_confs
             obj = os.scandir(path=self.cwd + "/data/pv_confs")
@@ -107,7 +90,7 @@ class PVCaptureController:
                     pv_type = None
                     lines = f.readlines()
                     for line in lines:
-                        blobs = [blob.strip(':\n') for blob in line.split(" ")]
+                        blobs = [blob.strip(":\n") for blob in line.split(" ")]
                         if blobs[0] == "__pv_type":
                             pv_type = blobs[1]
                             configs[pv_type] = {}

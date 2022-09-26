@@ -6,13 +6,16 @@
 @data       2022-09-22
 """
 
+import argparse
+import glob
+import os
+import sys
 from curses import baudrate
+from datetime import datetime
+
 import serial
 import serial.tools.list_ports
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
-import argparse
-from datetime import datetime
-import os
 
 
 class PVCurveTracerController:
@@ -23,7 +26,18 @@ class PVCurveTracerController:
     # Communication configuration
 
     def list_ports(self):
-        return serial.tools.list_ports.comports()
+        # Modified from https://stackoverflow.com/a/14224477
+        if sys.platform.startswith("win"):
+            ports = ["COM%s" % (i + 1) for i in range(256)]
+        elif sys.platform.startswith("linux") or sys.platform.startswith("cygwin"):
+            # this excludes your current terminal "/dev/tty"
+            ports = glob.glob("/dev/tty[A-Za-z]*")
+            ports = [port for port in ports if "ACM" in port or "USB" in port]
+        elif sys.platform.startswith("darwin"):
+            ports = glob.glob("/dev/tty.*")
+        else:
+            ports = []
+        return ports
 
     def list_baud_rates(self):
         return [4800, 9600, 19200, 38400, 57600, 115200]

@@ -8,21 +8,16 @@
 """
 
 import sys
-from screeninfo import get_monitors
-from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QTabWidget,
-    QWidget,
-    QProgressBar,
-    QGridLayout,
-)
 
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
+                             QProgressBar, QTabWidget, QWidget)
+from screeninfo import get_monitors
+
+from src.about.controller import AboutController
+from src.power_gen_sim.controller import PowerGenSimController
 from src.pv_capture.controller import PVCaptureController
 from src.sim_designer.controller import SimDesignerController
-from src.power_gen_sim.controller import PowerGenSimController
-from src.about.controller import AboutController
 
 
 class Eclipse:
