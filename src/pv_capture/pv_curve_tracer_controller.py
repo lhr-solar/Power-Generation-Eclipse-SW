@@ -10,6 +10,7 @@ import argparse
 import glob
 import os
 import sys
+import time
 from curses import baudrate
 from datetime import datetime
 
@@ -149,7 +150,9 @@ class PVCurveTracerController:
 
     # Talk to Curve Tracer
 
-    def capture(self, com_conf, capture_conf, ui_signal):
+    def capture(
+        self, com_conf, capture_conf, pv_id, sig_res, sig_log, sig_prog, sig_finished
+    ):
         """
         com_conf = {
             "com_port": COM_PORT,
@@ -167,18 +170,73 @@ class PVCurveTracerController:
         }
 
         """
-        # Open up a serial instance to the curve tracer using com_conf.
-        serial_instance = QSerialPort()
-        self.serial_instance = serial_instance
-        serial_instance.setPortName(com["com_port"])
-        serial_instance.setBaudRate(com["baud_rate"])
-        serial_instance.setParity(com["parity_bit"])
-        serial_instance.open(QSerialPort.ReadWrite)
+        entries = []
+        try:
+            # Open up a serial instance to the curve tracer using com_conf.
+            serial_instance = QSerialPort()
+            self.serial_instance = serial_instance
+            serial_instance.setPortName(com_conf["com_port"])
+            serial_instance.setBaudRate(com_conf["baud_rate"])
+            serial_instance.setParity(com_conf["parity_bit"])
+            serial_instance.open(QSerialPort.ReadWrite)
 
-        # TODO: Transmit message to set encoding scheme.
+            # TODO: Transmit message to set encoding scheme.
+            line_enc_scheme = "ENC_SCHEME=NONE\n"
+            serial.write(line_enc_scheme.encode())
 
-        # TODO: Transmit message to set capture configuration.
+            # TODO: Transmit message to set capture configuration.
+            lines_pv_capture = [
+                f"PV_TYPE={capture_conf['pv_type']}\n",
+                f"SAMPLE_RANGE={capture_conf['sample_range']}\n",
+                f"STEP_SIZE={capture_conf['step_size']}\n",
+                f"NUM_ITERS={capture_conf['num_iters']}\n",
+                f"SETTLING_TIME_MS={capture_conf['settling_time']}\n",
+            ]
+            for line in lines_pv_capture:
+                serial.write(line_enc_scheme.encode())
 
-        # TODO: Gather data while emitting updates to ui_signal.
+            # TODO: Transmit message to begin capture.
+            line_begin_capture = "GO\n"
+            serial.write(line_begin_capture.encode())
 
-        # TODO: Return completed capture.
+            while serial_instance.waitForReadyRead():
+                pass
+            res = serial_instance.readline().decode("ascii")  # .strip()
+            if res != "SCAN_START":
+                sig_log.emit(("ERROR", f"Bad response from Curve Tracer. {res}"))
+
+            # TODO: Gather data while emitting updates to ui_signal.
+            while True:
+                while serial_instance.waitForReadyRead():
+                    pass
+
+                # Read a line
+                line = serial_instance.readLine().decode("ascii")  # .strip()
+
+                # Break if end of message.
+                if line == "SCAN_END":
+                    break
+
+                # Parse into CSV
+                line = line.split(",")
+
+                # Split into components
+                if len(line) != 3:
+                    sig_log.emit(("ERROR", f"Bad response from Curve Tracer. {line}"))
+                    break
+
+                components = [line[0], line[1], line[2]]
+                entries.append(components)
+
+                # Emit signal
+                sig_res.emit(components)
+
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            print(exctype, value, traceback.format_exc())
+        finally:
+            # TODO: Return completed capture.
+            sig_finished.emit()
+            time.wait(100)
+            sig_res.emit(entries)

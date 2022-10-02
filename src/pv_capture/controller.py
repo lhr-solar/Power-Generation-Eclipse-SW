@@ -8,10 +8,21 @@
 
 import os
 import re
+import time
+import traceback
 from datetime import datetime
 
 import pyqtgraph as pg
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import (
+    QObject,
+    QRunnable,
+    Qt,
+    QThread,
+    QThreadPool,
+    QTimer,
+    pyqtSignal,
+    pyqtSlot,
+)
 from PyQt6.QtGui import QDoubleValidator, QIntValidator
 from PyQt6.QtWidgets import (
     QComboBox,
@@ -36,7 +47,6 @@ from src.pv_capture.pv_curve_tracer_controller import PVCurveTracerController
 
 class PVCaptureController:
     def __init__(self):
-        self.pv_model = PVModel()
         self.curve_tracer = PVCurveTracerController()
         self.data = self.Data(self)
         self.ui = self.UI(self)
@@ -64,6 +74,78 @@ class PVCaptureController:
         def __init__(self, parent):
             self.parent = parent
             self.cwd = os.getcwd()
+            self.com_config = {
+                "valid": False,
+                "com_port": None,
+                "baud_rate": None,
+                "parity_bit": None,
+                "enc_scheme": None,
+            }
+            self.pv_config = {
+                "valid": False,
+                "sample_range": None,
+                "step_size": None,
+                "num_iters": None,
+                "settling_time": None,
+                "pv_type": None,
+                "num_steps_per_iter": None,
+                "total_samples": None,
+                "test_duration_ms": None,
+            }
+            self.pv_id = {"valid": False, "id": None}
+
+        def validate_com_config(self, com_port, baud_rate, parity_bit, encoding_scheme):
+            if com_port not in self.parent.curve_tracer.list_ports():
+                self.com_config["valid"] = False
+            elif baud_rate not in self.parent.curve_tracer.list_baud_rates():
+                self.com_config["valid"] = False
+            elif parity_bit not in self.parent.curve_tracer.list_parity():
+                self.com_config["valid"] = False
+            elif (
+                encoding_scheme not in self.parent.curve_tracer.list_encoding_schemes()
+            ):
+                self.com_config["valid"] = False
+            else:
+                self.com_config["com_port"] = com_port
+                self.com_config["baud_rate"] = baud_rate
+                self.com_config["parity_bit"] = parity_bit
+                self.com_config["enc_scheme"] = encoding_scheme
+
+                self.com_config["valid"] = True
+            return self.com_config
+
+        def validate_pv_config(
+            self, sample_range, step_size, num_iters, settling_time, pv_type
+        ):
+            if (
+                (sample_range[0] < 0)
+                or (sample_range[1] > 1)
+                or (sample_range[1] <= sample_range[0])
+            ):
+                self.com_config["valid"] = False
+            elif step_size < 0.001 or step_size > 0.100:
+                self.com_config["valid"] = False
+            elif num_iters < 1 or num_iters > 100:
+                self.com_config["valid"] = False
+            elif settling_time < 1 or settling_time > 100:
+                self.com_config["valid"] = False
+            else:
+                self.pv_config["sample_range"] = sample_range
+                self.pv_config["step_size"] = step_size
+                self.pv_config["num_iters"] = num_iters
+                self.pv_config["settling_time"] = settling_time
+                self.pv_config["pv_type"] = pv_type
+
+                num_steps_per_iter = int(
+                    (sample_range[1] - sample_range[0]) / step_size
+                )
+                self.pv_config["num_steps_per_iter"] = num_steps_per_iter
+                total_samples = int(num_steps_per_iter * num_iters)
+                self.pv_config["total_samples"] = total_samples
+                self.pv_config["test_duration_ms"] = int(total_samples * settling_time)
+
+                self.pv_config["valid"] = True
+            return self.pv_config
 
         def get_potential_pv_configs(self):
             configs = {}
@@ -99,6 +181,28 @@ class PVCaptureController:
                                 configs[pv_type][blobs[0]] = blobs[1]
             return configs
 
+        def validate_pv_id(self, pv_id):
+            if pv_id == "":
+                self.pv_id["valid"] = False
+                self.parent.print("ERROR", "No ID is specified.")
+                return self.pv_id
+
+            # Check if file exists in ./data/captures
+            files = self.parent.curve_tracer.list_capture_files()
+            files = [file.split(".")[0] for file in files]
+            self.pv_id["valid"] = True
+            self.pv_id["id"] = pv_id
+            if pv_id in files:
+                self.parent.print(
+                    "WARN", f"ID {pv_id} already in use. Overwrite at your risk."
+                )
+            else:
+                self.parent.print(
+                    "LOG", f"Output will be written to data/captures/{pv_id}.capture."
+                )
+
+            return self.pv_id
+
     class UI(QWidget):
         def __init__(self, parent):
             super().__init__()
@@ -110,8 +214,8 @@ class PVCaptureController:
             self.add_sublayout_pv_config()
             main_layout.addWidget(self.pv_config_ui["display"], 0, 0, 3, 4)
 
-            self.add_sublayout_comm_config()
-            main_layout.addWidget(self.comm_config_ui["display"], 3, 0, 3, 3)
+            self.add_sublayout_com_config()
+            main_layout.addWidget(self.com_config_ui["display"], 3, 0, 3, 3)
 
             self.add_sublayout_id()
             main_layout.addWidget(self.id_ui["display"], 3, 3, 1, 1)
@@ -233,13 +337,6 @@ class PVCaptureController:
             self.set_pv_config()
 
         def set_pv_config(self):
-            """_summary_
-            Pass in default values to the PV Config selectors based on the
-            selected.
-
-            Args:
-                config_name (enum): Config selected.
-            """
             config_name = self.pv_config_ui["selectors"]["sel_pv_type"].currentText()
             configs = self.parent.data.get_potential_pv_configs()
             self.pv_config_ui["selectors"]["sel_sample_range"].setText(
@@ -265,32 +362,21 @@ class PVCaptureController:
                     self.pv_config_ui["selectors"]["sel_sample_range"].text().split(":")
                 ):
                     sample_range.append(float(item.strip("[]")))
+            except Exception as e:
+                self.parent.print("ERROR", "Sample range error: {0}".format(e))
+                return
 
-                # Update config
-                config = {
-                    "sample_range": sample_range,
-                    "step_size": float(
-                        self.pv_config_ui["selectors"]["sel_step_size"].text()
-                    ),
-                    "num_iters": int(
-                        self.pv_config_ui["selectors"]["sel_num_iters"].text()
-                    ),
-                    "settling_time": int(
-                        self.pv_config_ui["selectors"]["sel_settle_time"].text()
-                    ),
-                }
-                config["num_steps_per_iter"] = int(
-                    (config["sample_range"][1] - config["sample_range"][0])
-                    / config["step_size"]
-                )
-                config["total_samples"] = int(
-                    config["num_steps_per_iter"] * config["num_iters"]
-                )
-                config["test_duration_ms"] = int(
-                    config["total_samples"] * config["settling_time"]
-                )
+            # Update config
+            config = self.parent.data.validate_pv_config(
+                sample_range,
+                float(self.pv_config_ui["selectors"]["sel_step_size"].text()),
+                int(self.pv_config_ui["selectors"]["sel_num_iters"].text()),
+                int(self.pv_config_ui["selectors"]["sel_settle_time"].text()),
+                self.pv_config_ui["selectors"]["sel_pv_type"].currentText(),
+            )
 
-                # Update UI
+            # Update UI for labels.
+            if config["valid"]:
                 self.pv_config_ui["labels"]["lab_num_steps"].setText(
                     str(config["num_steps_per_iter"])
                 )
@@ -300,12 +386,12 @@ class PVCaptureController:
                 self.pv_config_ui["labels"]["lab_test_dur"].setText(
                     str(config["test_duration_ms"])
                 )
+            else:
+                self.pv_config_ui["labels"]["lab_num_steps"].setText("INV")
+                self.pv_config_ui["labels"]["lab_tot_steps"].setText("INV")
+                self.pv_config_ui["labels"]["lab_test_dur"].setText("INV")
 
-                self.parent.data.pv_config = config
-            except Exception as e:
-                print("Input error: {0}".format(e))
-
-        def add_sublayout_comm_config(self):
+        def add_sublayout_com_config(self):
             display = QFrame()
             layout = QGridLayout()
             display.setLayout(layout)
@@ -332,6 +418,7 @@ class PVCaptureController:
             label_com_port = QLabel("COM Port")
             selector_com_port = QComboBox()
             selector_com_port.addItems(self.parent.curve_tracer.list_ports())
+            selector_com_port.currentIndexChanged.connect(self.update_com_config)
             layout_selectors.addRow(label_com_port, selector_com_port)
 
             # Baud Rate Selector
@@ -340,12 +427,14 @@ class PVCaptureController:
             selector_baud_rate.addItems(
                 [str(item) for item in self.parent.curve_tracer.list_baud_rates()]
             )
+            selector_baud_rate.currentIndexChanged.connect(self.update_com_config)
             layout_selectors.addRow(label_baud_rate, selector_baud_rate)
 
             # Parity Bit Selector
             label_parity_bit = QLabel("Parity Bit")
             selector_parity_bit = QComboBox()
             selector_parity_bit.addItems(self.parent.curve_tracer.list_parity())
+            selector_parity_bit.currentIndexChanged.connect(self.update_com_config)
             layout_selectors.addRow(label_parity_bit, selector_parity_bit)
 
             # Encoding Scheme Selector
@@ -354,9 +443,17 @@ class PVCaptureController:
             selector_encoding_scheme.addItems(
                 self.parent.curve_tracer.list_encoding_schemes()
             )
+            selector_encoding_scheme.currentIndexChanged.connect(self.update_com_config)
             layout_selectors.addRow(label_encoding_scheme, selector_encoding_scheme)
 
-            self.comm_config_ui = {
+            # Setup timer to update com config.
+            # TODO: re-enable when this doesn't break config.
+            timer = QTimer()
+            timer.timeout.connect(self.update_com_combo)
+            timer.setInterval(1000)
+            timer.start()
+
+            self.com_config_ui = {
                 "display": display,
                 "selectors": {
                     "sel_config_file": selector_com_config,
@@ -365,23 +462,46 @@ class PVCaptureController:
                     "sel_parity_bit": selector_parity_bit,
                     "sel_enc_scheme": selector_encoding_scheme,
                 },
+                "timer": None,  # timer
             }
+
+            # Default setup com config.
+            self.update_com_config()
+
+        def update_com_combo(self):
+            # TODO: handle the case where an active port is already selected. Do
+            # not modify this port.
+            com_ports = self.com_config_ui["selectors"]["sel_com_port"]
+            com_ports.blockSignals(True)
+            com_ports.clear()
+            com_ports.addItems(self.parent.curve_tracer.list_ports())
+            com_ports.blockSignals(False)
+
+        def update_com_config(self):
+            config = self.parent.data.validate_com_config(
+                self.com_config_ui["selectors"]["sel_com_port"].currentText(),
+                int(self.com_config_ui["selectors"]["sel_baud_rate"].currentText()),
+                self.com_config_ui["selectors"]["sel_parity_bit"].currentText(),
+                self.com_config_ui["selectors"]["sel_enc_scheme"].currentText(),
+            )
 
         def select_com_config_file(self):
             file_path = QFileDialog.getOpenFileName(self, "Open File:", "./", "")
             config = self.parent.curve_tracer.load_com_config(file_path)
-            self.comm_config_ui["selectors"]["sel_com_port"].setCurrentText(
+            self.com_config_ui["selectors"]["sel_com_port"].setCurrentText(
                 config["com_port"]
             )
-            self.comm_config_ui["selectors"]["sel_baud_rate"].setCurrentText(
+            self.com_config_ui["selectors"]["sel_baud_rate"].setCurrentText(
                 str(config["baud_rate"])
             )
-            self.comm_config_ui["selectors"]["sel_parity_bit"].setCurrentText(
+            self.com_config_ui["selectors"]["sel_parity_bit"].setCurrentText(
                 config["parity_bit"]
             )
-            self.comm_config_ui["selectors"]["sel_enc_scheme"].setCurrentText(
+            self.com_config_ui["selectors"]["sel_enc_scheme"].setCurrentText(
                 config["enc_scheme"]
             )
+
+            self.update_com_config()
 
         def add_sublayout_id(self):
             display = QFrame()
@@ -399,7 +519,7 @@ class PVCaptureController:
             # Name of PV to capture.
             selector_id = QLineEdit()
             selector_id.setObjectName("pv_id")
-            selector_id.editingFinished.connect(self.check_pv_id)
+            selector_id.editingFinished.connect(self.update_pv_id)
             selector_id.setSizePolicy(
                 QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
             )
@@ -408,14 +528,12 @@ class PVCaptureController:
 
             self.id_ui = {"display": display, "selectors": selector_id}
 
-        def check_pv_id(self):
-            # Check if file exists in ./data/captures
-            files = self.parent.curve_tracer.list_capture_files()
-            files = [file.split(".")[0] for file in files]
-            if self.id_ui["selectors"].text() in files:
-                self.id_ui["selectors"].setStyleSheet("background-color: #FF0000;")
-            else:
+        def update_pv_id(self):
+            config = self.parent.data.validate_pv_id(self.id_ui["selectors"].text())
+            if config["valid"]:
                 self.id_ui["selectors"].setStyleSheet("background-color: #00FF00;")
+            else:
+                self.id_ui["selectors"].setStyleSheet("background-color: #FF0000;")
 
         def add_sublayout_controls(self):
             display = QFrame()
@@ -433,43 +551,123 @@ class PVCaptureController:
             # Start Button
             selector_start = QPushButton("START")
             selector_start.setStyleSheet("background-color: #00FF00;")
-            selector_start.clicked.connect(self.start_char)
+            selector_start.clicked.connect(self.start_cap)
             layout.addWidget(selector_start, 1, 0, 1, 1)
 
             # Stop Button
             selector_stop = QPushButton("STOP")
             selector_stop.setStyleSheet("background-color: #FF0000;")
-            selector_stop.clicked.connect(self.stop_char)
+            selector_stop.clicked.connect(self.stop_cap)
             layout.addWidget(selector_stop, 2, 0, 1, 1)
-
-            # Save Button
-            selector_save = QPushButton("SAVE")
-            selector_save.clicked.connect(self.save_char)
-            layout.addWidget(selector_save, 3, 0, 1, 1)
 
             self.control_ui = {
                 "display": display,
                 "selectors": {
                     "sel_start": selector_start,
                     "sel_stop": selector_stop,
-                    "sel_save": selector_save,
                 },
             }
 
-        def start_char(self):
-            self.parent.print("LOG", "Start characterization.")
+        class CaptureTask(QRunnable):
+            def __init__(self, *args, **kwargs):
+                super().__init__()
+                self.args = args
+                self.kwargs = kwargs
+                self.signals = self.CaptureSignals()
+
+            @pyqtSlot()
+            def run(self):
+                self.signals.log.emit(("LOG", "Starting Capture Task."))
+                self.args[0].capture(
+                    self.args[1],
+                    self.args[2],
+                    self.args[3],
+                    self.signals.res,
+                    self.signals.log,
+                    self.signals.progress,
+                    self.signals.finished,
+                )
+                self.signals.log.emit(("LOG", "Finished Capture Task."))
+                self.signals.finished.emit()
+
+            class CaptureSignals(QObject):
+                finished = pyqtSignal()
+                log = pyqtSignal(tuple)
+                res = pyqtSignal(list)
+                progress = pyqtSignal(int)
+
+        def start_cap(self):
+            self.parent.print("LOG", "Starting characterization.")
+
+            # Gather all the UI parts.
+            print(self.parent.data.com_config)
+
+            if not self.parent.data.com_config["valid"]:
+                self.parent.print("ERROR", "COM config invalid.")
+                return
+            if not self.parent.data.pv_config["valid"]:
+                self.parent.print("ERROR", "PV config invalid.")
+                return
+            if not self.parent.data.pv_id["valid"]:
+                self.parent.print("ERROR", "PV ID invalid.")
+                return
+
+            try:
+                worker = self.CaptureTask(
+                    self.parent.curve_tracer,
+                    self.parent.data.com_config,
+                    self.parent.data.pv_config,
+                    self.parent.data.pv_id,
+                )
+
+                # Tie the progress signal to a progress bar, if any.
+                worker.signals.progress.connect(self.update_progress_bar)
+
+                # Tie the log signal to the console.
+                worker.signals.log.connect(
+                    lambda log: self.parent.print(log[0], log[1])
+                )
+
+                # Tie the inter_res and result signals to updating the
+                # graphs and characteristics.
+                worker.signals.res.connect(self.update_capture)
+
+                # Tie the finished signal to updating the console, updating the
+                # graphs and characteristics.
+                worker.signals.finished.connect(
+                    lambda log: self.parent.print("LOG", "Capture complete.")
+                )
+
+                QThreadPool().globalInstance().start(worker)
+
+                # TODO: at end of characterization, increment pv_id. Notify
+                # this change.
+                # self.parent.print("LOG", f"Incremented PV_ID from {} to {}")
+
+            except Exception as e:
+                self.parent.print("ERROR", e)
+                self.parent.print("LOG", "Halting characterization.")
+
+            def update_capture(self, capture_data):
+                # Feed data back to parent.data
+                # Update graphs
+                # Generate characteristic data, update table
+                pass
+
+            def update_progress_bar(self, progress):
+                pass
 
         def stop_char(self):
-            self.parent.print("LOG", "Stop characterization.")
+            self.parent.print("LOG", "Stopping characterization.")
+            # TODO: kill any running threads.
 
         def save_char(self):
-            if self.id_ui["selectors"].text() == "":
-                self.parent.print("WARN", "Specify a PV ID to save as.")
-            else:
-                file_path = (
-                    "/data/captures/" + self.id_ui["selectors"].text() + ".capture"
-                )
-                self.parent.print("LOG", f"Saving characterization to {file_path}")
+            if not self.parent.data.pv_id["valid"]:
+                self.parent.print("ERROR", "PV ID invalid.")
+                return
+
+            file_path = "/data/captures/" + self.parent.data.pv_id["id"] + ".capture"
+            self.parent.print("LOG", f"Saving characterization to {file_path}.")
 
         def add_sublayout_console(self):
             display = QFrame()
