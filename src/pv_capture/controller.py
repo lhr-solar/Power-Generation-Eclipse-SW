@@ -657,17 +657,9 @@ class PVCaptureController:
             def update_progress_bar(self, progress):
                 pass
 
-        def stop_char(self):
+        def stop_cap(self):
             self.parent.print("LOG", "Stopping characterization.")
             # TODO: kill any running threads.
-
-        def save_char(self):
-            if not self.parent.data.pv_id["valid"]:
-                self.parent.print("ERROR", "PV ID invalid.")
-                return
-
-            file_path = "/data/captures/" + self.parent.data.pv_id["id"] + ".capture"
-            self.parent.print("LOG", f"Saving characterization to {file_path}.")
 
         def add_sublayout_console(self):
             display = QFrame()
