@@ -6,39 +6,20 @@
 @date       2022-09-14
 """
 
-from tkinter import HORIZONTAL
-from types import CellType
-from PyQt6.QtWidgets import ( #copying all widget imports from pv_cap temporarily, remove unecessary later
-    QWidget,
-    QLabel,
-    QGridLayout,
-    QPushButton,
-    QStackedLayout,
-    QVBoxLayout,
-    QTextEdit,
-    QHBoxLayout,
-    QComboBox,
-    QFileDialog,
-    QFormLayout,
-    QFrame,
-    QGridLayout,
-    QHBoxLayout,
-    QInputDialog,
-    QLabel,
-    QLineEdit,
-    QPushButton,
-    QSizePolicy,
-    QSlider,
-    QTableView,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-)
-from PyQt6.QtCore import Qt, QAbstractTableModel #also copied from pv_cap
-from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
-import pyqtgraph as pg
-from datetime import datetime
 from array import *
+from datetime import datetime
+# from tkinter import HORIZONTAL
+from types import CellType
+
+import pyqtgraph as pg
+from PyQt6.QtCore import QAbstractTableModel, Qt  # also copied from pv_cap
+from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
+from PyQt6.QtWidgets import (  # copying all widget imports from pv_cap temporarily, remove unecessary later
+    QComboBox, QFileDialog, QFormLayout, QFrame, QGridLayout, QHBoxLayout,
+    QHeaderView, QInputDialog, QLabel, QLineEdit, QPushButton, QSizePolicy,
+    QSlider, QStackedLayout, QTableView, QTableWidget, QTableWidgetItem,
+    QTextEdit, QVBoxLayout, QWidget)
+
 
 class PVModule: #TODO: figure out how a class in python for this case is actually supposed to look
     # modID = "defaultID"
