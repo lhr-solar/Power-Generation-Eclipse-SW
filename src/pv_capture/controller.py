@@ -1,9 +1,9 @@
 """_summary_
 @file       controller.py
-@author     Matthew Yu (matthewjkyu@gmail.com)
+@author     Matthew Yu (matthewjkyu@gmail.com) and Roy Mor (roymor.102@gmail.com)
 @brief      PV Capture Controller. 
-@version    3.0.0
-@date       2022-09-14
+@version    3.1.0
+@date       2023-02-04
 """
 
 import os
@@ -23,7 +23,7 @@ from PyQt6.QtCore import (
     pyqtSignal,
     pyqtSlot,
 )
-from PyQt6.QtGui import QDoubleValidator, QIntValidator
+from PyQt6.QtGui import QDoubleValidator, QIntValidator, QColor
 from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -93,7 +93,21 @@ class PVCaptureController:
                 "test_duration_ms": None,
             }
             self.pv_id = {"valid": False, "id": None}
-
+            self.log_data = {
+                "gate": [],
+                "voltage": [],
+                "current": [],
+            }
+            # self.char_data = {
+            #     "v_oc": None,
+            #     "c_sc": None,
+            #     "v_mpp": None,
+            #     "c_mpp": None,
+            #     "p_mpp": None
+            # }
+            self.power_data = {
+                "power": []
+            }
         def validate_com_config(self, com_port, baud_rate, parity_bit, encoding_scheme):
             if com_port not in self.parent.curve_tracer.list_ports():
                 self.com_config["valid"] = False
@@ -569,32 +583,85 @@ class PVCaptureController:
             }
 
         class CaptureTask(QRunnable):
-            def __init__(self, *args, **kwargs):
+            def __init__(self, parent, *args, **kwargs):
                 super().__init__()
                 self.args = args
+                self.parent = parent
                 self.kwargs = kwargs
                 self.signals = self.CaptureSignals()
 
             @pyqtSlot()
             def run(self):
                 self.signals.log.emit(("LOG", "Starting Capture Task."))
-                self.args[0].capture(
-                    self.args[1],
-                    self.args[2],
-                    self.args[3],
-                    self.signals.res,
-                    self.signals.log,
-                    self.signals.progress,
-                    self.signals.finished,
-                )
-                self.signals.log.emit(("LOG", "Finished Capture Task."))
-                self.signals.finished.emit()
+                self.capture_data = self.args[0].capture(
+                            self.args[1],
+                            self.args[2],
+                            self.signals.res,
+                            self.signals.log,
+                            self.signals.progress,
+                            self.signals.finished,
+                        )
+                self.args[0].save_capture_file(self.args[2], self.capture_data, self.args[3])
+                #self.parent.parent.data.log_data = self.capture_data
+
 
             class CaptureSignals(QObject):
                 finished = pyqtSignal()
                 log = pyqtSignal(tuple)
                 res = pyqtSignal(list)
                 progress = pyqtSignal(int)
+
+        def update_capture(self, dataList):
+            # Feed data back to parent.data
+            # Update graphs
+            # Generate characteristic data, update table
+            
+            # valueCheck = f"{dataList[0]} {dataList[1]} {dataList[2]}\n"
+            # print(valueCheck)
+            
+            self.parent.data.log_data["gate"].append(dataList[0])
+            self.parent.data.log_data["voltage"].append(dataList[1])
+            self.parent.data.log_data["current"].append(dataList[2])
+
+            self.parent.data.power_data["power"].append(dataList[1]*dataList[2])
+
+            self.graph_ui["ivscatter"].setData(self.parent.data.log_data["voltage"], self.parent.data.log_data["current"])
+            self.graph_ui["pvscatter"].setData(self.parent.data.log_data["voltage"], self.parent.data.power_data["power"])
+
+        def update_pv_char(self):
+            # TODO: Calculate Voc and Isc to add to characteristics
+            # TODO: Calculate MPP and Vmpp/Impp
+            # TODO: Calculate FF%
+            # Send all of the above to their respective LineEdits
+
+            mppIndex = 0
+            for i, power in enumerate(self.parent.data.power_data['power']):
+                if power>self.parent.data.power_data['power'][mppIndex]:
+                    mppIndex = i
+            self.char_board_ui["labels"]["lab_v_mpp"].setText(str(self.parent.data.log_data["voltage"][mppIndex]))
+            self.char_board_ui["labels"]["lab_i_mpp"].setText(str(self.parent.data.log_data["current"][mppIndex]))
+            self.char_board_ui["labels"]["lab_p_mpp"].setText("{:.3f}".format(self.parent.data.power_data["power"][mppIndex]))
+            
+            volCount = 0
+            volSum = 0.0
+            for i, vol, in enumerate(self.parent.data.log_data["voltage"]):
+                if self.parent.data.log_data["current"][i]<.1:
+                    volCount+=1
+                    volSum+=vol
+            self.char_board_ui["labels"]["lab_v_oc"].setText("{:.3f}".format(volSum/volCount))
+            
+            iCount = 0
+            iSum = 0.0
+            for i, current, in enumerate(self.parent.data.log_data["current"]):
+                if self.parent.data.log_data["voltage"][i]<.1:
+                    iCount+=1
+                    iSum+=current
+            self.char_board_ui["labels"]["lab_i_sc"].setText("{:.3f}".format(iSum/iCount))
+
+            # FF = (Impp*Vmpp)/(Isc*Voc)
+            fillFactor = (self.parent.data.log_data["current"][mppIndex]*self.parent.data.log_data["voltage"][mppIndex])/((volSum/volCount)*(iSum/iCount))
+            self.char_board_ui["labels"]["lab_ff"].setText("{:.1f}".format(fillFactor*100))
+                
 
         def start_cap(self):
             self.parent.print("LOG", "Starting characterization.")
@@ -614,6 +681,7 @@ class PVCaptureController:
 
             try:
                 worker = self.CaptureTask(
+                    self,
                     self.parent.curve_tracer,
                     self.parent.data.com_config,
                     self.parent.data.pv_config,
@@ -621,7 +689,7 @@ class PVCaptureController:
                 )
 
                 # Tie the progress signal to a progress bar, if any.
-                worker.signals.progress.connect(self.update_progress_bar)
+                # worker.signals.progress.connect(self.update_progress_bar)
 
                 # Tie the log signal to the console.
                 worker.signals.log.connect(
@@ -635,27 +703,24 @@ class PVCaptureController:
                 # Tie the finished signal to updating the console, updating the
                 # graphs and characteristics.
                 worker.signals.finished.connect(
-                    lambda log: self.parent.print("LOG", "Capture complete.")
+                    lambda : self.parent.print("LOG", "Capture complete.")
+
+                    # TODO: at end of characterization, increment pv_id. Notify
+                    # this change.
+                    # self.parent.print("LOG", f"Incremented PV_ID from {} to {}")
                 )
+                worker.signals.finished.connect(self.update_pv_char)
 
                 QThreadPool().globalInstance().start(worker)
 
-                # TODO: at end of characterization, increment pv_id. Notify
-                # this change.
-                # self.parent.print("LOG", f"Incremented PV_ID from {} to {}")
 
             except Exception as e:
                 self.parent.print("ERROR", e)
                 self.parent.print("LOG", "Halting characterization.")
-
-            def update_capture(self, capture_data):
-                # Feed data back to parent.data
-                # Update graphs
-                # Generate characteristic data, update table
-                pass
-
-            def update_progress_bar(self, progress):
-                pass
+            
+            
+            # def update_progress_bar(self, progress):
+            #     pass
 
         def stop_cap(self):
             self.parent.print("LOG", "Stopping characterization.")
@@ -707,6 +772,7 @@ class PVCaptureController:
             val_v_oc = QLineEdit()
             val_v_oc.setReadOnly(True)
             layout_labels_left.addRow(label_v_oc, val_v_oc)
+            
 
             # I_SC
             label_i_sc = QLabel("I_SC (A)")
@@ -762,6 +828,12 @@ class PVCaptureController:
             graph.setLabel("bottom", "Voltage (V)")
             graph.setLabel("right", "Power (W)")
             graph.showGrid(x=True, y=True)
+
+            IVCurve = pg.ScatterPlotItem(size = 7, brush=QColor(0,0,255))
+            PVCurve = pg.ScatterPlotItem(size = 7, brush=QColor(255,0,0))
+            graph.addItem(IVCurve)
+            graph.addItem(PVCurve)
+
             layout.addWidget(graph, 0, 0, 1, 1)
 
-            self.graph_ui = {"display": display, "selectors": graph}
+            self.graph_ui = {"display": display, "selectors": graph, "ivscatter": IVCurve, "pvscatter": PVCurve}
