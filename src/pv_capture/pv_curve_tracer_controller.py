@@ -2,8 +2,8 @@
 @file       pv_curve_tracer_controller.py
 @author     Roy Mor (roymor.102@gmail.com) and Matthew Yu (matthewjkyu@gmail.com)
 @brief      Talks to the PV Curve Tracer.
-@version    0.1.0
-@data       2023-02-04
+@version    0.1.1
+@data       2023-02-06
 """
 
 import argparse
@@ -149,7 +149,7 @@ class PVCurveTracerController:
 
     def save_capture_file(self, capture_conf, capture_data, pv_id):
         # TODO: save a dict of info into a capture file format.
-        with open(self.cwd + "/data/"+f"{pv_id['id']}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.capture", 'w') as captureFile:
+        with open(self.cwd + "/data/captures/"+f"{pv_id['id']}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.capture", 'w') as captureFile:
             config = f"__version: v0.1.0\n\n"
             config += f"Capture Configuration\nPV ID: {pv_id['id']}\nCell Type: {capture_conf['pv_type']}\n"
             config += f"Capture Range: {capture_conf['sample_range']}\nStep Size: {capture_conf['step_size']}\nIterations: {capture_conf['num_iters']}\n"
