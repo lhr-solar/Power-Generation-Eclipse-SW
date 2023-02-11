@@ -4,14 +4,12 @@
 @brief      Entry point for the Eclipse photovoltaic characterization and
             simulation application.
 @version    3.0.0
-@date       2022-09-14
+@date       2022-12-13
 """
 
 import sys
 
-from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import (QApplication, QGridLayout, QMainWindow,
-                             QProgressBar, QTabWidget, QWidget)
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget
 from screeninfo import get_monitors
 
 from src.about.controller import AboutController
@@ -59,7 +57,7 @@ class Eclipse:
         )
 
         self.window = self.EclipseWindow()
-        self.window.setFixedSize(1080, 720)
+        self.window.resize(1080, 720)
         self.window.show()
 
         # Generate instances of each module.

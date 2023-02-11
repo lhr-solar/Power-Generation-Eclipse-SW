@@ -1,0 +1,8 @@
+__model_name: maxeon_gen_iii_bin_le_1_ideal_cell
+__brief: PV Model for an ideal Maxeon Gen III Bin Le 1 solar cell.
+__author: Matthew Yu
+__last_modified: 2022_09_17
+__model_type: CELL
+
+Voltage (V),Irradiance (G),Temperature (C),Current (A)
+0,0,0,0
