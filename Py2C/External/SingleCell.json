@@ -1,0 +1,24 @@
+{
+    "name": "Single Cell",
+    "description": "A single cell. The default model with a pre-generated environmental regime.",
+    "num_modules": 1,
+    "pv_model": {
+        "0": {
+            "module_type": "1x1",
+            "env_type": "Array",
+            "needs_interp": true,
+            "env_regime": [
+                [0, 1000, 25],
+                [200, 1000, 25],
+                [250, 1000, 50],
+                [275, 1000, 75],
+                [300, 1000, 25],
+                [500, 1000, 25],
+                [550, 750, 25],
+                [575, 250, 25],
+                [600, 1000, 25],
+                [800, 1000, 25]
+            ]
+        }
+    }
+}

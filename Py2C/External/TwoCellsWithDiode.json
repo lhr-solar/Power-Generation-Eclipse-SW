@@ -1,0 +1,42 @@
+{
+    "name": "Two Cells with Bypass Diodes",
+    "description": "Two cells, in series, each with a bypass diode across them. The temperature and irradiance profiles across them are the same.",
+    "num_modules": 2,
+    "pv_model": {
+        "0": {
+            "module_type": "1x1",
+            "env_type": "Array",
+            "junk": "(487.8, 25)",
+            "needs_interp": false,
+            "env_regime": [
+                [0, 1000, 25],
+                [200, 1000, 25],
+                [250, 1000, 50],
+                [275, 1000, 75],
+                [300, 1000, 25],
+                [500, 1000, 25],
+                [550, 750, 25],
+                [575, 500, 25],
+                [600, 1000, 25],
+                [800, 1000, 25]
+            ]
+        },
+        "1": {
+            "module_type": "1x1",
+            "env_type": "Array",
+            "needs_interp": true,
+            "env_regime": [
+                [0, 1000, 25],
+                [200, 1000, 25],
+                [250, 1000, 50],
+                [275, 1000, 75],
+                [300, 1000, 25],
+                [500, 1000, 25],
+                [550, 250, 25],
+                [575, 0, 25],
+                [600, 1000, 25],
+                [800, 1000, 25]
+            ]
+        }
+    }
+}
