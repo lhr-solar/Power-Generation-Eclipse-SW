@@ -1,0 +1,3 @@
+{
+    "files": ["ui/AboutPage/AboutPage.qml","main.py","main.qml","ui/ControlBar/ControlBar.qml"]
+}
