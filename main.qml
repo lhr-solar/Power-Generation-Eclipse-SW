@@ -3,15 +3,19 @@ import QtQuick.Window
 import QtQuick.Layouts
 import "ui/AboutPage"
 import "ui/ControlBar"
+import "ui/PVCapturePage"
+import "ui/PVDesignerPage"
+import "ui/PVSimulatorPage"
 
 Window {
-    width: 1080
-    height: 720
+    width: 1920
+    height: 1080
     visible: true
     title: qsTr("Eclipse")
 
     ControlBar {
         id: control_bar
+        objectName: "control_bar"
     }
 
     Rectangle {
@@ -21,6 +25,8 @@ Window {
             left: parent.left
             right: parent.right
         }
+        objectName: "main_view"
+
         StackLayout {
             id: main_layout
             currentIndex: control_bar.currentIndex
@@ -32,27 +38,18 @@ Window {
             }
 
             // Control I-V Curve Tracer
-            Rectangle {
+            PVCapturePage {
                 id: pv_capture
-                color: 'plum'
-                Layout.fillWidth: true
-                Layout.fillHeight: true
             }
 
             // Design PV array
-            Rectangle {
+            PVDesignerPage {
                 id: pv_designer
-                color: 'teal'
-                Layout.fillWidth: true
-                Layout.fillHeight: true
             }
 
             // Simulate PV array and MPPT
-            Rectangle {
+            PVSimulatorPage {
                 id: pv_simulator
-                color: 'goldenrod'
-                Layout.fillWidth: true
-                Layout.fillHeight: true
             }
         }
     }
