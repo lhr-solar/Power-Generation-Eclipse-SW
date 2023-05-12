@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Controls.Material
 
-Rectangle {
-    color: 'goldenrod'
+Pane {
+    Material.background: Material.Green
+
     Layout.fillWidth: true
     Layout.fillHeight: true
 }

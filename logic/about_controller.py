@@ -21,7 +21,6 @@ def load_about(objs):
             # Python v2.
             text = str(text)
 
-        print(text)
         about_text = objs.findChild(QObject, "about_text")
         about_text.setProperty("text", text)
 
