@@ -3,14 +3,15 @@
 @author     Matthew Yu (matthewjkyu@gmail.com)
 @brief      Loads in program information for the about page.
 
-@version    0.0.0
-@date       2023-05-11
+@version    0.4.0
+@date       2023-05-13
 """
 from PySide6.QtCore import QFile, QObject
 
+
 def load_about(objs):
     # Load text for about page.
-    file = QFile("ui/AboutPage/about.md")
+    file = QFile("ui/assets/about.md")
     if file.open(QFile.ReadOnly | QFile.Text):
         text = file.readAll()
 
