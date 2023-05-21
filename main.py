@@ -1,4 +1,10 @@
-# This Python file uses the following encoding: utf-8
+"""_summary_
+@file       main.py
+@author     Matthew Yu (matthewjkyu@gmail.com)
+@brief      Entry point for loading the application.
+@version    0.4.0
+@date       2023-05-13
+"""
 import sys
 from pathlib import Path
 

@@ -1,34 +1,46 @@
 # Eclipse
 
-Eclipse is a multifunctional application to characterize UT Austin's LHR Solar power generation system.
-It performs the following tasks:
+Eclipse is a multifunctional application to characterize UT Austin's LHR Solar
+power generation system. It performs the following tasks:
+
 - control and monitor the IV Curve Tracer,
-- characterize and evaluate photovoltaic systems,
+- characterize and analyze photovoltaic systems,
 - create and model said systems,
 - and simulate a virtual power generation system.
 
 ---
+
 ## What's New (Doc)
 
 `Version 4.0.0`
 
-TODO: this
+Version 4.0.0 revamps the user interface for the software application, moving
+over to custom QML files to describe the user interface. This has reduced the
+backend code debt significantly while allowing the team to focus on custom
+components for visualizing photovoltaic models.
+
+We've also moved over to PySide6 from PyQt6, which comes with the LGPL license.
+
+Further photovoltaic analysis has also been integrated, allowing for cell
+comparison, binning, and matching.
 
 ---
+
 ## Credits
 
-The main author of this revision is Matthew Yu (matthewjkyu@gmail.com).
-The greater assistant author is Roy Mor.
-The lesser assistant author is Jared McArthur.
+The primary maintainer of this software is Matthew Yu (matthewjkyu@gmail.com).
 
-Also credits to the following members of LHR Solar who have contributed
-previously to MPPT algorithm components:
+Thanks to the following for their help in developing this software and providing
+feedback.
+
+- Roy Mor
+- Jared McArthur
 - Afnan Mir
 - Gary Hallock
 
 ---
-## Copyright
 
+## Copyright
 
 Copyright (C) 2023 by Matthew Yu
 
