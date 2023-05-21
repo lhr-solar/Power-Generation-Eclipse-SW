@@ -6,14 +6,15 @@
 @date       2023-05-13
 """
 
+import sys
+
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-
-import sys
 
 sys.path.extend([".."])
 
 from common.utils import update
+
 
 class Graph:
     def __init__(self, title, x_label, y_label, use_gl=False) -> None:
@@ -37,7 +38,8 @@ class Graph:
                     plot_item = self.plot.plot(
                         x=series["x"],
                         y=series["y"],
-                        pen=pg.mkPen(series["color"], width=1.5)
+                        pen=pg.mkPen(series["color"], width=1.5),
+                        name=key,
                     )
                 case "scatter":
                     if self.use_gl:
@@ -46,7 +48,8 @@ class Graph:
                         x=series["x"],
                         y=series["y"],
                         pen=pg.mkPen(series["color"], width=1.5),
-                        size=5
+                        size=5,
+                        name=key,
                     )
                     self.plot.addItem(plot_item)
                 case "3dscatter":
@@ -54,7 +57,7 @@ class Graph:
                         raise Exception("3D series for non 3D Graph.")
 
                     cm = series["colormap"]
-                    colors = cm.map(series["voxels"][:,2], mode=cm.FLOAT)
+                    colors = cm.map(series["voxels"][:, 2], mode=cm.FLOAT)
 
                     plot_item = gl.GLScatterPlotItem(
                         pos=series["voxels"], size=series["size"], color=colors
@@ -98,6 +101,7 @@ class Graph:
             plot.setLabel("bottom", x_label)
             plot.setLabel("left", y_label)
             plot.addLegend()
+            plot.showGrid(x=True, y=True, alpha=1.0)
             self.plot = plot
         self.widget = widget
 

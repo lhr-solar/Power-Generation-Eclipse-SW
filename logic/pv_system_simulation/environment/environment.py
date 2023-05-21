@@ -1,18 +1,25 @@
-import pandas as pd
-import numpy as np
+"""_summary_
+@file       environment.py
+@author     Matthew Yu (matthewjkyu@gmail.com)
+@brief      Models the external environment for the photovoltaics.
+@version    0.4.0
+@date       2023-05-17
+"""
 import random
 import sys
-from perlin_noise import PerlinNoise
-import pyqtgraph as pg
 
+import numpy as np
+import pandas as pd
+import pyqtgraph as pg
 from PySide6 import QtWidgets
-from common.graph import Graph
 
 COL_G = "IRRAD (W/m^2)"
 COL_T = "TEMP (C)"
+FPS = 30
+
 
 class Environment:
-    def __init__(self, env_fp=None, spatial_units="mm", temporal_units="s") -> None:
+    def __init__(self, env_fp=None, spatial_units="m", temporal_units="s") -> None:
         if env_fp is not None:
             self.df = self.load_env(env_fp)
         else:
@@ -20,11 +27,11 @@ class Environment:
             # Contains dummy frame.
             self.df = pd.DataFrame(
                 data={
-                    "X": [np.nan],
-                    "Y": [np.nan],
-                    "T": [np.nan],
-                    "IRRAD (W/m^2)": [np.nan],
-                    "TEMP (C)": [np.nan],
+                    "X": [],
+                    "Y": [],
+                    "T": [],
+                    "IRRAD (W/m^2)": [],
+                    "TEMP (C)": [],
                 }
             )
 
@@ -39,7 +46,14 @@ class Environment:
 
     def save_env(self, env_fp) -> None:
         self.df = pd.DataFrame(
-            self.np, columns=["X", "Y", "T", "IRRAD (W/m^2)", "TEMP (C)"]
+            self.np,
+            columns=[
+                f"X ({self.sp_u})",
+                f"Y ({self.sp_u})",
+                f"T ({self.te_u})",
+                "IRRAD (W/m^2)",
+                "TEMP (K)",
+            ],
         )
         self.df.to_csv(env_fp, index=None)
 
@@ -52,69 +66,115 @@ class Environment:
     def generate_hypervoxels(self, func) -> None:
         self.np = np.vstack((self.np, func()))
 
-    def visualize_hypervoxels(self, image_fp=None) -> None:
-        # Setup application window
-        app = QtWidgets.QApplication()
-        win = QtWidgets.QMainWindow()
-        win.setGeometry(0, 0, 720, 480)
-        win.setWindowTitle("Environment")
-
-        def get_voxel_slice(data, timestamp, interest_idx) -> tuple:
+    def visualize_hypervoxels(self) -> None:
+        def get_timeslice(data, timestamp) -> tuple:
             # Reshape by y axis
             indices = np.argwhere(data[:, 2] == timestamp).flatten()
-            slice = np.take(data, indices, axis=0)
-            slice = slice[:, [0, 1, interest_idx]]  # Look at irradiance data
-            return slice
+            time_slice = np.take(data, indices, axis=0)
 
-        slice = get_voxel_slice(self.np, 0, 4)
+            matrix = time_slice
+            matrix_tp = np.transpose(matrix)
+            x_max = int(np.max(matrix_tp[0]))
+            y_max = int(np.max(matrix_tp[1]))
+            x, y = np.mgrid[slice(0, x_max + 1 + 1, 1), slice(0, y_max + 1 + 1, 1)]
+            irrad = np.empty((x_max + 1, y_max + 1))
+            temp = np.empty((x_max + 1, y_max + 1))
 
-        # Generate the graph and apply it
-        graph = Graph.Graph("Environment", "X (m)", "Y (m)", use_gl=True)
-        graph.add_series(
-            {
-                "irradiance": {
-                    "voxels": slice,
-                    "colormap": pg.colormap.get("CET_L3", source="colorcet"),
-                    "size": 5
-                }
-            },
-            "3dscatter"
+            for hypervoxel in matrix:
+                x_idx = int(hypervoxel[0])
+                y_idx = int(hypervoxel[1])
+                irrad[x_idx, y_idx] = hypervoxel[3]
+                temp[x_idx, y_idx] = hypervoxel[4]
+
+            return x, y, irrad, temp
+
+        if not QtWidgets.QApplication.instance():
+            app = QtWidgets.QApplication(sys.argv)
+        else:
+            app = QtWidgets.QApplication.instance()
+
+        win = QtWidgets.QMainWindow()
+        win.setGeometry(0, 0, 1080, 480)
+        win.setWindowTitle("Environment")
+
+        x, y, irrad, temp = get_timeslice(self.np, 0)
+
+        view = pg.GraphicsLayoutWidget()
+        plot_irrad = view.addPlot()
+        mesh_irrad = pg.PColorMeshItem(
+            x, y, irrad, levels=(0, 1000), enableAutoLevels=False
         )
+        plot_irrad.addItem(mesh_irrad, row=0, col=0, rowspan=1, colspan=4)
+
+        plot_temp = view.addPlot()
+        mesh_temp = pg.PColorMeshItem(
+            x, y, temp, levels=(273.15, 398.15), enableAutoLevels=False
+        )
+        plot_temp.addItem(mesh_temp)
+
+        def update():
+            update.time_idx += 1
+            if update.time_idx > update.max_time_idx:
+                update.time_idx = 0
+
+            x, y, irrad, temp = get_timeslice(self.np, update.time_idx)
+            mesh_irrad.setData(x, y, irrad)
+            mesh_temp.setData(x, y, temp)
+
+        update.time_idx = 0
+        update.max_time_idx = int(np.max(np.transpose(self.np)[2]))
+
+        timer = pg.QtCore.QTimer()
+        timer.timeout.connect(update)
+        timer.start(1000 / FPS)
 
         # Run the application
-        win.setCentralWidget(graph.get_graph())
+        win.setCentralWidget(view)
         win.show()
         exe = app.exec()
 
 
 if __name__ == "__main__":
-    # TODO: bug loading in existing csv
-    env = Environment()
+    env = Environment(spatial_units="dm")
     # env.add_hypervoxel({"X": 0, "Y": 0, "T": 0, COL_G: 1000, COL_T: 25})
     # env.add_hypervoxels(
     #     {"X": [0, 0], "Y": [0, 1], "T": [0, 0], COL_G: [1000, 1000], COL_T: [25, 25]}
     # )
 
     def generator() -> list:
-        noise = PerlinNoise(octaves=5, seed=1)
-        rows, columns = 1000, 1000
-        time = 1
+        rows, columns = 25, 40
+        time = 500
+
+        matrix_irrad = [
+            [100, 100, 200, 200, 300],
+            [100, 100, 200, 200, 300],
+            [50, 50, 100, 100, 150],
+            [50, 50, 100, 100, 150],
+            [50, 50, 100, 100, 100],
+        ]
+        matrix_temp = [
+            [298.15, 318.15, 338.15, 338.15, 338.15],
+            [298.15, 318.15, 318.15, 338.15, 338.15],
+            [298.15, 298.15, 318.15, 338.15, 338.15],
+            [298.15, 298.15, 318.15, 318.15, 318.15],
+            [298.15, 298.15, 318.15, 318.15, 318.15],
+        ]
 
         def get_irrad(x, y, t):
-            # Gets stronger as we go east, fluctuate over time
-            return 1.0 #noise([y / rows, x / columns, t / time]) * 1000
+            irrad = x * y
+            return max(0, min(irrad, 1000))
 
         def get_temp(x, y, t):
-            return random.gauss(10, 5)
+            temp = 298.15 + random.gauss(x * y * t / 500, 1)
+            return max(273.15, min(temp, 398.15))
 
         return [
             [x, y, t, get_irrad(x, y, t), get_temp(x, y, t)]
             for t in range(time)
-            for y in range(columns)
-            for x in range(rows)
+            for y in range(rows)
+            for x in range(columns)
         ]
 
-    # print(min(timeit.Timer(generator).repeat(3, 10))/10)
     env.generate_hypervoxels(generator)
     env.visualize_hypervoxels()
-    # env.save_env("./test.csv")
+    env.save_env("./test.csv")

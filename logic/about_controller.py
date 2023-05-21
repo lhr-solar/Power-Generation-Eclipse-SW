@@ -8,6 +8,7 @@
 """
 from PySide6.QtCore import QFile, QObject
 
+
 def load_about(objs):
     # Load text for about page.
     file = QFile("ui/assets/about.md")
