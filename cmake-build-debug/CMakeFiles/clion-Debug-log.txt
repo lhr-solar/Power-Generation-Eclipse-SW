@@ -1,0 +1,18 @@
+"C:\Program Files\JetBrains\CLion 2022.3.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2022.3.2/bin/ninja/win/x64/ninja.exe" -G Ninja -S "C:\Users\mpran\OneDrive - The University of Texas at Austin\Documents\GitHub\Power-Generation-Eclipse-SW" -B "C:\Users\mpran\OneDrive - The University of Texas at Austin\Documents\GitHub\Power-Generation-Eclipse-SW\cmake-build-debug"
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/mpran/OneDrive - The University of Texas at Austin/Documents/GitHub/Power-Generation-Eclipse-SW/cmake-build-debug
+
+Cannot get compiler information:
+	Compiler exited with error code 1: C:\Program Files\JetBrains\CLion 2022.3.2\bin\mingw\bin\gcc.exe -xobjective-c -g -fdiagnostics-color=always -fpch-preprocess -v -dD -E
+	Using built-in specs.
+	COLLECT_GCC=C:\Program Files\JetBrains\CLion 2022.3.2\bin\mingw\bin\gcc.exe
+	Target: x86_64-w64-mingw32
+	Configured with: ../gcc-11.2.0/configure --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32 --build=x86_64-alpine-linux-musl --prefix=/win --enable-checking=release --enable-fully-dynamic-string --enable-languages=c,c++ --enable-libatomic --enable-libgomp --enable-libstdcxx-filesystem-ts=yes --enable-libstdcxx-time=yes --enable-seh-exceptions --enable-shared --enable-static --enable-threads=posix --enable-version-specific-runtime-libs --disable-bootstrap --disable-graphite --disable-libada --disable-libstdcxx-pch --disable-libstdcxx-debug --disable-libquadmath --disable-lto --disable-nls --disable-multilib --disable-rpath --disable-symvers --disable-werror --disable-win32-registry --with-gnu-as --with-gnu-ld --with-system-libiconv --with-system-libz --with-gmp=/win/makedepends --with-mpfr=/win/makedepends --with-mpc=/win/makedepends
+	Thread model: posix
+	Supported LTO compression algorithms: zlib
+	gcc version 11.2.0 (GCC) 
+	[01m[Kgcc.exe:[m[K [01;31m[Kerror: [m[Klanguage objective-c not recognized
+	[01m[Kgcc.exe:[m[K [01;31m[Kerror: [m[Klanguage objective-c not recognized
+	
+	

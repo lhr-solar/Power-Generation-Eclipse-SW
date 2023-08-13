@@ -1,0 +1,60 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.24"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Power_Generation_Eclipse_SW",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "Power_Generation_Eclipse_SW::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Power_Generation_Eclipse_SW-Debug-fa7d49df22b11f910145.json",
+					"name" : "Power_Generation_Eclipse_SW",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/mpran/OneDrive - The University of Texas at Austin/Documents/GitHub/Power-Generation-Eclipse-SW/cmake-build-debug",
+		"source" : "C:/Users/mpran/OneDrive - The University of Texas at Austin/Documents/GitHub/Power-Generation-Eclipse-SW"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}
