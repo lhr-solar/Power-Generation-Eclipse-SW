@@ -1,8 +1,0 @@
-# Development dependencies.
-black
-pytest
-
-# Normal dependencies.
-pyqt5
-pyqtgraph
-jsbeautifier
