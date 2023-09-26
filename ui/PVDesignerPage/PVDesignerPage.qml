@@ -6,6 +6,14 @@ import QtQuick.Controls.Material
 Pane {
     Material.background: Material.Green
 
-    Layout.fillWidth: true
-    Layout.fillHeight: true
+    PVDesignerControls {
+        id: pv_designer_controls
+        width: parent.width * 1/4
+    }
+
+    PVDesignerViewer {
+        id: pv_designer_viewer
+    }
+    // Layout.fillWidth: true
+    // Layout.fillHeight: true
 }
