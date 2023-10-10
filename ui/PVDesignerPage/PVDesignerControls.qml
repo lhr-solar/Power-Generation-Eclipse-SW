@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "../MLDoubleSpinBox"
+import "../Cell"
 
 /* TODO:
     * Add module creator
@@ -10,12 +12,17 @@ import QtQuick.Controls
 
 
 Rectangle {
+    id: pv_designer_controls_rect
     anchors {
         top: parent.top
         bottom: parent.bottom
         left: parent.left
     }
+    // color: "green"
     anchors.margins: 15
+
+
+    signal writeToParent(int receiverID, var msg)
 
     Connections {
         target: designer_page
@@ -47,13 +54,371 @@ Rectangle {
             Layout.minimumWidth: parent.width
             border {
                 width: 1
-            }
-            ComboBox {
-                id: config_combo
-                anchors.fill: parent
-                model: ["First", "Second", "Third"]
+            } 
+            color: "black"
+            TabBar {
+                id: bar
+                width: parent.width
+                TabButton {
+                    text: "Module Creator"
+                }
+                TabButton {
+                    text: "Module Viewer"
+                }
             }
             
+            StackLayout {
+                anchors {
+                    top: bar.bottom
+                    bottom: parent.bottom
+                    left: parent.left
+                    right: parent.right
+                }
+                currentIndex: bar.currentIndex
+                Rectangle {
+                    id: module_creator
+                    color: "#222222"
+                    property int i: 0
+                    property var msg: ["uh oh, no cell"]
+                    GridLayout {
+                        id: creator_grid
+                        columns: 6
+                        rows: 5
+                        anchors.fill: parent
+                        GridLayout {
+                            columns: 2
+                            rows: 1
+                            Layout.columnSpan: 6
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.margins: 20
+                            Text {
+                                text: "Module Name: "
+                                color: "white"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            TextField {
+                                id: module_name
+                                text: "new_module"
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+
+                        GridLayout {
+                            id: v_oc_grid
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "OC Voltage"
+                                color: "white"
+                                // Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: v_oc
+                                wrap: false;
+                                value: 0.721
+                                from: 0.000
+                                to: 1.000
+                                decimals: 3
+                                stepSize: 0.001
+                                wheelEnabled: true
+                            }
+                        }
+                        GridLayout {
+                            id: i_sc_grid
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "SC Current"
+                                color: "white"
+                                // Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: i_sc
+                                wrap: false;
+                                value: 6.15
+                                from: 0.00
+                                to: 10.00
+                                stepSize: 0.01
+                                wheelEnabled: true
+                            }
+                        }
+
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "Reference Temp (K)"
+                                // Layout.fillWidth: true
+                                color: "white"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: ref_temp
+                                wrap: false;
+                                value: 298.15
+                                from: 200.00
+                                to: 400.00
+                                decimals: 2
+                                stepSize: 0.01
+                                wheelEnabled: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "Reference Irradiance (W/m^2)"
+                                // Layout.fillWidth: true
+                                color: "white"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: ref_irrad
+                                wrap: false;
+                                value: 1000.0
+                                from: 0.0
+                                to: 2000.0
+                                decimals: 1
+                                stepSize: 0.1
+                                wheelEnabled: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+
+                        GridLayout {
+                            id: if_grid
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "Ideality Factor"
+                                color: "white"
+                                // Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: ideality_factor
+                                wrap: false;
+                                value: 2.0
+                                from: 0.0
+                                to: 10.0
+                                stepSize: 0.1
+                                wheelEnabled: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                        Button {
+                            id: create_button
+                            text: "Create Module"
+                            Layout.columnSpan: 3
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignHCenter
+                            onClicked: {
+                                // property var id = "new_cell" + i
+                                module_creator.msg = [module_name.text + module_creator.i, "green", v_oc.value, 
+                                i_sc.value, ref_temp.value, ref_irrad.value, ideality_factor.value]
+                                module_creator.i++
+                                // console.log(module_creator.msg)
+                                designer_console.text += "added cell through controller" + "\n"
+                                pv_designer_controls_rect.writeToParent(1, module_creator.msg)
+                                
+                            }
+                        }
+                    }
+                }
+                Rectangle {
+                    id: module_viewer
+                    color: "#222222"
+                    GridLayout {
+                        id: viewer_grid
+                        columns: 6
+                        rows: 5
+                        anchors.fill: parent
+
+                        GridLayout {
+                            columns: 2
+                            rows: 1
+                            Layout.columnSpan: 6
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.margins: 20
+                            Text {
+                                text: "Module Name: "
+                                color: "white"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            TextField {
+                                text: "new_module"
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                                readOnly: true
+                            }
+                        }
+
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "OC Voltage"
+                                color: "white"
+                                // Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: view_v_oc
+                                wrap: false;
+                                value: 0.721
+                                from: 0.000
+                                to: 1.000
+                                decimals: 3
+                                stepSize: 0.001
+                                wheelEnabled: true
+                            }
+                        }
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "SC Current"
+                                color: "white"
+                                // Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: view_i_sc
+                                wrap: false;
+                                value: 6.15
+                                from: 0.00
+                                to: 10.00
+                                stepSize: 0.01
+                                wheelEnabled: true
+                            }
+                        }
+
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "Reference Temp (K)"
+                                // Layout.fillWidth: true
+                                color: "white"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: view_ref_temp
+                                wrap: false;
+                                value: 298.15
+                                from: 200.00
+                                to: 400.00
+                                decimals: 2
+                                stepSize: 0.01
+                                wheelEnabled: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "Reference Irradiance (W/m^2)"
+                                // Layout.fillWidth: true
+                                color: "white"
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: view_ref_irrad
+                                wrap: false;
+                                value: 1000.0
+                                from: 0.0
+                                to: 2000.0
+                                decimals: 1
+                                stepSize: 0.1
+                                wheelEnabled: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+                        GridLayout {
+                            columns: 1
+                            rows: 2
+                            Layout.columnSpan: 3
+                            Layout.fillHeight: true
+                            Layout.alignment: Qt.AlignHCenter
+                            Text {
+                                text: "Ideality Factor"
+                                color: "white"
+                                // Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                            MLDoubleSpinBox {
+                                id: view_ideality_factor
+                                wrap: false;
+                                value: 2.0
+                                from: 0.0
+                                to: 10.0
+                                stepSize: 0.1
+                                wheelEnabled: true
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+                        }
+
+                        // Button {
+                        //     id: delete_button
+                        //     text: "Delete Module"
+                        //     Layout.columnSpan: 3
+                        //     Layout.fillWidth: true
+                        //     Layout.alignment: Qt.AlignHCenter
+                        //     onClicked: {
+                                
+                        //     }
+                        // }
+                        Button {
+                            id: save_button
+                            text: "Save Module"
+                            Layout.columnSpan: 3
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignHCenter
+                            onClicked: {
+                                
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Rectangle {
@@ -76,9 +441,6 @@ Rectangle {
                     wrapMode: Text.WordWrap
                     placeholderText: "TYPE COMMAND then CTRL+ENTER to use CLI."
 
-                    
-
-
                     Keys.onReturnPressed: (event) => {
                         if(event.modifiers & Qt.ControlModifier) {
                             text += '\n'
@@ -90,5 +452,5 @@ Rectangle {
                 }
             }
         }
-    }
+    }   
 }

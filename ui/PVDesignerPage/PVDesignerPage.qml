@@ -7,12 +7,34 @@ Pane {
     id: designer_page
     
     signal writeToConsole(string msg)
+    signal sendToModuleViewer()
+
+    signal addNewCell(string cellID, string color, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
+    signal modifyCell(string cellID, string color, int x, int y)
+    signal deleteCell(string cellID)
+
 
     function receiverSwitch(receiverID, msg) {
         switch(receiverID) {
             case 0: // console
                 console.log(msg)
                 writeToConsole(msg)
+                break
+            case 1: // add new cell
+                console.log("receiverSwitch: add new cell")
+                addNewCell(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
+                break
+            case 2: // modify cell
+                console.log("receiverSwitch: modify cell")
+                modifyCell(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
+                break
+            case 3: // delete cell
+                console.log("receiverSwitch: delete cell")
+                deleteCell(msg)
+                break
+            case 4: // send cell data to console
+                console.log("receiverSwitch: send cell data to console")
+                writeToConsole(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
                 break
             default:
                 console.log("receiverSwitch: receiverID not found")
@@ -23,7 +45,11 @@ Pane {
     PVDesignerControls {
         id: pv_designer_controls
         width: parent.width * 1/4
+        onWriteToParent: {
+            receiverSwitch(receiverID, msg)
+        }
     }
+
 
     PVDesignerViewer {
         id: pv_designer_viewer

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import "../Cell"
 
 Rectangle {
     id: pv_designer_view_rect
@@ -12,7 +13,15 @@ Rectangle {
     }
     anchors.margins: 15
     
-    signal writeToParent(int receiverID, string msg)
+    signal writeToParent(int receiverID, var msg)
+
+    Connections {
+        target: designer_page
+        onAddNewCell: {
+            // addCell(cellID, color, v_oc, i_sc, ref_temp, ref_irrad, ideality_factor)
+            joemama(cellID, color, 1, 1)
+        }
+    }
 
     ListModel {
         id: pv_cell_list
@@ -23,22 +32,60 @@ Rectangle {
             x: 0
             y: 0
         }
+        // Cell {
+        //     name: "PV Cell 1"
+        //     color: "blue"
+        //     x: 0
+        //     y: 0
+        //     ref_v_oc: 1
+        //     ref_i_sc: 1
+        //     ref_irrad: 1
+        //     ref_temp: 1
+        //     ref_ideality: 1
+        // }
 
-        ListElement {
-            name: "PV Cell 2"
-            color: "yellow"
-            x: 0
-            y: 1
-        }
+        // Cell {
+        //     name: "PV Cell 2"
+        //     color: "yellow"
+        //     x: 4
+        //     y: 10
+        //     ref_v_oc: 1
+        //     ref_i_sc: 1
+        //     ref_irrad: 1
+        //     ref_temp: 1
+        //     ref_ideality: 1
+        // }
     }
 
-    function addCell(name1, color1, x1, y1) {
+    function joemama(name1, color1, x1, y1){
         pv_cell_list.append({name: name1,
             color: color1, 
             x: x1,
             y: y1
             })
     }
+
+    // function addCell(cellID, cellColor, voc, i_sc, temp, irrad, ideality) {
+    //     var object newObject = Qt.createQmlObject(`
+    //     import "../Cell"
+
+    //     Cell {
+    //         name: "` + name1 + `"
+    //         color: "` + color1 + `"
+    //         x: 1
+    //         y: 1
+    //         ref_v_oc: ` + voc + `
+    //         ref_i_sc: ` + i_sc + `
+    //         ref_irrad: ` + irrad + `
+    //         ref_temp: ` + temp + `
+    //         ref_ideality: ` + ideality + `
+    //     }
+    //     `,
+    //     pv_cell_list,
+    //     "PVDesignerViewer"
+    //     );
+    //     var object = Qt.createQmlObject( "import QtQuick; Cell { name: '" + name1 + "'; color: '" + color1 + "'; ref_v_oc: " + voc + "; ref_i_sc: " + i_sc + "; ref_irrad: " + irrad + "; ref_temp: " + temp + "; ref_ideality: " + ideality + "}", pv_cell_list)
+    // }
 
     GridView {
         anchors.fill: parent
@@ -100,19 +147,17 @@ Rectangle {
                 id: sim_drag
                 anchors.fill: parent
                 drag.target: parent
-                property int i: 2
+                
 
                 //parent.parent.parent.parent.parent.parent.
 
-                // Currently just adds another cell, but will eventually add a menu to add cell with custom characteristics
+                //TODO: send cell data to module viewer in design control
                 onClicked: {
-                    addCell("PV Cell " + i, "red", i, i)
-                    pv_designer_view_rect.writeToParent(0, "added cell")
-                    i++
+                    writeToParent(4, [parent.name, parent.color, parent.ref_v_oc, parent.ref_i_sc, parent.ref_temp, parent.ref_irrad, parent.ref_ideality])
                 }
 
                 onReleased: {
-                    console.log("x: " + parent.x + " y: " + parent.y)
+                    // console.log("x: " + parent.x + " y: " + parent.y)
                     parent.x = snappedX(parent.x)
                     parent.y = snappedY(parent.y)
                 }
