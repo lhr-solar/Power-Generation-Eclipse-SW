@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import "../Cell"
 
 Rectangle {
     id: pv_designer_view_rect

@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../MLDoubleSpinBox"
-import "../Cell"
 
 /* TODO:
     * Add module creator
