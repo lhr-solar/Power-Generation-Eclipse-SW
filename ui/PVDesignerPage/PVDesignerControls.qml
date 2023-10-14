@@ -31,6 +31,23 @@ Rectangle {
         }
     }
 
+    Connections {
+        target: designer_page
+        onSendToConfig: {
+            designer_console.text += "i need sleep" + "\n"
+            // view_module_name.text = msg
+
+            // Uncomment when Cell model implemented
+            view_module_name.text = cellID
+            view_v_oc.value = v_oc
+            view_i_sc.value = i_sc
+            view_ref_temp.value = ref_temp
+            view_ref_irrad.value = ref_irrad
+            view_ideality_factor.value = ideality_factor
+        }
+    }
+    
+
     GridLayout {
         anchors.fill: parent
         columns: 1
@@ -55,7 +72,7 @@ Rectangle {
             border {
                 width: 1
             } 
-            color: "black"
+            // color: "black"
             TabBar {
                 id: bar
                 width: parent.width
@@ -269,7 +286,8 @@ Rectangle {
                                 Layout.alignment: Qt.AlignHCenter
                             }
                             TextField {
-                                text: "new_module"
+                                id: view_module_name
+                                text: "No Module Selected"
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignHCenter
                                 readOnly: true

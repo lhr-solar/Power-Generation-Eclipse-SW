@@ -7,7 +7,7 @@ Pane {
     id: designer_page
     
     signal writeToConsole(string msg)
-    signal sendToModuleViewer()
+    signal sendToConfig(string cellID, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
 
     signal addNewCell(string cellID, string color, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
     signal modifyCell(string cellID, string color, int x, int y)
@@ -33,8 +33,8 @@ Pane {
                 deleteCell(msg)
                 break
             case 4: // send cell data to console
-                console.log("receiverSwitch: send cell data to console")
-                writeToConsole(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
+                console.log("receiverSwitch: send cell data to config  " + msg)
+                sendToConfig(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
                 break
             default:
                 console.log("receiverSwitch: receiverID not found")
@@ -48,6 +48,10 @@ Pane {
         onWriteToParent: {
             receiverSwitch(receiverID, msg)
         }
+        // TODO: figure out how to make this work so i dont get stupid deprecated function warnings
+        // function onWriteToParent(receiverID, msg) {
+        //     receiverSwitch(receiverID, msg)
+        // }
     }
 
 
