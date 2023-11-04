@@ -26,6 +26,14 @@ Rectangle {
         onDeleteCell: {
             deleteCell(cellID)
         }
+        onSaveConfig: {
+            console.log("saving config")
+            var filePath = fileName + ".array_conf"
+        }
+        onLoadConfig: {
+            console.log("loading config")
+            var filePath = fileName + ".array_conf"
+        }
     }
 
     ListModel {

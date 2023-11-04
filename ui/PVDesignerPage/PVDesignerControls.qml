@@ -58,6 +58,7 @@ Rectangle {
             border {
                 width: 1
             }
+            color: "#222222"
 
             GridLayout {
                 anchors.fill: parent
@@ -67,6 +68,8 @@ Rectangle {
                 Text {
                     text: "Configuration"
                     Layout.columnSpan: 2
+                    Layout.alignment: Qt.AlignHCenter
+                    color: "white"
                 }
                 Button {
                     id: load_config_button
@@ -75,7 +78,7 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
-                        
+                        writeToParent(6, config_name.text)
                     }
                 }
                 Button {
@@ -85,14 +88,13 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
-                        
+                        writeToParent(5, config_name.text)
                     }
                 }
                 TextField {
                     id: config_name
                     text: "new_config"
                     Layout.columnSpan: 2
-                    Layout.fillWidth: true
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -104,7 +106,7 @@ Rectangle {
             border {
                 width: 1
             } 
-            // color: "black"
+            
             TabBar {
                 id: bar
                 width: parent.width

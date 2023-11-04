@@ -12,11 +12,16 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from logic.about_controller import load_about
+from logic.file_io import file_io
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     engine = QQmlApplicationEngine()
+    
+    file_io = file_io()
+    engine.rootContext().setContextProperty("file_io", file_io)
+    
     qml_file = Path(__file__).resolve().parent / "main.qml"
     engine.load(qml_file)
     if not engine.rootObjects():

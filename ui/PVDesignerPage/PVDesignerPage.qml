@@ -12,6 +12,8 @@ Pane {
     signal addNewCell(string cellID, string color, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
     signal modifyCell(string cellID, string color, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
     signal deleteCell(string cellID)
+    signal saveConfig(string fileName)
+    signal loadConfig(string fileName)
 
 
     function receiverSwitch(receiverID, msg) {
@@ -36,6 +38,14 @@ Pane {
             case 4: // send cell data to console
                 console.log("receiverSwitch: send cell data to config  " + msg)
                 sendToConfig(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
+                break
+            case 5:
+                console.log("save config")
+                saveConfig(msg)
+                break
+            case 6:
+                console.log("load config")
+                loadConfig(msg)
                 break
             default:
                 console.log("receiverSwitch: receiverID not found")
