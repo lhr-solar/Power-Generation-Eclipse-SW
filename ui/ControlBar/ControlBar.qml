@@ -20,6 +20,10 @@ TabBar {
     }
 
     TabButton {
+        text: "PV Characteristics"
+    }
+
+    TabButton {
         text: "PV Designer"
     }
 

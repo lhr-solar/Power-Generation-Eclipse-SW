@@ -10,7 +10,7 @@ Pane {
     signal sendToConfig(string cellID, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
 
     signal addNewCell(string cellID, string color, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
-    signal modifyCell(string cellID, string color, int x, int y)
+    signal modifyCell(string cellID, string color, double v_oc, double i_sc, double ref_temp, double ref_irrad, double ideality_factor)
     signal deleteCell(string cellID)
 
 
@@ -26,6 +26,7 @@ Pane {
                 break
             case 2: // modify cell
                 console.log("receiverSwitch: modify cell")
+                console.log(msg)
                 modifyCell(msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6])
                 break
             case 3: // delete cell

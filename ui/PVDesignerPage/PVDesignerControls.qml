@@ -59,9 +59,42 @@ Rectangle {
                 width: 1
             }
 
-            Text {
-                text: "Configuration"
-                anchors.centerIn: parent
+            GridLayout {
+                anchors.fill: parent
+                columns: 2
+                rows: 3
+                
+                Text {
+                    text: "Configuration"
+                    Layout.columnSpan: 2
+                }
+                Button {
+                    id: load_config_button
+                    text: "Load Configuration"
+                    Layout.columnSpan: 1
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        
+                    }
+                }
+                Button {
+                    id: save_config_button
+                    text: "Save Configuration"
+                    Layout.columnSpan: 1
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                    onClicked: {
+                        
+                    }
+                }
+                TextField {
+                    id: config_name
+                    text: "new_config"
+                    Layout.columnSpan: 2
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignHCenter
+                }
             }
         }
 
@@ -251,12 +284,11 @@ Rectangle {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignHCenter
                             onClicked: {
-                                // property var id = "new_cell" + i
-                                module_creator.msg = [module_name.text + module_creator.i, "green", v_oc.value, 
-                                i_sc.value, ref_temp.value, ref_irrad.value, ideality_factor.value]
+                                module_creator.msg = [module_name.text + module_creator.i, "steelblue", v_oc.value, 
+                                    i_sc.value, ref_temp.value, ref_irrad.value, ideality_factor.value]
                                 module_creator.i++
                                 // console.log(module_creator.msg)
-                                designer_console.text += "added cell through controller" + "\n"
+                                designer_console.text += "added cell" + "\n"
                                 pv_designer_controls_rect.writeToParent(1, module_creator.msg)
                                 
                             }
@@ -266,6 +298,7 @@ Rectangle {
                 Rectangle {
                     id: module_viewer
                     color: "#222222"
+                    property var msg: ["uh oh, no cell"]
                     GridLayout {
                         id: viewer_grid
                         columns: 6
@@ -413,26 +446,39 @@ Rectangle {
                             }
                         }
 
-                        // Button {
-                        //     id: delete_button
-                        //     text: "Delete Module"
-                        //     Layout.columnSpan: 3
-                        //     Layout.fillWidth: true
-                        //     Layout.alignment: Qt.AlignHCenter
-                        //     onClicked: {
-                                
-                        //     }
-                        // }
-                        Button {
-                            id: save_button
-                            text: "Save Module"
+                        GridLayout {
+                            columns: 2
+                            rows: 1
                             Layout.columnSpan: 3
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignHCenter
-                            onClicked: {
-                                
+                            
+                            Button {
+                                id: save_button
+                                text: "Save Module"
+                                Layout.columnSpan: 1
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                                onClicked: {
+                                    module_viewer.msg = [view_module_name.text, "steelblue", view_v_oc.value, 
+                                        view_i_sc.value, view_ref_temp.value, view_ref_irrad.value, view_ideality_factor.value]
+                                    designer_console.text += "saved cell" + "\n"
+                                    pv_designer_controls_rect.writeToParent(2, module_viewer.msg)
+                                }
                             }
-                        }
+                            Button {
+                                id: delete_button
+                                text: "Delete Module"
+                                Layout.columnSpan: 1
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
+                                onClicked: {
+                                    module_viewer.msg = view_module_name.text
+                                    designer_console.text += "deleted cell" + "\n"
+                                    pv_designer_controls_rect.writeToParent(3, module_viewer.msg)
+                                }
+                            }
+                        }                        
                     }
                 }
             }
