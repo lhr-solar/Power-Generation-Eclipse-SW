@@ -343,7 +343,6 @@ class PVCell:
             container_layout.addWidget(graph["graph"].get_graph(), *graph["position"])
 
         def update_graphs():
-            self._graphs
             for key, graph in self._graphs.items():
                 if key == "IRRAD_SWEEP":
                     data = self.get_voltage_curves(graph["cur_val"], 298.15)
