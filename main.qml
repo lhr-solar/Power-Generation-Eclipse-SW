@@ -6,6 +6,7 @@ import QtQuick.Controls.Material
 import "ui/AboutPage"
 import "ui/ControlBar"
 import "ui/PVCapturePage"
+import "ui/PVCharacteristicsPage"
 import "ui/PVDesignerPage"
 import "ui/PVSimulatorPage"
 
@@ -45,6 +46,10 @@ Window {
             // Control I-V Curve Tracer
             PVCapturePage {
                 id: pv_capture
+            }
+
+            PVCharacteristicsPage {
+                id: pv_characteristics
             }
 
             // Design PV array
