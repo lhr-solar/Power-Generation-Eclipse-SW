@@ -49,16 +49,51 @@ Rectangle {
                     theme: ChartView.ChartThemeQt
                     antialiasing: true
 
-                    ScatterSeries {
-                        name: "AAA"
-                        XYPoint { x: 1.5; y: 1.5 }
-                        XYPoint { x: 1.5; y: 1.6 }
-                        XYPoint { x: 1.57; y: 1.55 }
-                        XYPoint { x: 1.8; y: 1.8 }
-                        XYPoint { x: 1.9; y: 1.6 }
-                        XYPoint { x: 2.1; y: 1.3 }
-                        XYPoint { x: 2.5; y: 2.1 }
+                    ValueAxis {
+                        id: xAxis
+                        min: 0
+                        max: 1
                     }
+
+                    ValueAxis {
+                        id: yAxis
+                        min: 0
+                        max: 1
+                    }
+
+                    ScatterSeries {
+                        id: scatter1 
+                        name: "AAA"
+                        axisX: xAxis
+                        axisY: yAxis
+                    }
+
+                    Connections {
+                        target: plotSignals
+
+                        function onNew_point(point) {
+                            scatter1.append(point.x, point.y);
+                        }
+
+                        function onRe_scale(maxy, miny, maxx, minx) {
+                            xAxis.min = minx;
+                            xAxis.max = maxx;
+                            yAxis.min = miny;
+                            yAxis.max = maxy;
+                        }
+                    }
+
+                    // ScatterSeries {
+                    //     name: "AAA"
+
+                    //     XYPoint { x: 1.5; y: 1.5 }
+                    //     XYPoint { x: 1.5; y: 1.6 }
+                    //     XYPoint { x: 1.57; y: 1.55 }
+                    //     XYPoint { x: 1.8; y: 1.8 }
+                    //     XYPoint { x: 1.9; y: 1.6 }
+                    //     XYPoint { x: 2.1; y: 1.3 }
+                    //     XYPoint { x: 2.5; y: 2.1 }
+                    // }
                 }
             }
         }

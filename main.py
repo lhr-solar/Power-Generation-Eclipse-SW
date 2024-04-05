@@ -13,6 +13,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 from logic.about_controller import load_about
 from logic.file_io import file_io
+from src.pv_capture import plotter
 
 
 if __name__ == "__main__":
@@ -21,6 +22,9 @@ if __name__ == "__main__":
     
     file_io = file_io()
     engine.rootContext().setContextProperty("file_io", file_io)
+
+    plot = plotter()
+    engine.rootContext().setContextProperty("plotSignals", plot)
     
     qml_file = Path(__file__).resolve().parent / "main.qml"
     engine.load(qml_file)
