@@ -23,7 +23,7 @@ if __name__ == "__main__":
     file_io = file_io()
     engine.rootContext().setContextProperty("file_io", file_io)
 
-    plot = plotter()
+    plot = plotter.Plotter()
     engine.rootContext().setContextProperty("plotSignals", plot)
     
     qml_file = Path(__file__).resolve().parent / "main.qml"

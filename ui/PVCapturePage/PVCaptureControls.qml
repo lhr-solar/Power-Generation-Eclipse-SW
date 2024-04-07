@@ -46,6 +46,18 @@ Rectangle {
             Text {
                 text: "Controls and Analysis"
                 anchors.centerIn: parent
+
+                visible: false
+            }
+
+            Button {
+                id: plotButton
+                text: "Plot"
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                onClicked: {
+                    plotSignals.plot()
+                }
             }
         }
 

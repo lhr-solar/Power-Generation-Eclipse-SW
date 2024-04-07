@@ -12,7 +12,7 @@ import glob
 import os
 import sys
 import time
-from curses import baudrate
+# from curses import baudrate
 from datetime import datetime
 
 import serial
@@ -20,7 +20,7 @@ import serial.tools.list_ports
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt6.QtCore import QIODevice
 
-import plotter
+# import plotter
 
 
 class PVCurveTracerController:
@@ -73,7 +73,7 @@ class PVCurveTracerController:
         # TODO: load from config file comm scheme.
         
         config = {
-            "com_port": "COM4",
+            "com_port": "COM5",
             "baud_rate": 19200,
             "parity_bit": QSerialPort.Parity.EvenParity,
             "enc_scheme": "NONE",

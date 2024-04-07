@@ -71,16 +71,20 @@ Rectangle {
                     Connections {
                         target: plotSignals
 
-                        function onNew_point(point) {
-                            scatter1.append(point.x, point.y);
+                        function onSig_res(dataList) {
+                            scatter1.append(dataList[1], dataList[2]);
                         }
 
-                        function onRe_scale(maxy, miny, maxx, minx) {
-                            xAxis.min = minx;
-                            xAxis.max = maxx;
-                            yAxis.min = miny;
-                            yAxis.max = maxy;
-                        }
+                        // function onNew_point(point) {
+                        //     scatter1.append(point.x, point.y);
+                        // }
+
+                        // function onRe_scale(maxy, miny, maxx, minx) {
+                        //     xAxis.min = minx;
+                        //     xAxis.max = maxx;
+                        //     yAxis.min = miny;
+                        //     yAxis.max = maxy;
+                        // }
                     }
 
                     // ScatterSeries {
