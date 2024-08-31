@@ -1,3 +1,0 @@
-{
-    "files": ["ui/AboutPage/about.md","ui/ControlBar/ControlBar.qml","ui/PVSimulatorPage/PVSimulatorPage.qml","ui/PVSimulatorPage/PVSimulatorViewer.qml","ui/FormControl/FormControl.qml","main.qml","ui/Arrows/ArrowDown.qml","ui/PVSimulatorPage/PVSimulatorControls.qml","ui/AboutPage/AboutPage.qml","ui/PVSimulatorPage/GraphSet.qml","ui/Arrows/ArrowDownLeft.qml","ui/PVCapturePage/PVCapturePage.qml","ui/PVDesignerPage/PVDesignerPage.qml","ui/PVCapturePage/PVCaptureViewer.qml","main.py","ui/PVCapturePage/PVCaptureControls.qml","logic/about_controller.py","ui/Arrows/ArrowUpLeft.qml"]
-}
