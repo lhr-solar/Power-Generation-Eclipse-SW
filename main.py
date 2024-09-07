@@ -181,6 +181,8 @@ def main():
             refresh_rate,
             v_ref,
         )
+        
+        
 
     # simulating from an impulse created by the user
     else:
@@ -297,7 +299,7 @@ def main_loop(
         # source.setup_i(irradiance, temperature, load)
 
     input("Halted at the end of cycle " + str(max_cycle))
-    # simulation.save_model() # TODO: add prompt to save the model into results.txt
+    simulation.save_model() # TODO: add prompt to save the model into results.txt
 
 
 if __name__ == "__main__":

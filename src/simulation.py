@@ -13,6 +13,7 @@ Description: This Simulation class contains the state of the simulation.
 from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
 import pyqtgraph as pg
+import psycopg2
 import sys
 import csv
 
@@ -775,3 +776,35 @@ class Simulation:
         with open("results.csv", "ab") as f:
             a = np.transpose(np.asarray([self.cycles, self.disp_pDiffA])) # or disp_pDiff or power2
             np.savetxt(f, a, delimiter=",", fmt="%.4f")
+        
+        conn = None
+        try:
+            # connect to the PostgreSQL server
+            print('Connecting to the PostgreSQL database...')
+            conn = psycopg2.connect(
+                host = 'localhost',
+                dbname = 'results.csv',
+                user = 'postgres',
+                password = 'SQL_2024',
+                port = 5432
+            )
+
+            # Creating a cursor with name cur.
+            cur = conn.cursor()
+            print('Connected to the PostgreSQL database')
+
+            # Execute a query:
+            # To display the PostgreSQL
+            # database server version
+            cur.execute('SELECT version()')
+            print(cur.fetchone())
+
+            # Close the connection
+            cur.close()
+
+        except(Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if conn is not None:
+                conn.close()
+                print('Database connection closed.')
