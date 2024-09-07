@@ -19,4 +19,6 @@ import { CapDisplayComponent } from './cap-display/cap-display.component';
     PvCapComponent
   ]
 })
-export class PvCapModule { }
+export class PvCapModule {
+
+}

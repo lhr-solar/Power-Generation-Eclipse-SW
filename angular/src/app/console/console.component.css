@@ -1,0 +1,14 @@
+/* console.component.css */
+.console {
+    border: 1px solid #ccc;
+    padding: 10px;
+    height: 200px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+  }
+  
+  .message {
+    margin-bottom: 5px;
+    font-family: monospace;
+  }
+  
