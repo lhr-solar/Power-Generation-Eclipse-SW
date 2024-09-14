@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PV Config</title>
+</head>
+<body>
+    <div class="container">
+        <h1>PV Config</h1>
+        <div class="section">
+            <label for="pvType">PV Type</label>
+            <select id="pvType">
+                <option value="ARRAY">ARRAY</option>
+            </select>
+        </div>
+        <div class="section">
+            <label for="numSteps">Num Steps</label>
+            <input type="number" id="numSteps" value="150">
+        </div>
+        <div class="section">
+            <label for="stepSize">Step Size</label>
+            <input type="number" id="stepSize" value="0.001">
+        </div>
+        <div class="section">
+            <label for="settlingTime">Settling Time (s)</label>
+            <input type="number" id="settlingTime" value="2">
+        </div>
+        <div class="section">
+            <label for="totalSamples">Total Samples (ms)</label>
+            <input type="number" id="totalSamples" value="3750">
+        </div>
+        <div class="section">
+            <label for="testDuration">Test Duration</label>
+            <input type="number" id="testDuration">
+        </div>
+        <h2>COMM Config</h2>
+        <div class="section">
+            <button>Select File</button>
+        </div>
+        <div class="section">
+            <label for="pvId">PV ID</label>
+            <input type="text" id="pvId" placeholder="ex: BV001">
+        </div>
+        <div class="section">
+            <label for="port">Port</label>
+            <select id="port">
+                <!-- Add options as needed -->
+            </select>
+        </div>
+        <div class="section">
+            <label for="baudRate">Baud Rate</label>
+            <select id="baudRate">
+                <option value="4800">4800</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <div class="section">
+            <label for="encodingScheme">Encoding Scheme</label>
+            <select id="encodingScheme">
+                <!-- Add options as needed -->
+            </select>
+        </div>
+        <div class="section">
+            <label for="parity">Parity</label>
+            <select id="parity">
+                <option value="NONE">NONE</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <div class="section">
+            <label for="stopBits">Stop Bits</label>
+            <select id="stopBits">
+                <!-- Add options as needed -->
+            </select>
+        </div>
+        <div class="buttons">
+            <button class="start">START!</button>
+            <button class="stop">STOP</button>
+            <button class="save">SAVE</button>
+        </div>
+    </div>
+</body>
+</html>

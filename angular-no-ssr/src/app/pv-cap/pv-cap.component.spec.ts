@@ -1,17 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ConsoleComponent } from './console.component';
 
-describe('ConsoleComponent', () => {
-  let component: ConsoleComponent;
-  let fixture: ComponentFixture<ConsoleComponent>;
+import { PvCapComponent } from './pv-cap.component';
+
+describe('PvCapComponent', () => {
+  let component: PvCapComponent;
+  let fixture: ComponentFixture<PvCapComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ConsoleComponent]
+      imports: [PvCapComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ConsoleComponent);
+    fixture = TestBed.createComponent(PvCapComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
