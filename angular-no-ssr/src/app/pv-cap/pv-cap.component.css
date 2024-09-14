@@ -1,20 +1,21 @@
 .pv-cap-container {
-    display: flex;
-    flex-direction: row;
-  }
-  
-  .left-panel {
-    flex: 1;
-    padding: 10px;
-  }
-  
-  .console-panel {
-    flex: 1;
-    padding: 10px;
-  }
-  
-  .right-panel {
-    flex: 2;
-    padding: 10px;
-  }
+  display: flex;
+  flex-direction: row;
+}
+
+.left-panel {
+  flex-direction: column;
+  flex: 1;
+  padding: 10px;
+}
+
+.console-panel {
+  flex: 1;
+  padding: 10px;
+}
+
+.right-panel {
+  flex: 1;
+  padding: 10px;
+}
   

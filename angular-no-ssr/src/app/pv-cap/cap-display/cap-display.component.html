@@ -1,4 +1,17 @@
-<div class="statistics">
+<div class="display-container">
+  <div class="statistics">
+    <div>
+      <label>V_MPP (V):</label>
+      <span>{{ vMpp }}</span>
+    </div>
+    <div>
+      <label>I_MPP (A):</label>
+      <span>{{ iMpp }}</span>
+    </div>
+    <div>
+      <label>P_MPP (W):</label>
+      <span>{{ pMpp }}</span>
+    </div>
     <div>
       <label>V_OC (V):</label>
       <span>{{ vOc }}</span>
@@ -8,23 +21,12 @@
       <span>{{ iSc }}</span>
     </div>
     <div>
-      <label>V_MPP (V):</label>
-      <span>{{ vMpp }}</span>
-    </div>
-    <div>
-      <label>I_MPP (A):</label>
-      <span>{{ iMpp }}</span>
-    <div>
-      <label>P_MPP (W):</label>
-      <span>{{ pMpp }}</span>
-    </div>
-    <div>
       <label>Fill Factor (%):</label>
       <span>{{ ff }}</span>
     </div>
   </div>
-  
-  <div>
+
+  <div class="iv-pv-plot">
     <plotly-plot [data]="graph.data" [layout]="graph.layout"></plotly-plot>
   </div>
-  
+</div>

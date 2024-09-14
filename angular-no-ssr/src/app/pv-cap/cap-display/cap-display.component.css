@@ -1,16 +1,31 @@
+.display-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .statistics {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-  }
-  
-  .statistics div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .statistics label {
-    font-weight: bold;
-  }
-  
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.statistics > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30%; /* Each child div takes up 30% of the width */
+}
+
+.statistics label {
+  font-weight: bold;
+}
+
+.iv-pv-plot {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  width: 100%;
+}
