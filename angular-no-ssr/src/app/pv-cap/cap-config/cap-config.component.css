@@ -1,47 +1,49 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
 }
 
 .container {
-    width: 80%;
-    margin: 20px auto;
-    background: #fff;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: center;
+    background: #e13434;
 }
 
-h1, h2 {
+h1 {
     text-align: center;
     color: #333;
 }
 
-.section {
-    margin-bottom: 15px;
+.label-input-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px; /* Reduced from 15px */
 }
 
-label {
-    display: block;
-    margin-bottom: 5px;
+.label-input-group label {
+    flex: 1;
     color: #555;
 }
 
-input[type="number"], input[type="text"], select {
-    width: 100%;
-    padding: 8px;
+.label-input-group input[type="number"], 
+.label-input-group input[type="text"], 
+.label-input-group select {
+    flex: 2;
+    padding: 6px; /* Reduced from 8px */
     box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 4px;
+    margin-left: 10px; /* Space between label and input */
 }
 
 button {
-    padding: 10px 20px;
+    padding: 8px 15px; /* Adjusted padding */
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 10px;
+    margin-right: 5px; /* Reduced from 10px */
 }
 
 button.start {
@@ -61,5 +63,5 @@ button.save {
 
 .buttons {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 15px; /* Reduced from 20px */
 }

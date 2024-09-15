@@ -1,7 +1,11 @@
+
+
 .display-container {
   display: flex;
   flex-direction: column;
   flex: 1;
+  background: #3468e1;
+  /* height: 100vh; */
 }
 
 .statistics {
@@ -24,8 +28,10 @@
 }
 
 .iv-pv-plot {
-  display: flex;
+  flex: 1;
+}
+
+plotly-plot {
   flex: 1;
   height: 100%;
-  width: 100%;
 }
