@@ -4,14 +4,13 @@
 }
 
 .left-panel {
-  flex-direction: column;
-  padding: 10px;
   flex: .6;
-  height: 100%;
+  /* padding: 10px; */
+  background-color: bisque;
 }
 
-.display-panel {
+.display-panel { 
   flex: 1;
-  padding: 10px;
-  height: 100%;
+  /* padding: 10px; */
+  background-color: aquamarine;
 }
