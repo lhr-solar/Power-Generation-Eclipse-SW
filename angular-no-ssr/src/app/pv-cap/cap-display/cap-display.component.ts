@@ -26,6 +26,10 @@ export class CapDisplayComponent implements OnInit {
       }
     ],
     layout: {
+      autosize: true,
+      margin: { l: 0, r: 0, b: 0, t: 0 },
+      // height: 800,
+      // width: null,
       title: 'PV Characteristics',
       xaxis: { title: 'Voltage (V)' },
       yaxis: { title: 'Current (A)', side: 'left' },

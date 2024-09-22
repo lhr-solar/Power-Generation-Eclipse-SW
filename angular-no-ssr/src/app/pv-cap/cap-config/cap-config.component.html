@@ -1,85 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PV Config</title>
-</head>
-<body>
-    <div class="container">
-        <div class="pv-config">
-            <h1>PV Config</h1>
-            <div class="label-input-group">
-                <label for="pvType">PV Type</label>
-                <select id="pvType">
-                    <option value="ARRAY">ARRAY</option>
-                </select>
-            </div>
-            <div class="label-input-group">
-                <label for="numSteps">Num Steps</label>
-                <input type="number" id="numSteps" value="150">
-            </div>
-            <div class="label-input-group">
-                <label for="stepSize">Step Size</label>
-                <input type="number" id="stepSize" value="0.001">
-            </div>
-            <div class="label-input-group">
-                <label for="settlingTime">Settling Time (s)</label>
-                <input type="number" id="settlingTime" value="2">
-            </div>
-            <div class="label-input-group">
-                <label for="totalSamples">Total Samples (ms)</label>
-                <input type="number" id="totalSamples" value="3750">
-            </div>
-            <div class="label-input-group">
-                <label for="testDuration">Test Duration</label>
-                <input type="number" id="testDuration">
-            </div>    
+<div class="container">
+    <div class="pv-config">
+        <h1>PV Config</h1>
+        <div class="label-input-group">
+            <label for="pvType">PV Type</label>
+            <select id="pvType">
+                <option value="ARRAY">ARRAY</option>
+            </select>
         </div>
-        <div class="comm-config">
-            <h1>COMM Config</h1>
-            <div class="label-input-group">
-                <label for="pvId">PV ID</label>
-                <input type="text" id="pvId" placeholder="ex: BV001">
-            </div>
-            <div class="label-input-group">
-                <label for="port">Port</label>
-                <select id="port">
-                    <!-- Add options as needed -->
-                </select>
-            </div>
-            <div class="label-input-group">
-                <label for="baudRate">Baud Rate</label>
-                <select id="baudRate">
-                    <option value="4800">4800</option>
-                    <!-- Add more options as needed -->
-                </select>
-            </div>
-            <div class="label-input-group">
-                <label for="encodingScheme">Encoding Scheme</label>
-                <select id="encodingScheme">
-                    <!-- Add options as needed -->
-                </select>
-            </div>
-            <div class="label-input-group">
-                <label for="parity">Parity</label>
-                <select id="parity">
-                    <option value="NONE">NONE</option>
-                    <!-- Add more options as needed -->
-                </select>
-            </div>
-            <div class="label-input-group">
-                <label for="stopBits">Stop Bits</label>
-                <select id="stopBits">
-                    <!-- Add options as needed -->
-                </select>
-            </div>
-            <div class="buttons">
-                <button class="start">START!</button>
-                <button class="stop">STOP</button>
-                <button class="save">SAVE</button>
-            </div>
+        <div class="label-input-group">
+            <label for="numSteps">Num Steps</label>
+            <input type="number" id="numSteps" value="150">
+        </div>
+        <div class="label-input-group">
+            <label for="stepSize">Step Size</label>
+            <input type="number" id="stepSize" value="0.001">
+        </div>
+        <div class="label-input-group">
+            <label for="settlingTime">Settling Time (s)</label>
+            <input type="number" id="settlingTime" value="2">
+        </div>
+        <div class="label-input-group">
+            <label for="totalSamples">Total Samples (ms)</label>
+            <input type="number" id="totalSamples" value="3750">
+        </div>
+        <div class="label-input-group">
+            <label for="testDuration">Test Duration</label>
+            <input type="number" id="testDuration">
+        </div>    
+    </div>
+    <div class="comm-config">
+        <h1>COMM Config</h1>
+        <div class="label-input-group">
+            <label for="pvId">PV ID</label>
+            <input type="text" id="pvId" placeholder="ex: BV001">
+        </div>
+        <div class="label-input-group">
+            <label for="port">Port</label>
+            <select id="port">
+                <!-- Add options as needed -->
+            </select>
+        </div>
+        <div class="label-input-group">
+            <label for="baudRate">Baud Rate</label>
+            <select id="baudRate">
+                <option value="4800">4800</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <div class="label-input-group">
+            <label for="encodingScheme">Encoding Scheme</label>
+            <select id="encodingScheme">
+                <!-- Add options as needed -->
+            </select>
+        </div>
+        <div class="label-input-group">
+            <label for="parity">Parity</label>
+            <select id="parity">
+                <option value="NONE">NONE</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+        <div class="label-input-group">
+            <label for="stopBits">Stop Bits</label>
+            <select id="stopBits">
+                <!-- Add options as needed -->
+            </select>
+        </div>
+        <div class="buttons">
+            <button class="start">START!</button>
+            <button class="stop">STOP</button>
+            <button class="save">SAVE</button>
         </div>
     </div>
-</body>
-</html>
+</div>

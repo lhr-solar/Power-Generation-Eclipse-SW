@@ -1,4 +1,8 @@
-/* console.component.css */
+.container {
+  padding: 5px;
+  background-color: azure;
+}
+
 .console {
     border: 1px solid #ccc;
     padding: 10px;
