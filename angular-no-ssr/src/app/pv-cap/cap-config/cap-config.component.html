@@ -3,9 +3,14 @@
         <h1>PV Config</h1>
         <div class="label-input-group">
             <label for="pvType">PV Type</label>
-            <select id="pvType">
-                <option value="ARRAY">ARRAY</option>
-            </select>
+            <mat-form-field appearance="fill" subscriptSizing="dynamic">
+                <mat-label>PV Type</mat-label>
+                <mat-select id="pvType" (selectionChange)="onPvTypeChange($event)">
+                    <mat-option *ngFor="let option of pvTypeOptions" [value]="option.value">
+                        {{ option.viewValue }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
         </div>
         <div class="label-input-group">
             <label for="numSteps">Num Steps</label>

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'cap-config',
@@ -6,5 +6,16 @@ import { Component } from '@angular/core';
   styleUrls: ['./cap-config.component.css']
 })
 export class CapConfigComponent {
-  // Add any necessary logic for the cap-config component here
+  @Output() pvTypeChanged = new EventEmitter<string>();
+  
+  pvTypeOptions = [
+    { value: 1, viewValue: 'Array' },
+    { value: 2, viewValue: 'Module' },
+    { value: 3, viewValue: 'Cell' }
+  ]
+
+  onPvTypeChange(event: any) {
+    console.log(event);
+    this.pvTypeChanged.emit("PV Type changed to " + event.value);
+  }
 }
