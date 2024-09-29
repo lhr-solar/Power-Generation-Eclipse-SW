@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from './material.module';
+import { FormsModule } from '@angular/forms';
 import { PvCapComponent } from './pv-cap.component';
 import { CapConfigComponent } from './cap-config/cap-config.component';
 import { ConsoleComponent } from '../console/console.component';
@@ -22,7 +23,8 @@ PlotlyModule.plotlyjs = PlotlyJS;
   imports: [
     CommonModule,
     PlotlyModule,
-    MaterialModule
+    MaterialModule,
+    FormsModule
   ],
   exports: [
     PvCapComponent

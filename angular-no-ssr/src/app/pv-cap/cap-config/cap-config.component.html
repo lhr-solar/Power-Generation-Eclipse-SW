@@ -14,23 +14,23 @@
         </div>
         <div class="label-input-group">
             <label for="numSteps">Num Steps</label>
-            <input type="number" id="numSteps" value="150">
+            <input type="number" id="numSteps" [(ngModel)]="numSteps">
         </div>
         <div class="label-input-group">
             <label for="stepSize">Step Size</label>
-            <input type="number" id="stepSize" value="0.001">
+            <input type="number" id="stepSize" [(ngModel)]="stepSize">
         </div>
         <div class="label-input-group">
             <label for="settlingTime">Settling Time (s)</label>
-            <input type="number" id="settlingTime" value="2">
+            <input type="number" id="settlingTime" [(ngModel)]="settlingTime">
         </div>
         <div class="label-input-group">
             <label for="totalSamples">Total Samples (ms)</label>
-            <input type="number" id="totalSamples" value="3750">
+            <input type="number" id="totalSamples" [(ngModel)]="totalSamples">
         </div>
         <div class="label-input-group">
             <label for="testDuration">Test Duration</label>
-            <input type="number" id="testDuration">
+            <input type="number" id="testDuration" [(ngModel)]="testDuration">
         </div>    
     </div>
     <div class="comm-config">
@@ -42,7 +42,7 @@
         <div class="label-input-group">
             <label for="port">Port</label>
             <select id="port">
-                <!-- Add options as needed -->
+                <option *ngFor="let port of portOptions" [value]="port">{{ port }}</option>
             </select>
         </div>
         <div class="label-input-group">
