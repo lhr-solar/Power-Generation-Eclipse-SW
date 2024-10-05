@@ -10,10 +10,10 @@ Description: This Simulation class contains the state of the simulation.
     and 2) displays it using matplotlib.
 """
 # used for primary display and realtime update
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtWidgets, QtCore
 import numpy as np
 import pyqtgraph as pg
-import psycopg2
+import psycopg2 as psql
 import sys
 import csv
 
@@ -67,7 +67,7 @@ class Simulation:
         """
         self.mppt_name = mppt_name
 
-        self.app = QtGui.QApplication([])
+        self.app = QtWidgets.QApplication([])
         self.view = pg.GraphicsView()
         self.layout = pg.GraphicsLayout(border=(100, 100, 100))
         self.view.setCentralItem(self.layout)
@@ -593,7 +593,7 @@ class Simulation:
         self.eff2.setData(y=self.disp_pDiffA)
         self.eff3.setData(y=self.disp_pEff)
 
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
     def update_display_source_model(self):
         """
@@ -748,7 +748,7 @@ class Simulation:
                 idx += 1
         self.plots2_len = len(self.plots2)
 
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
     def overlay_data(self, file=""):
         if file != "":
@@ -776,35 +776,5 @@ class Simulation:
         with open("results.csv", "ab") as f:
             a = np.transpose(np.asarray([self.cycles, self.disp_pDiffA])) # or disp_pDiff or power2
             np.savetxt(f, a, delimiter=",", fmt="%.4f")
+            
         
-        conn = None
-        try:
-            # connect to the PostgreSQL server
-            print('Connecting to the PostgreSQL database...')
-            conn = psycopg2.connect(
-                host = 'localhost',
-                dbname = 'results.csv',
-                user = 'postgres',
-                password = 'SQL_2024',
-                port = 5432
-            )
-
-            # Creating a cursor with name cur.
-            cur = conn.cursor()
-            print('Connected to the PostgreSQL database')
-
-            # Execute a query:
-            # To display the PostgreSQL
-            # database server version
-            cur.execute('SELECT version()')
-            print(cur.fetchone())
-
-            # Close the connection
-            cur.close()
-
-        except(Exception, psycopg2.DatabaseError) as error:
-            print(error)
-        finally:
-            if conn is not None:
-                conn.close()
-                print('Database connection closed.')
