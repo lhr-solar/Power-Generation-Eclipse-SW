@@ -157,6 +157,7 @@ def main():
         for entry in bin:
             source_file.add_source(entry)
     if save_sim:
+        source_file.clear_file()
         source_file.write_file()
 
     end = time.time()

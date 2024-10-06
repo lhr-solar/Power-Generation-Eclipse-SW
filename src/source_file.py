@@ -37,6 +37,7 @@ Description: This file is a standalone file that can be inserted into a program 
 """
 import csv
 import time
+import psycopg2 as psql
 
 CELL_MODEL_HEADER = "cell_1"
 
@@ -106,6 +107,40 @@ class SourceFile():
         else:
             return 0
 
+    def upload_data(self):
+        timestamp=time.strftime("%Y__%H_%M",time.localtime())
+        table_name = f'sc_sim_{timestamp}'
+        try:
+            conn = psql.connect(user="name",
+                                password="postgres",
+                                host="localhost",
+                                port="5432",
+                                database="Array Simulation")
+            cur = conn.cursor()
+
+            # Insert data into the database
+            cur.execute(f"""
+                        CREATE TABLE {table_name}(
+                        v_ref FLOAT NOT NULL,
+                        irrad FLOAT NOT NULL,
+                        temp FLOAT NOT NULL,
+                        current FLOAT NOT NULL);
+                        """)
+
+            for line in self.data:
+                cur.execute(f"""
+                            INSERT INTO {table_name} (v_ref, irrad, temp, current)
+                            VALUES (%s, %s, %s, %s)
+                            """, (line[0], line[1], line[2], line[3]))
+
+            conn.commit()
+            cur.close()
+            conn.close()
+            print("Uploaded to Array Simulation.")
+        
+        except Exception as e:
+            print("Failed to access database: ", e)
+                
     def write_file(self):
         """
         write_file writes all of the accumulated data to the file.
@@ -120,6 +155,7 @@ class SourceFile():
             writer.writerow(header)
             for line in self.data:
                 writer.writerow(line)
+        self.upload_data()
 
     def read_file(self):
         """
@@ -129,3 +165,7 @@ class SourceFile():
             reader = csv.reader(csv_file)            
             for row in reader:
                 self.data.append(row)
+
+    def clear_file(self):
+        with open(self.file, "w") as f:
+            f.truncate()
