@@ -5,7 +5,7 @@
             <label for="pvType">PV Type</label>
             <mat-form-field appearance="fill" subscriptSizing="dynamic">
                 <mat-label>PV Type</mat-label>
-                <mat-select id="pvType" (selectionChange)="onPvTypeChange($event)">
+                <mat-select id="pvType" (selectionChange)="pvTypeChange($event)">
                     <mat-option *ngFor="let option of pvTypeOptions" [value]="option.value">
                         {{ option.viewValue }}
                     </mat-option>
@@ -13,25 +13,35 @@
             </mat-form-field>
         </div>
         <div class="label-input-group">
-            <label for="numSteps">Num Steps</label>
-            <input type="number" id="numSteps" [(ngModel)]="numSteps">
+            <label for="sampleRange">Sample Range</label>
+            <input type="text" [(ngModel)]="sampleRange" (input)="validateRange($event)">
+        </div>
+        <div class="label-input-group">
+            <label for="numSteps">Num Iterations</label>
+            <input #numIter="ngModel" type="number" [ngModel]="numIterVal" (ngModelChange)="numIterChanged($event)">
         </div>
         <div class="label-input-group">
             <label for="stepSize">Step Size</label>
-            <input type="number" id="stepSize" [(ngModel)]="stepSize">
+            <input #stepSize="ngModel" type="number" [ngModel]="stepSizeVal" (ngModelChange)="stepSizeChanged($event)">
         </div>
         <div class="label-input-group">
-            <label for="settlingTime">Settling Time (s)</label>
-            <input type="number" id="settlingTime" [(ngModel)]="settlingTime">
+            <label for="settlingTime">Settling Time (ms)</label>
+            <input #settlingTime="ngModel" type="number" [ngModel]="settlingTimeVal" (ngModelChange)="settlingTimeChanged($event)">
         </div>
-        <div class="label-input-group">
-            <label for="totalSamples">Total Samples (ms)</label>
-            <input type="number" id="totalSamples" [(ngModel)]="totalSamples">
+        <div class="stat-container">
+            <div>
+                <label>Num Steps:</label>
+                <span>{{ numSteps }}</span>
+            </div>
+            <div>
+                <label>Total Samples:</label>
+                <span>{{ totalSamples }}</span>
+            </div>
+            <div>
+                <label>Test Duration (ms):</label>
+                <span>{{ testDuration }}</span>
+            </div>
         </div>
-        <div class="label-input-group">
-            <label for="testDuration">Test Duration</label>
-            <input type="number" id="testDuration" [(ngModel)]="testDuration">
-        </div>    
     </div>
     <div class="comm-config">
         <h1>COMM Config</h1>
@@ -48,27 +58,20 @@
         <div class="label-input-group">
             <label for="baudRate">Baud Rate</label>
             <select id="baudRate">
-                <option value="4800">4800</option>
-                <!-- Add more options as needed -->
+                <option value="57600">57600</option>
+                <option value="112500">112500</option>
             </select>
         </div>
         <div class="label-input-group">
             <label for="encodingScheme">Encoding Scheme</label>
             <select id="encodingScheme">
-                <!-- Add options as needed -->
+                <option value="NONE">NONE</option>
             </select>
         </div>
         <div class="label-input-group">
             <label for="parity">Parity</label>
             <select id="parity">
                 <option value="NONE">NONE</option>
-                <!-- Add more options as needed -->
-            </select>
-        </div>
-        <div class="label-input-group">
-            <label for="stopBits">Stop Bits</label>
-            <select id="stopBits">
-                <!-- Add options as needed -->
             </select>
         </div>
         <div class="buttons">

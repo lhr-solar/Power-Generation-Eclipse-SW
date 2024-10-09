@@ -12,6 +12,7 @@ export class PortService {
   constructor(private http: HttpClient) {}
 
   getPorts(): Observable<string[]> {
+    console.log(this.http.get<string[]>(this.getPortsURL))
     return this.http.get<string[]>(this.getPortsURL);
   }
 }

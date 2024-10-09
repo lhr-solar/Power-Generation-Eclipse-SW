@@ -36,11 +36,11 @@ h1 {
 }
 
 button {
-    padding: 8px 15px; /* Adjusted padding */
+    padding: 8px 15px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-right: 5px; /* Reduced from 10px */
+    margin-right: 5px;
 }
 
 button.start {
@@ -60,5 +60,24 @@ button.save {
 
 .buttons {
     text-align: center;
-    margin-top: 15px; /* Reduced from 20px */
+    margin-top: 15px;
+}
+
+.stat-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 5px;
+}
+
+.stat-container > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 30%; /* Each child div takes up 30% of the width */
+  }
+
+.stat-container  label {
+font-weight: bold;
 }

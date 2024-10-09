@@ -9,7 +9,6 @@ import { ConsoleComponent } from '../console/console.component';
 export class PvCapComponent implements AfterViewInit{
   @ViewChild(ConsoleComponent) consoleComponent!: ConsoleComponent;
 
-  
 
   addCapConMsg(message: string) {
     this.consoleComponent.addConsoleMessage(message);
