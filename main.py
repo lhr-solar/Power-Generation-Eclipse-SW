@@ -298,7 +298,8 @@ def main_loop(
         # load += UPDATE_HERE
         # source.setup_i(irradiance, temperature, load)
 
-    input("Halted at the end of cycle " + str(max_cycle))
+    print("Halted at the end of cycle " + str(max_cycle))
+    simulation.clear_file()
     simulation.save_model() # TODO: add prompt to save the model into results.txt
 
 

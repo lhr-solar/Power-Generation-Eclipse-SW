@@ -16,6 +16,7 @@ import pyqtgraph as pg
 import psycopg2 as psql
 import sys
 import csv
+import time
 
 from bisect import bisect
 import numpy as np
@@ -771,8 +772,46 @@ class Simulation:
             )
             scatterPoints.addPoints(array_formatted)
             self.plt2.addItem(scatterPoints)
+            
+    def upload_data(self):
+        timestamp = time.strftime("%Y_%m_%d_%I", time.localtime())
+        table_name = f'mppt_sim__{timestamp}'
+        try:
+            conn = psql.connect(user="name",
+                                password="postgres",
+                                host="localhost",
+                                port="5432",
+                                database="Array Simulation")
+            cur = conn.cursor()
+
+            # Insert data into the database
+            cur.execute(f"""
+                        CREATE TABLE {table_name}(
+                        cycle REAL NOT NULL,
+                        psrc REAL NOT NULL);
+                        """)
+            
+            file = open("results.csv", 'r')
+            for line in file:
+                l = line.split(",")
+                cur.execute(f"""
+                            INSERT INTO {table_name} (cycle, psrc)
+                            VALUES (%s, %s)
+                            """, (l[0], l[1]))
+
+            conn.commit()
+            cur.close()
+            conn.close()
+            print("Uploaded to Array Simulation.")
+        
+        except Exception as e:
+            print("Failed to access database: ", e)
 
     def save_model(self):
         with open("results.csv", "ab") as f:
             a = np.transpose(np.asarray([self.cycles, self.disp_pDiffA])) # or disp_pDiff or power2
             np.savetxt(f, a, delimiter=",", fmt="%.4f")
+            
+    def clear_file(self):
+        with open("results.csv", "w") as f:
+            f.truncate()

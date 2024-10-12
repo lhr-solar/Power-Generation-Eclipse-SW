@@ -108,8 +108,7 @@ class SourceFile():
             return 0
 
     def upload_data(self):
-        timestamp=time.strftime("%Y__%H_%M",time.localtime())
-        table_name = f'sc_sim_{timestamp}'
+        table_name = 'solar_cell_sim'
         try:
             conn = psql.connect(user="name",
                                 password="postgres",
@@ -118,21 +117,46 @@ class SourceFile():
                                 database="Array Simulation")
             cur = conn.cursor()
 
-            # Insert data into the database
+            # check if the table solar_cell_sim exists
             cur.execute(f"""
-                        CREATE TABLE {table_name}(
-                        v_ref FLOAT NOT NULL,
-                        irrad FLOAT NOT NULL,
-                        temp FLOAT NOT NULL,
-                        current FLOAT NOT NULL);
+                        SELECT EXISTS(
+                            SELECT FROM information_schema.tables
+                            WHERE table_name = '{table_name}'
+                        );
                         """)
-
-            for line in self.data:
+            table_exists = cur.fetchone()[0]
+            
+            # if table solar_cell_sim doesn't exist, make it
+            if not table_exists:
                 cur.execute(f"""
-                            INSERT INTO {table_name} (v_ref, irrad, temp, current)
-                            VALUES (%s, %s, %s, %s)
-                            """, (line[0], line[1], line[2], line[3]))
-
+                            CREATE TABLE {table_name}(
+                            cell_name TEXT,
+                            v_ref FLOAT[],
+                            irrad FLOAT[],
+                            temp FLOAT[],
+                            current FLOAT[]);
+                            """)
+            
+            v_arr = []
+            irrad_arr = []
+            temp_arr = []
+            curr_arr = []
+            
+            with open("model.csv", newline='') as csvfile:
+                csvreader = csv.reader(csvfile)
+                next(csvreader)
+                
+                for line in csvreader:
+                    v_arr.append(float(line[0]))
+                    irrad_arr.append(float(line[1]))
+                    temp_arr.append(float(line[2]))
+                    curr_arr.append(float(line[3]))
+            
+            cur.execute(f"""
+                        INSERT INTO {table_name} (v_ref, irrad, temp, current)
+                        VALUES (%s, %s, %s, %s)
+                        """, (v_arr, irrad_arr, temp_arr, curr_arr))
+            
             conn.commit()
             cur.close()
             conn.close()

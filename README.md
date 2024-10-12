@@ -31,6 +31,7 @@ Install these dependencies or use the requirements.txt to install.
 - bisect
 - math
 - pyqtgraph
+- psycopg2
 
 Install dependencies using `pip3 install -r requirements.txt`
 
