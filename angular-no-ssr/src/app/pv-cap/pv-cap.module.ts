@@ -6,11 +6,10 @@ import { PvCapComponent } from './pv-cap.component';
 import { CapConfigComponent } from './cap-config/cap-config.component';
 import { ConsoleComponent } from '../console/console.component';
 import { CapDisplayComponent } from './cap-display/cap-display.component';
-
+import { SocketService } from '../socket/socket.service';
 
 import * as PlotlyJS from 'plotly.js-dist-min';
 import { PlotlyModule } from 'angular-plotly.js';
-
 PlotlyModule.plotlyjs = PlotlyJS;
 
 @NgModule({
@@ -30,9 +29,8 @@ PlotlyModule.plotlyjs = PlotlyJS;
     PvCapComponent
   ],
   providers: [
-    PvCapComponent
+    PvCapComponent,
+    SocketService
   ]
 })
-export class PvCapModule {
-  
-}
+export class PvCapModule {}

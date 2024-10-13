@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, viewChild } from '@angular/core';
 import { NgModel } from '@angular/forms';
 import { PortService } from '../../port/port.service';
 import { environment } from '../../../environments/environment';
+import { SocketService } from '../../socket/socket.service';
 
 //TODO: all buttons, make sure there's a validate all params func on start test press bc some might be 0 or null
 
@@ -57,6 +58,7 @@ export class CapConfigComponent {
   //Constructor:
   constructor(
     private portService: PortService,
+    private socketService: SocketService
   ) {}
 
   ngOnInit() {
@@ -84,6 +86,31 @@ export class CapConfigComponent {
     this.numSteps++;
 
     this.setDefaults(selectedOption);
+  }
+
+  // Called to validate the current sampling range input, also updates the lower and upper bounds
+  // Call if: 
+  //    want to know if current range is valid
+  //    want to update lower and upper bounds
+  validateRange(event: any) : boolean {
+    try {
+      const range = this.sampleRange.split(":");
+      const lowerBound = parseFloat(range[0]);
+      const upperBound = parseFloat(range[1]);
+      if (lowerBound < 0 || lowerBound > 1 || upperBound < 0 || upperBound > 1 || upperBound < lowerBound) {
+        throw new Error("Invalid range");
+      }
+      this.lowerBound = lowerBound;
+      this.upperBound = upperBound;
+      return true;
+
+    } catch (error) {
+      if(!environment.production) {
+        this.ConMsgFromConfig.emit("Invalid range: " + this.sampleRange);
+        console.warn("Invalid range: " + this.sampleRange);
+      }
+      return false;
+    }
   }
 
   numIterChanged(newNumIter: number) {
@@ -116,6 +143,41 @@ export class CapConfigComponent {
     }
   }
 
+  onStart() {
+    if(!environment.production)
+      console.log("Start button pressed");
+    this.ConMsgFromConfig.emit("Start button pressed");
+
+    let valid = true;
+    //Verify cap config:
+    if(!this.validateRange(null)) {
+      this.ConMsgFromConfig.emit("Invalid range: " + this.sampleRange);
+      valid = false;
+    }
+    if(!this.validNumIter()) {
+      this.ConMsgFromConfig.emit("Invalid number of iterations: " + this.numIterVal);
+      valid = false;
+    }
+    if(!this.validStepSize()) {
+      this.ConMsgFromConfig.emit("Invalid step size: " + this.stepSizeVal);
+      valid = false;
+    }
+    if(!this.validSettlingTime()) {
+      this.ConMsgFromConfig.emit("Invalid settling time: " + this.settlingTimeVal);
+      valid = false;
+    }
+
+    //Verify comm config:
+    if(!environment.hardcodedCommConfig) {
+
+    }
+
+    if(!valid) return;
+
+    this.socketService.connect();
+  }
+
+
   // Other internal tools:
   //TODO: add the res tof the defaults
   setDefaults(selectedOption: any) {
@@ -137,34 +199,21 @@ export class CapConfigComponent {
     this.updateTestStatistics();
   }
 
-  // Called to validate the current sampling range input, also updates the lower and upper bounds
-  // Call if: 
-  //    want to know if current range is valid
-  //    want to update lower and upper bounds
-  validateRange(event: any) {
-    try {
-      const range = this.sampleRange.split(":");
-      const lowerBound = parseFloat(range[0]);
-      const upperBound = parseFloat(range[1]);
-      if (lowerBound < 0 || lowerBound > 1 || upperBound < 0 || upperBound > 1 || upperBound < lowerBound) {
-        throw new Error("Invalid range");
-      }
-      this.lowerBound = lowerBound;
-      this.upperBound = upperBound;
-      return true;
-
-    } catch (error) {
-      if(!environment.production) {
-        this.ConMsgFromConfig.emit("Invalid range: " + this.sampleRange);
-        console.warn("Invalid range: " + this.sampleRange);
-      }
-      return false;
-    }
-  }
-
   updateTestStatistics() {
     this.numSteps = Math.round((this.upperBound - this.lowerBound) / this.stepSizeVal);
     this.totalSamples = this.numSteps * this.numIterVal;
     this.testDuration = this.totalSamples * this.settlingTimeVal;
+  }
+
+  validNumIter() : boolean {
+    return false;
+  }
+
+  validStepSize() : boolean {
+    return false;
+  }
+
+  validSettlingTime() : boolean {
+    return false;
   }
 }

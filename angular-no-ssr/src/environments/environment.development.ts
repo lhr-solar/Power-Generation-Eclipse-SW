@@ -1,4 +1,7 @@
 export const environment = {
     production: false,
-    getOpenCOMPortsRoute: 'http://localhost:4242/pvcap/get-open-com-ports',
+    backendURL: 'http://localhost:4242',
+    getOpenCOMPortsRoute: '/get-open-com-ports',
+    startCellCharRoute: '/start-cell-characterization',
+    hardcodedCommConfig: true
 };

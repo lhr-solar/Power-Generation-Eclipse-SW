@@ -1,4 +1,7 @@
 export const environment = {
     production: true,
-    getOpenCOMPortsRoute: 'http://localhost:4242/get-open-com-ports',
+    backendURL: 'http://localhost:4242',
+    getOpenCOMPortsRoute: '/get-open-com-ports',
+    startCellCharRoute: '/start-cell-characterization',
+    hardcodedCommConfig: false
 };

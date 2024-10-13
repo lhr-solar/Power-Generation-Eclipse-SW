@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { SocketService } from '../../socket/socket.service';
 
 @Component({
   selector: 'cap-display',
@@ -48,9 +49,11 @@ export class CapDisplayComponent implements OnInit {
   public pMpp: number = 0; // Power at maximum power point
   public ff: number = 0; // Fill factor
 
-  constructor() {}
+  constructor(
+    socketService: SocketService
+  ) {}
 
   ngOnInit(): void {
-    // Initialize your data here
+    
   }
 }
