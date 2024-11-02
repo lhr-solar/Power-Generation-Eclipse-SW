@@ -15,17 +15,17 @@ import time
 from curses import baudrate
 from datetime import datetime
 
-import psycopg2
 import serial
 import serial.tools.list_ports
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt6.QtCore import QIODevice
-
+from src.DatabaseManager import DatabaseManager
 
 class PVCurveTracerController:
     def __init__(self) -> None:
         self.serial_instance = None
         self.cwd = os.getcwd()
+        self.db = DatabaseManager()
 
     # Communication configuration
 
@@ -147,7 +147,7 @@ class PVCurveTracerController:
             ],
         }
         return capture
-
+    
     def save_capture_file(self, capture_conf, capture_data, pv_id):
         # TODO: save a dict of info into a capture file format.
         with open(self.cwd + "/data/captures/"+f"{pv_id['id']}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.capture", 'w') as captureFile:
@@ -162,6 +162,7 @@ class PVCurveTracerController:
 
             captureFile.write(config)
             captureFile.write(data)
+            self.db(captureFile)
 
     def ok_handshake(self, serial_instance):
         serial_instance.write("OK\r\n".encode('utf-8'))
