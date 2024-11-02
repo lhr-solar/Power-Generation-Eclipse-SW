@@ -15,6 +15,7 @@ import time
 from curses import baudrate
 from datetime import datetime
 
+import psycopg2
 import serial
 import serial.tools.list_ports
 from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
