@@ -82,6 +82,7 @@ reach any expected output value.
 # Library Imports.
 import csv
 import os
+import datetime
 
 # Custom Imports.
 
@@ -233,3 +234,5 @@ class Lookup:
             reader = csv.reader(csv_file)
             for row in reader:
                 self.data.append(row)
+
+    
