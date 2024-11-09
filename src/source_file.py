@@ -110,7 +110,7 @@ class SourceFile():
     def upload_data(self):
         table_name = 'solar_cell_sim'
         try:
-            conn = psql.connect(user="name",
+            conn = psql.connect(user="connorshen",
                                 password="postgres",
                                 host="localhost",
                                 port="5432",

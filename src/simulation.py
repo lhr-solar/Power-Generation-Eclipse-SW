@@ -777,7 +777,7 @@ class Simulation:
         timestamp = time.strftime("%Y_%m_%d_%I", time.localtime())
         table_name = f'mppt_sim__{timestamp}'
         try:
-            conn = psql.connect(user="name",
+            conn = psql.connect(user="connorshen",
                                 password="postgres",
                                 host="localhost",
                                 port="5432",
