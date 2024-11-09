@@ -11,7 +11,7 @@ class DatabaseManager:
     def connect(self):
         try:
             self.connection = psycopg2.connect(
-                dbname="Array Simulation",
+                dbname="PVCapture",
                 user="connorshen",
                 password="postgres",
                 host="locahost",
