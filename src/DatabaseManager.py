@@ -3,8 +3,8 @@ import re
 from datetime import datetime
 
 class DatabaseManager:
-    def __init__(self, file):
-        self.file = file
+    def __init__(self):
+        self.file = None
         self.connection = None
         self.cursor = None
 
@@ -12,14 +12,14 @@ class DatabaseManager:
         try:
             self.connection = psycopg2.connect(
                 dbname="Array Simulation",
-                user="postgres",
+                user="connorshen",
                 password="postgres",
                 host="locahost",
                 port=5432
             )
             self.connection.autocommit = True
             self.cursor = self.connection.cursor()
-            print("Connected to the database successfully.")
+            print("Connection Successful")
         except Exception as e:
             print(f"Error: {e}")
 
@@ -58,8 +58,9 @@ class DatabaseManager:
         self.cursor.execute(create_capture_data_table)
         print("Tables created successfully.")
 
-    def add_data_from_capture_file(self):
+    def add_data(self, file):
         """Parse a .capture file and insert data with environmental arrays into the database."""
+        self.file = file
         try:
             with open(self.file, 'r') as file:
                 content = file.read()
@@ -69,6 +70,7 @@ class DatabaseManager:
                 r"__version: (.+)\n__file: (.+)\n__brief: (.+)\n__author: (.+)\n__generation_time: (.+)\n__pv_id: (.+)\n__pv_type: (.+)",
                 content
             )
+            
             if metadata_match:
                 version = metadata_match.group(1)
                 file_name = metadata_match.group(2)
@@ -120,7 +122,7 @@ class DatabaseManager:
 if __name__ == "__main__":
     db_manager = DatabaseManager(
         dbname="Array Simulation",
-        user="postgres",
+        user="connorshen",
         password="postgres",
         host="localhost",
         port=5432
@@ -130,6 +132,6 @@ if __name__ == "__main__":
     db_manager.create_tables()
 
     # Insert data from a .capture file
-    db_manager.add_data_from_capture_file()
+    db_manager.add_data()
 
     db_manager.close()

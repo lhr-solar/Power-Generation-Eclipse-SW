@@ -108,6 +108,7 @@ class PVCaptureController:
             self.power_data = {
                 "power": []
             }
+        
         def validate_com_config(self, com_port, baud_rate, parity_bit, encoding_scheme):
             if com_port not in self.parent.curve_tracer.list_ports():
                 self.com_config["valid"] = False

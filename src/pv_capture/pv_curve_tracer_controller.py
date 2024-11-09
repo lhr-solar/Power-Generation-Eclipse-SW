@@ -162,7 +162,7 @@ class PVCurveTracerController:
 
             captureFile.write(config)
             captureFile.write(data)
-            self.db(captureFile)
+            self.db.add_data(captureFile)
 
     def ok_handshake(self, serial_instance):
         serial_instance.write("OK\r\n".encode('utf-8'))
