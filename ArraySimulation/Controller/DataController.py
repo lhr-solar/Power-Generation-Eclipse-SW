@@ -86,7 +86,7 @@ class DataController:
     executed, etc) and an API for running the models in the data pipeline.
     """
 
-    def __init__(self):
+    def __init__(self, log_callback=None):
         """
         Generates objects for the pipeline and initializes a data store that
         records data and prepares it for feeding into the UIController.
@@ -126,7 +126,9 @@ class DataController:
 
         # The reference voltage applied at the start of every cycle.
         self._vREF = 0.0
-
+        # 
+        self.log_callback = log_callback
+    
     # Simulation pipeline management.
     def resetPipeline(
         self, modelType, environment, maxCycles, MPPTGlobalAlgo, MPPTLocalAlgo, MPPTStrideAlgo
@@ -211,6 +213,24 @@ class DataController:
         )
         self.datastore["mpptOutput"].append(vRef)
         self.datastore["dcdcOutput"].append(pulseWidth)
+        
+        if self.log_callback:
+            self.log_callback(
+                cycle_number = cycle,
+                num_cells = numCells,
+                voltage = self._vREF,
+                irradiance = envDef["irradiance"],
+                temperature = envDef["temperature"],
+                voc = sourceEdgeChar[0],
+                isc = sourceEdgeChar[1],
+                vmp = sourceEdgeChar[2][0],
+                imp = sourceEdgeChar[2][1],
+                current = sourceCurrent,
+                iv_curve = sourceIV,
+                v_Ref = vRef,
+                pulse_width = pulseWidth,
+                max_cycles = self.datastore["maxCycle"]
+            )
 
         # Assign the VREF to apply across the source in the next simulation cycle.
         self._vREF = vRef

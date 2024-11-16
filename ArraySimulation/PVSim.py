@@ -55,10 +55,31 @@ sys.path.append("../")
 
 # Custom Imports.
 from ArraySimulation.Controller.UIController import UIController
+from ArraySimulation.DatabaseManager import DatabaseManager
 
 if __name__ == "__main__":
     if sys.version_info[0] < 3:
         raise Exception("This program only supports Python 3.")
+    
+    # Database configuration
+    db_config = {
+        'host': 'localhost',
+        'dbname': 'ArraySimulation',
+        'user': 'connorshen',
+        'password': 'postgres'
+    }
 
-    controller = UIController()
-    controller.startup()
+    # Initialize DatabaseManager
+    db_manager = DatabaseManager(db_config)
+    db_manager.setup_tables()
+
+    # Start a new simulation run
+    run_id = db_manager.log_simulation_run(description=input("Describe the Conditions of the Simulation"))
+
+    # Initialize the UIController
+    try:
+        controller = UIController(db_manager=db_manager, run_id=run_id)
+        controller.startup()
+    finally:
+        # Ensure the database connection is closed
+        db_manager.close_connection()

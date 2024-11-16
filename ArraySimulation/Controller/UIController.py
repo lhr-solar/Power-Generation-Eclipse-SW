@@ -39,6 +39,7 @@ import sys
 from ArraySimulation.Controller.MPPTView import MPPTView
 from ArraySimulation.Controller.SourceView import SourceView
 from ArraySimulation.Controller.DataController import DataController
+from ArraySimulation.DatabaseManager import DatabaseManager
 
 
 class UIController:
@@ -49,10 +50,13 @@ class UIController:
     simulation and execute it in real time.
     """
 
-    def __init__(self):
+    def __init__(self, db_manager, run_id):
         self._framerate = 30
         self.sourceSimData = None
         self.MPPTSimData = None
+        
+        self.db_manager = db_manager
+        self.run_id = run_id
 
     def startup(self, windowWidth=1920, windowHeight=1080):
         """
@@ -75,9 +79,52 @@ class UIController:
         windowHeight: int
             Height of the window. Defaults to 720p.
         """
+        
+        def log_callback(
+            cycle_number,
+            num_cells,
+            voltage,
+            irradiance,
+            temperature,
+            voc,
+            isc,
+            vmp,
+            imp,
+            current,
+            iv_curve,
+            reference_voltage,
+            pulse_width,
+            max_cycles
+        ):
+            # Log source simulation data
+            self.db_manager.log_source_simulation(
+                run_id=self.run_id,
+                cycle_number=cycle_number,
+                num_cells=num_cells,
+                voltage=voltage,
+                irradiance=irradiance,
+                temperature=temperature,
+                voc=voc,
+                isc=isc,
+                vmp=vmp,
+                imp=imp,
+                current=current,
+                iv_curve=iv_curve
+            )
+
+            # Log MPPT simulation data
+            self.db_manager.log_mppt_simulation(
+                run_id=self.run_id,
+                cycle_number=cycle_number,
+                reference_voltage=reference_voltage,
+                pulse_width=pulse_width,
+                max_cycles=max_cycles
+            )
+
+        # Initialize DataController with the logging callback
         # 1. Setup data structures for ingesting data and managing the
         #    simulation execution pipeline.
-        self.dataController = DataController()
+        self.dataController = DataController(log_callback=log_callback)
 
         # 2. Startup the application UI runtime.
         self.app = QApplication(sys.argv)
