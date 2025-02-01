@@ -226,25 +226,28 @@ class PVCaptureController:
             main_layout = QGridLayout()
             self.setLayout(main_layout)
 
-            self.add_sublayout_pv_config()
+            self.add_sublayout_mode_selection() # mode selection
+            main_layout.addWidget(self.mode_ui["display"], 0, 0, 1, 4)
+            
+            self.add_sublayout_pv_config() # PV config
             main_layout.addWidget(self.pv_config_ui["display"], 0, 0, 3, 4)
 
-            self.add_sublayout_com_config()
+            self.add_sublayout_com_config() # Communication config
             main_layout.addWidget(self.com_config_ui["display"], 3, 0, 3, 3)
 
-            self.add_sublayout_id()
+            self.add_sublayout_id() # PV ID input
             main_layout.addWidget(self.id_ui["display"], 3, 3, 1, 1)
 
-            self.add_sublayout_controls()
+            self.add_sublayout_controls() # Start/Stop Controls
             main_layout.addWidget(self.control_ui["display"], 4, 3, 2, 1)
 
-            self.add_sublayout_console()
+            self.add_sublayout_console() # Console for logs
             main_layout.addWidget(self.console_ui["display"], 6, 0, 2, 4)
 
-            self.add_sublayout_char_board()
+            self.add_sublayout_char_board() # Characteristic board
             main_layout.addWidget(self.char_board_ui["display"], 0, 4, 2, 4)
 
-            self.add_sublayout_graph()
+            self.add_sublayout_graph() #Graph for I-V and P-V curves
             main_layout.addWidget(self.graph_ui["display"], 2, 4, 6, 4)
 
         def add_sublayout_pv_config(self):
@@ -350,6 +353,28 @@ class PVCaptureController:
             # Default select a PV Type.
             selector_pv_type.currentIndexChanged.connect(self.set_pv_config)
             self.set_pv_config()
+            
+        def add_sublayout_mode_selection(self):
+            display = QFrame()
+            layout = QGridLayout()
+            display.setLayout(layout)
+
+            # Title Label
+            title = QLabel("Mode Selection")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(title, 0, 0, 1, 1)
+
+            # Dropdown for Mode Selection
+            label_mode = QLabel("Mode")
+            selector_mode = QComboBox()
+            selector_mode.addItems(["DEBUG", "MEASUREMENT"])
+            layout.addWidget(label_mode, 1, 0)
+            layout.addWidget(selector_mode, 1, 1)
+
+            self.mode_ui = {"display": display, "selector_mode": selector_mode}
+
+        def get_selected_mode(self):
+            return self.mode_ui["selector_mode"].currentText()
 
         def set_pv_config(self):
             config_name = self.pv_config_ui["selectors"]["sel_pv_type"].currentText()
@@ -669,14 +694,21 @@ class PVCaptureController:
 
             # Gather all the UI parts.
             print(self.parent.data.com_config)
+            
+            # Gather configuration
+            mode = self.get_selected_mode()
+            com_config = self.parent.data.com_config
+            pv_config = self.parent.data.pv_config
+            pv_id = self.parent.data.pv_id
 
-            if not self.parent.data.com_config["valid"]:
+
+            if not com_config["valid"]:
                 self.parent.print("ERROR", "COM config invalid.")
                 return
-            if not self.parent.data.pv_config["valid"]:
+            if not pv_config["valid"]:
                 self.parent.print("ERROR", "PV config invalid.")
                 return
-            if not self.parent.data.pv_id["valid"]:
+            if not pv_id["valid"]:
                 self.parent.print("ERROR", "PV ID invalid.")
                 return
 
@@ -684,9 +716,9 @@ class PVCaptureController:
                 worker = self.CaptureTask(
                     self,
                     self.parent.curve_tracer,
-                    self.parent.data.com_config,
-                    self.parent.data.pv_config,
-                    self.parent.data.pv_id,
+                    com_config,
+                    pv_config,
+                    pv_id, #figure out what this is for
                 )
 
                 # Tie the progress signal to a progress bar, if any.

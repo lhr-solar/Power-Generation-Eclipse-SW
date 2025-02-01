@@ -203,30 +203,87 @@ class PVCurveTracerController:
             "current": [],
         }
 
-        # Open up a serial instance to the curve tracer using com_conf.
-        # with serial.Serial(port=com_conf["com_port"], baudrate=com_conf["baud_rate"]) as uart:
-        #     while True:
-        #         line = uart.readline()
-        #         print(line)
-        #         if line == "READY_FOR_TRANSMISSION\r\n":
-        #             serial_instance.write("OK")#.encode(capture_conf["enc_scheme"]))
-        #             break
+        #Open serial connection
+        serial_instance = serial.Serial(
+            com_conf["com_port"],
+            com_conf["baud_rate"],
+            bytesize=serial.EIGHTBITS,
+            parity=com_conf["parity_bit"],
+            stopbits=serial.STOPBITS_ONE,
+            timeout=1,
+        )
         
-
-        serial_instance = serial.Serial(com_conf["com_port"], 57600, 8, serial.PARITY_EVEN, serial.STOPBITS_ONE)
         self.serial_instance = serial_instance
-        # serial_instance.setPortName(com_conf["com_port"])
-        # serial_instance.setBaudRate(com_conf["baud_rate"])
-        # serial_instance.setParity(com_conf["parity_bit"])
-        # print(serial_instance.open(QIODevice.OpenModeFlag.ReadWrite))
+        
+        #Wait for ready signal
         while True:
-            serialIn = serial_instance.readline().decode('utf-8')
+            serialIn = serial_instance.readline().decode('utf-8').strip()
             print(serialIn)
             if serialIn == "READY_FOR_TRANSMISSION\r\n":
-                print("ready\n")
+                print("Ready for transmission\n")
                 break
         
-        baudCheck = True
+        #Send handshake
+        self.ok_handshake(serial_instance)
+        
+        #Send mode selection
+        if mode == "DEBUG":
+            serial_instance.write("MODE=DEBUG\n".encode("utf-8"))
+        elif mode == "MEASUREMENT":
+            serial_instance.write("MODE=MEASUREMENT\n".encode("utf-8"))
+            
+        #Wait for acknowledgment
+        while True:
+            serial_in = serial_instance.readline().decode("utf-8").strip()
+            if serial_in == "MODE_ACK":
+                print(f"{mode} acknowledged")
+                break
+        
+        # Send configuration as JSON
+        json_config = {
+            "type": capture_conf["pv_type"],
+            "sr": capture_conf["sample_range"],
+            "step_size": capture_conf["step_size"],
+            "num_iters": capture_conf["num_iters"],
+            "settling_time": capture_conf["settling_time"],
+            "enc_scheme": com_conf["enc_scheme"],
+        }
+        
+        config_str = f"{json_config}\n"
+        serial_instance.write(config_str.encode("utf-8"))
+        
+        # Wait for configuration acknowledgment
+        while True:
+            serial_in = serial_instance.readline().decode("utf-8").strip()
+            if serial_in == "valid config":
+                print("Valid configuration received")
+                break
+            elif serial_in == "invalid config":
+                print("Invalid configuration")
+                return
+
+        # Start capturing data
+        while True:
+            serial_in = serial_instance.readline().decode("utf-8").strip()
+            if serial_in == "END_SCAN":
+                print("Scan complete")
+                break
+            elif serial_in.startswith("Gate (V)"):
+                parts = serial_in.split(", ")
+                gate = float(parts[0].split(": ")[1])
+                voltage = float(parts[1].split(": ")[1])
+                current = float(parts[2].split(": ")[1])
+
+                read_data["gate"].append(gate)
+                read_data["voltage"].append(voltage)
+                read_data["current"].append(current)
+
+                sig_res.emit([gate, voltage, current])
+
+        sig_finished.emit()
+        return read_data
+        
+"""         baudCheck = True
         while baudCheck:
             self.ok_handshake(serial_instance)
 
@@ -308,7 +365,7 @@ class PVCurveTracerController:
         # print(f"Gate (V): {read_data['gate'][0]}, VSense (V): {read_data['voltage'][0]}, ISense (A): {read_data['current'][0]}\n")
         # print(f"Gate (V): {read_data['gate'][4]}, VSense (V): {read_data['voltage'][4]}, ISense (A): {read_data['current'][4]}\n\n")
         sig_finished.emit()
-        return read_data
+        return read_data """
         
 if __name__ == "__main__":
     if sys.version_info[0] < 3:
