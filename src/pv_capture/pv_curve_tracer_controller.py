@@ -1,8 +1,8 @@
 """_summary_
 @file       pv_curve_tracer_controller.py
-@author     Roy Mor (roymor.102@gmail.com) and Matthew Yu (matthewjkyu@gmail.com)
+@author     Roy Mor (roymor.102@gmail.com), Matthew Yu (matthewjkyu@gmail.com), and Connor Shen (connor.lishen@gmail.com)
 @brief      Talks to the PV Curve Tracer.
-@version    0.1.1
+@version    0.2.0
 @data       2023-02-06
 """
 
