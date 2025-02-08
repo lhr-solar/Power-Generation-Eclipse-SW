@@ -7,17 +7,16 @@
 """
 
 import argparse
-from ast import Break
 import glob
 import os
 import sys
 import time
-from curses import baudrate
+import json
 from datetime import datetime
 
 import serial
 import serial.tools.list_ports
-from PyQt6.QtSerialPort import QSerialPort, QSerialPortInfo
+from PyQt6.QtSerialPort import QSerialPort
 from PyQt6.QtCore import QIODevice
 from src.DatabaseManager import DatabaseManager
 
@@ -73,7 +72,7 @@ class PVCurveTracerController:
         
         config = {
             "com_port": "COM4",
-            "baud_rate": 19200,
+            "baud_rate": 115200,
             "parity_bit": QSerialPort.Parity.EvenParity,
             "enc_scheme": "NONE",
         }
@@ -169,6 +168,9 @@ class PVCurveTracerController:
         while True:
             serialIn = serial_instance.readline().decode('utf-8')
             print(serialIn)
+            if serialIn == "READY_FOR_HANDSHAKE":
+                print("Handshake initiated. Sending OK...")
+                serial_instance.write("OK\r\n".encode("utf-8"))
             if serialIn == "OK_RECEIVED\r\n":
                 print("proceed")
                 break
@@ -215,6 +217,11 @@ class PVCurveTracerController:
         
         self.serial_instance = serial_instance
         
+        #Send selected baud rate
+        baud_rate = str(com_conf["baud_rate"]) + "\r\n"
+        serial_instance.write(baud_rate.encode("utf-8"))
+        print(f"Send baud rate: {baud_rate.strip()}")
+        
         #Wait for ready signal
         while True:
             serialIn = serial_instance.readline().decode('utf-8').strip()
@@ -225,18 +232,13 @@ class PVCurveTracerController:
         
         #Send handshake
         self.ok_handshake(serial_instance)
-        
-        #Send mode selection
-        if mode == "DEBUG":
-            serial_instance.write("MODE=DEBUG\n".encode("utf-8"))
-        elif mode == "MEASUREMENT":
-            serial_instance.write("MODE=MEASUREMENT\n".encode("utf-8"))
             
         #Wait for acknowledgment
         while True:
-            serial_in = serial_instance.readline().decode("utf-8").strip()
-            if serial_in == "MODE_ACK":
-                print(f"{mode} acknowledged")
+            serialIn = serial_instance.readline().decode("utf-8").strip()
+            print(serialIn)
+            if serialIn == f"Baud Rate Updated: {com_conf['baud_rate']}":
+                print("Baud rate change acknowledged")
                 break
         
         # Send configuration as JSON
@@ -249,37 +251,39 @@ class PVCurveTracerController:
             "enc_scheme": com_conf["enc_scheme"],
         }
         
-        config_str = f"{json_config}\n"
+        config_str = json.dumps(json_config) + "\n"
         serial_instance.write(config_str.encode("utf-8"))
+        print(f"Sent configuration: {config_str.strip()}")
         
         # Wait for configuration acknowledgment
         while True:
-            serial_in = serial_instance.readline().decode("utf-8").strip()
-            if serial_in == "valid config":
+            serialIn = serial_instance.readline().decode("utf-8").strip()
+            if serialIn == "valid config":
                 print("Valid configuration received")
                 break
-            elif serial_in == "invalid config":
+            elif serialIn == "invalid config":
                 print("Invalid configuration")
                 return
 
         # Start capturing data
         while True:
-            serial_in = serial_instance.readline().decode("utf-8").strip()
-            if serial_in == "END_SCAN":
+            serialIn = serial_instance.readline().decode("utf-8").strip()
+            if serialIn == "END_SCAN":
                 print("Scan complete")
                 break
-            elif serial_in.startswith("Gate (V)"):
-                parts = serial_in.split(", ")
-                gate = float(parts[0].split(": ")[1])
-                voltage = float(parts[1].split(": ")[1])
-                current = float(parts[2].split(": ")[1])
-
+            try:
+                data = json.loads(serialIn)
+                gate = data["gate"]
+                voltage = data["voltage"]
+                current = data["current"]
+                
                 read_data["gate"].append(gate)
                 read_data["voltage"].append(voltage)
                 read_data["current"].append(current)
-
+                
                 sig_res.emit([gate, voltage, current])
-
+            except json.JSONDecodeError:
+                print(f"Error parsing JSON: {serialIn}")
         sig_finished.emit()
         return read_data
         

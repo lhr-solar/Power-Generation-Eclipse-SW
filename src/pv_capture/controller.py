@@ -7,9 +7,6 @@
 """
 
 import os
-import re
-import time
-import traceback
 from datetime import datetime
 
 import pyqtgraph as pg
@@ -17,7 +14,6 @@ from PyQt6.QtCore import (
     QObject,
     QRunnable,
     Qt,
-    QThread,
     QThreadPool,
     QTimer,
     pyqtSignal,
@@ -30,15 +26,11 @@ from PyQt6.QtWidgets import (
     QFormLayout,
     QFrame,
     QGridLayout,
-    QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QPushButton,
     QSizePolicy,
-    QStackedLayout,
     QTextEdit,
-    QVBoxLayout,
     QWidget,
 )
 from src.modeling.pv_model import PVModel
