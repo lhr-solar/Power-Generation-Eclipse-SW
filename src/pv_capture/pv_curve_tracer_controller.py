@@ -6,21 +6,19 @@
 @data       2023-02-06
 """
 
-import argparse
-import glob
 import os
 import sys
 import time
 import json
+import glob
 from datetime import datetime
 
 import serial
 import serial.tools.list_ports
-from PyQt6.QtSerialPort import QSerialPort
-from PyQt6.QtCore import QIODevice
+from PyQt6.QtCore import QObject
 from src.DatabaseManager import DatabaseManager
 
-class PVCurveTracerController:
+class PVCurveTracerController (QObject):
     def __init__(self) -> None:
         self.serial_instance = None
         self.cwd = os.getcwd()
@@ -45,15 +43,6 @@ class PVCurveTracerController:
     def list_baud_rates(self):
         return [4800, 9600, 19200, 38400, 57600, 115200]
 
-    def list_parity(self):
-        return [
-            "PARITY_NONE",
-            "PARITY_EVEN",
-            "PARITY_ODD",
-            "PARITY_MARK",
-            "PARITY_SPACE",
-        ]
-
     def list_encoding_schemes(self):
         # TODO: load from folder any files containing encoding schemes
         return ["NONE"]
@@ -69,14 +58,26 @@ class PVCurveTracerController:
 
     def load_com_config(self): #, file_path
         # TODO: load from config file comm scheme.
+        file_path = os.path.join(self.cwd, "data/com_confs/config.json")
+
+        if not os.path.exists(file_path):
+            # Return default config if file does not exist
+            return {
+                "com_port": self.list_ports()[0] if self.list_ports() else None,
+                "baud_rate": 115200,
+                "parity_bit": serial.PARITY_NONE,
+            }
+
+        with open(file_path, "r") as config_file:
+            return json.load(config_file)
         
-        config = {
-            "com_port": "COM4",
-            "baud_rate": 115200,
-            "parity_bit": QSerialPort.Parity.EvenParity,
-            "enc_scheme": "NONE",
-        }
-        return config
+    def save_com_config(self, com_conf):
+        file_path = os.path.join(self.cwd, "data/com_confs/config.json")
+        
+        with open(file_path, "w") as config_file:
+            json.dump(com_conf, config_file, indent=4)
+
+        print(f"Communication config saved to {file_path}")
 
     # PV Capture configuration
 
@@ -90,8 +91,29 @@ class PVCurveTracerController:
         return capture_files
 
     def load_capture_config(self, file_path):
-        # TODO: load from config file capture scheme.
-        pass
+        file_path = os.path.join(self.cwd, "data/capture_confs/config.json")
+
+        if not os.path.exists(file_path):
+            return {
+                "sample_range": [0.0, 1.0],
+                "step_size": 0.01,
+                "num_iters": 10,
+                "settling_time": 1000,
+                "pv_type": "CELL",
+                "pv_id": "DEFAULT_PV",
+            }
+
+        with open(file_path, "r") as config_file:
+            return json.load(config_file)
+        
+    def save_capture_config(self, capture_conf):
+        """Saves capture settings to a JSON file"""
+        file_path = os.path.join(self.cwd, "data/capture_confs/config.json")
+
+        with open(file_path, "w") as config_file:
+            json.dump(capture_conf, config_file, indent=4)
+
+        print(f"Capture config saved to {file_path}")
 
     def list_capture_config_files(self):
         obj = os.scandir(path=self.cwd + "/data/capture_confs")
@@ -146,40 +168,96 @@ class PVCurveTracerController:
             ],
         }
         return capture
-    
-    def save_capture_file(self, capture_conf, capture_data, pv_id):
+
+    def set_baud_rate(self, new_baud_rate):
+        """Changes the baud rate dynamically"""
+        if self.serial_instance:
+            self.serial_instance.baudrate = new_baud_rate
+            print(f"Baud Rate Changed to: {new_baud_rate}")
+
+            # Inform the Curve Tracer about the change
+            baud_command = f"{new_baud_rate}\r\n"
+            self.serial_instance.write(baud_command.encode("utf-8"))
+
+            # Wait for acknowledgment from the Curve Tracer
+            while True:
+                serial_in = self.serial_instance.readline().decode("utf-8").strip()
+                if serial_in == f"Baud Rate Updated: {new_baud_rate}":
+                    print("Baud rate change acknowledged.")
+                    break
+
+    def save_capture_file(self, capture_data):
         # TODO: save a dict of info into a capture file format.
-        with open(self.cwd + "/data/captures/"+f"{pv_id['id']}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.capture", 'w') as captureFile:
-            config = f"__version: v0.1.0\n\n"
-            config += f"Capture Configuration\nPV ID: {pv_id['id']}\nCell Type: {capture_conf['pv_type']}\n"
-            config += f"Capture Range: {capture_conf['sample_range']}\nStep Size: {capture_conf['step_size']}\nIterations: {capture_conf['num_iters']}\n"
-            config += f"Settling Time: {capture_conf['settling_time']}\n\n"
+        file_path = os.path.join(
+            self.cwd, "data", "captures",
+            f"PV_Capture_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
+        )
 
-            data = f"Test Data\n\n"
-            for i, gate in enumerate(capture_data['gate']):
-                data += f"Gate (V): {capture_data['gate'][i]:.3f}, VSense (V): {capture_data['voltage'][i]:.3f}, ISense (A): {capture_data['current'][i]:.3f}\n"
+        with open(file_path, "w") as capture_file:
+            json.dump(capture_data, capture_file, indent=4)
 
-            captureFile.write(config)
-            captureFile.write(data)
-            self.db.add_data(captureFile)
+        print(f"Capture data saved to {file_path}")
 
-    def ok_handshake(self, serial_instance):
-        serial_instance.write("OK\r\n".encode('utf-8'))
+    def ok_handshake(self):
+        self.serial_instance.write("OK\r\n".encode('utf-8'))
         while True:
-            serialIn = serial_instance.readline().decode('utf-8')
+            serialIn = self.serial_instance.readline().decode('utf-8').strip()
             print(serialIn)
             if serialIn == "READY_FOR_HANDSHAKE":
                 print("Handshake initiated. Sending OK...")
-                serial_instance.write("OK\r\n".encode("utf-8"))
+                self.serial_instance.write("OK\r\n".encode("utf-8"))
             if serialIn == "OK_RECEIVED\r\n":
                 print("proceed")
                 break
 
-    # Talk to Curve Tracer
+    def receive_frontend_command(self, command: str):
+        if not self.serial_instance:
+            print("ERROR: Serial connection not initialized")
+            return
+        
+        if command.startswith("SET"):
+            try:
+                voltage = float(command.split(" ")[1])
+                formatted_command = f"SET {voltage:.3f}\r\n"
+                self.serial_instance.write(formatted_command.encode("utf-8"))
+                print(f"Sent voltage command: {formatted_command.strip()}")
+            except ValueError:
+                print("ERROR: Invalid voltage command format")
+        
+        elif command == "RESET":
+            self.serial_instance.write("RESET\r\n".encode("utf-8"))
+            print("Sent RESET command")
+            
+        elif command.startswith("BAUD"):
+            try:
+                new_baud_rate = int(command.split(" ")[1])
+                if new_baud_rate in self.list_baud_rates():
+                    self.set_baud_rate(new_baud_rate)
+                else:
+                    print(f"ERROR: Unsupported baud rate {new_baud_rate}")
+            except ValueError:
+                print("ERROR: Invalid baud rate format.")
+        
+        else:
+            print(f"ERROR: Unrecognized command '{command}'")
 
-    def capture(
-        self, com_conf, capture_conf, sig_res, sig_log, sig_prog, sig_finished
-    ):
+    def request_capture_conf(self):
+        if not self.serial_instance:
+            print("ERROR: Serial connection not initialized")
+            return
+        
+        self.serial_instance.write("GET_CAPTURE_CONFIG\r\n".encode("utf-8"))
+        
+        serial_in = self.serial_instance.readline().decode("utf-8").strip()
+        
+        try:
+            capture_conf = json.loads(serial_in)
+            print("Received Capture Config:", capture_conf)
+            self.save_capture_config(capture_conf)
+        except json.JSONDecodeError:
+            print(f"ERROR: Invalid capture config: {serial_in}")
+
+    def capture(self, com_conf, capture_conf):
         """
         com_conf = {
             "com_port": COM_PORT,
@@ -198,15 +276,18 @@ class PVCurveTracerController:
         }
 
         """
-
+        self.request_capture_conf()
+        self.save_capture_config(capture_conf)
+        
         read_data = {
             "gate": [],
             "voltage": [],
             "current": [],
+            "power": []
         }
 
         #Open serial connection
-        serial_instance = serial.Serial(
+        self.serial_instance = serial.Serial(
             com_conf["com_port"],
             com_conf["baud_rate"],
             bytesize=serial.EIGHTBITS,
@@ -215,76 +296,39 @@ class PVCurveTracerController:
             timeout=1,
         )
         
-        self.serial_instance = serial_instance
-        
-        #Send selected baud rate
-        baud_rate = str(com_conf["baud_rate"]) + "\r\n"
-        serial_instance.write(baud_rate.encode("utf-8"))
-        print(f"Send baud rate: {baud_rate.strip()}")
-        
         #Wait for ready signal
         while True:
-            serialIn = serial_instance.readline().decode('utf-8').strip()
+            serialIn = self.serial_instance.readline().decode('utf-8').strip()
             print(serialIn)
             if serialIn == "READY_FOR_TRANSMISSION\r\n":
                 print("Ready for transmission\n")
                 break
         
         #Send handshake
-        self.ok_handshake(serial_instance)
-            
-        #Wait for acknowledgment
-        while True:
-            serialIn = serial_instance.readline().decode("utf-8").strip()
-            print(serialIn)
-            if serialIn == f"Baud Rate Updated: {com_conf['baud_rate']}":
-                print("Baud rate change acknowledged")
-                break
+        self.ok_handshake()
         
-        # Send configuration as JSON
-        json_config = {
-            "type": capture_conf["pv_type"],
-            "sr": capture_conf["sample_range"],
-            "step_size": capture_conf["step_size"],
-            "num_iters": capture_conf["num_iters"],
-            "settling_time": capture_conf["settling_time"],
-            "enc_scheme": com_conf["enc_scheme"],
-        }
-        
-        config_str = json.dumps(json_config) + "\n"
-        serial_instance.write(config_str.encode("utf-8"))
-        print(f"Sent configuration: {config_str.strip()}")
-        
-        # Wait for configuration acknowledgment
         while True:
-            serialIn = serial_instance.readline().decode("utf-8").strip()
-            if serialIn == "valid config":
-                print("Valid configuration received")
-                break
-            elif serialIn == "invalid config":
-                print("Invalid configuration")
-                return
-
-        # Start capturing data
-        while True:
-            serialIn = serial_instance.readline().decode("utf-8").strip()
-            if serialIn == "END_SCAN":
+            serial_in = self.serial_instance.readline().decode("utf-8").strip()
+            if serial_in == "END_SCAN":
                 print("Scan complete")
                 break
             try:
-                data = json.loads(serialIn)
-                gate = data["gate"]
-                voltage = data["voltage"]
-                current = data["current"]
+                gate, voltage, current, power = map(float, serial_in.split(","))
+                data = {
+                    "gate": gate,
+                    "voltage": voltage,
+                    "current": current,
+                    "power": power,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                }
                 
                 read_data["gate"].append(gate)
                 read_data["voltage"].append(voltage)
                 read_data["current"].append(current)
+            
+            except ValueError:
+                print(f"Invalid data received: {serial_in}")
                 
-                sig_res.emit([gate, voltage, current])
-            except json.JSONDecodeError:
-                print(f"Error parsing JSON: {serialIn}")
-        sig_finished.emit()
         return read_data
         
 """         baudCheck = True
@@ -377,17 +421,14 @@ if __name__ == "__main__":
 
     controller = PVCurveTracerController()
 
-    capture_conf = {
-        "sample_range": [.25, .5],
-        "step_size": .01,
-        "num_iters": 5,
-        "settling_time": 5,
-        "pv_type": "CELL",
-        "pv_id": "ok"
-    }
-    print("READ_START\n")
-    
-    readData = controller.capture(controller.load_com_config(), capture_conf, 0, 0, 0, 0)
+    com_conf = controller.load_com_config()
+    capture_conf = controller.load_capture_config()
 
-    controller.save_capture_file(capture_conf, readData)
+    if not com_conf["com_port"]:
+        print("No available serial ports detected.")
+        sys.exit(1)
+
+    print("Starting Curve Tracer Controller...")
+    capture_data = controller.capture(com_conf)
+    controller.save_capture_file(capture_data)
 
